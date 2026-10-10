@@ -165,16 +165,39 @@ const initialConfig = {
   freeShipping: 69900,
 };
 async function api(path: string, data?: any) {
-  const r = await fetch("/api/" + path, {
-    method: data === undefined ? "GET" : "POST",
-    headers:
-      data === undefined ? undefined : { "Content-Type": "application/json" },
-    body: data === undefined ? undefined : JSON.stringify(data),
-  });
-  const b: any = await r.json();
-  if (!r.ok) throw new Error(b.error || "Please try again.");
-  return b;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 30000);
+  try {
+    const r = await fetch("/api/" + path, {
+      method: data === undefined ? "GET" : "POST",
+      headers:
+        data === undefined ? undefined : { "Content-Type": "application/json" },
+      body: data === undefined ? undefined : JSON.stringify(data),
+      signal: controller.signal,
+    });
+    let b: any;
+    try {
+      b = await r.json();
+    } catch {
+      throw new Error(
+        "The store returned an unavailable response. Please retry shortly.",
+      );
+    }
+    if (!r.ok) throw new Error(b.error || "Please try again.");
+    return b;
+  } catch (error) {
+    if (controller.signal.aborted)
+      throw new Error(
+        data === undefined
+          ? "The store is taking too long to respond. Please retry shortly."
+          : "The response timed out. Refresh orders or the saved record before trying the action again.",
+      );
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
 }
+
 function Icon({ name }: { name: string }) {
   return (
     <svg
@@ -2581,6 +2604,54 @@ export default function Storefront({ children }: { children: ReactNode }) {
                                       {o.data.address.phone}
                                     </p>
                                   </details>
+                                  {o.status === "pending" &&
+                                    o.payment === "unpaid" &&
+                                    !o.razorpay_id &&
+                                    !o.data.demo && (
+                                      <details>
+                                        <summary>
+                                          Reconcile payment checkout
+                                        </summary>
+                                        <p className="muted">
+                                          Find the original Razorpay order by
+                                          this store receipt. Keep inventory
+                                          reserved until its payment is
+                                          verified.
+                                        </p>
+                                        <form
+                                          className="shipment-form"
+                                          onSubmit={(e) => {
+                                            e.preventDefault();
+                                            const f = new FormData(
+                                              e.currentTarget,
+                                            );
+                                            void adminSave(
+                                              "payment/reconcile",
+                                              {
+                                                id: o.id,
+                                                remoteOrderId:
+                                                  f.get("remoteOrderId"),
+                                              },
+                                            );
+                                          }}
+                                        >
+                                          <label>
+                                            Razorpay order ID
+                                            <input
+                                              name="remoteOrderId"
+                                              required
+                                              pattern="order_[A-Za-z0-9]+"
+                                            />
+                                          </label>
+                                          <button
+                                            className="small-button"
+                                            disabled={busy}
+                                          >
+                                            Reconcile existing checkout
+                                          </button>
+                                        </form>
+                                      </details>
+                                    )}
                                   {!["pending", "cancelled"].includes(
                                     o.status,
                                   ) && (
@@ -2649,6 +2720,211 @@ export default function Storefront({ children }: { children: ReactNode }) {
                                       </form>
                                     </details>
                                   )}
+                                  {!["pending", "cancelled"].includes(
+                                    o.status,
+                                  ) && (
+                                    <details className="shipping-tools">
+                                      <summary>Shiprocket tools</summary>
+                                      <p className="muted">
+                                        {adminData.settings.shiprocket
+                                          ? "Use measured packaging. Create the shipment, assign a courier, then request pickup."
+                                          : "Configure Shiprocket in the hosting environment to enable live shipments."}
+                                      </p>
+                                      <p className="muted">
+                                        {(adminData.operations || [])
+                                          .filter(
+                                            (a: any) =>
+                                              a.order_id === o.id &&
+                                              a.kind.startsWith("shipping"),
+                                          )
+                                          .map(
+                                            (a: any) =>
+                                              a.kind.replace("shipping-", "") +
+                                              ": " +
+                                              a.status,
+                                          )
+                                          .join(" · ") ||
+                                          "No Shiprocket booking yet."}
+                                      </p>
+                                      <form
+                                        className="shipment-form"
+                                        onSubmit={(e) => {
+                                          e.preventDefault();
+                                          const f = new FormData(
+                                            e.currentTarget,
+                                          );
+                                          void adminSave("shipping/create", {
+                                            id: o.id,
+                                            length: Number(f.get("length")),
+                                            breadth: Number(f.get("breadth")),
+                                            height: Number(f.get("height")),
+                                            weight: Number(f.get("weight")),
+                                          });
+                                        }}
+                                      >
+                                        <label>
+                                          Length (cm)
+                                          <input
+                                            name="length"
+                                            type="number"
+                                            min="0.1"
+                                            max="200"
+                                            step="0.1"
+                                            required
+                                            disabled={
+                                              !adminData.settings.shiprocket
+                                            }
+                                          />
+                                        </label>
+                                        <label>
+                                          Breadth (cm)
+                                          <input
+                                            name="breadth"
+                                            type="number"
+                                            min="0.1"
+                                            max="200"
+                                            step="0.1"
+                                            required
+                                            disabled={
+                                              !adminData.settings.shiprocket
+                                            }
+                                          />
+                                        </label>
+                                        <label>
+                                          Height (cm)
+                                          <input
+                                            name="height"
+                                            type="number"
+                                            min="0.1"
+                                            max="200"
+                                            step="0.1"
+                                            required
+                                            disabled={
+                                              !adminData.settings.shiprocket
+                                            }
+                                          />
+                                        </label>
+                                        <label>
+                                          Packed weight (kg)
+                                          <input
+                                            name="weight"
+                                            type="number"
+                                            min="0.1"
+                                            max="50"
+                                            step="0.01"
+                                            required
+                                            disabled={
+                                              !adminData.settings.shiprocket
+                                            }
+                                          />
+                                        </label>
+                                        <button
+                                          className="small-button"
+                                          disabled={
+                                            busy ||
+                                            !adminData.settings.shiprocket ||
+                                            o.status !== "packed"
+                                          }
+                                        >
+                                          Create shipment
+                                        </button>
+                                      </form>
+                                      <div className="order-actions">
+                                        <button
+                                          className="small-button"
+                                          disabled={
+                                            busy ||
+                                            !adminData.settings.shiprocket ||
+                                            o.status !== "packed"
+                                          }
+                                          onClick={() =>
+                                            void adminSave("shipping/awb", {
+                                              id: o.id,
+                                            })
+                                          }
+                                        >
+                                          Assign courier / AWB
+                                        </button>
+                                        <button
+                                          className="small-button"
+                                          disabled={
+                                            busy ||
+                                            !adminData.settings.shiprocket ||
+                                            o.status !== "packed"
+                                          }
+                                          onClick={() =>
+                                            void adminSave("shipping/pickup", {
+                                              id: o.id,
+                                            })
+                                          }
+                                        >
+                                          Request pickup
+                                        </button>
+                                        <button
+                                          className="small-button"
+                                          disabled={
+                                            busy ||
+                                            !adminData.settings.shiprocket ||
+                                            !o.tracking
+                                          }
+                                          onClick={() =>
+                                            void adminSave("shipping/sync", {
+                                              id: o.id,
+                                            })
+                                          }
+                                        >
+                                          Sync delivery
+                                        </button>
+                                      </div>
+                                      {(adminData.operations || []).some(
+                                        (a: any) =>
+                                          a.id === "shipping-create-" + o.id &&
+                                          ["running", "uncertain"].includes(
+                                            a.status,
+                                          ),
+                                      ) && (
+                                        <form
+                                          className="shipment-form"
+                                          onSubmit={(e) => {
+                                            e.preventDefault();
+                                            const f = new FormData(
+                                              e.currentTarget,
+                                            );
+                                            void adminSave(
+                                              "shipping/reconcile",
+                                              {
+                                                id: o.id,
+                                                remoteOrderId: Number(
+                                                  f.get("remoteOrderId"),
+                                                ),
+                                              },
+                                            );
+                                          }}
+                                        >
+                                          <p className="muted">
+                                            Verify the original booking in
+                                            Shiprocket. Do not create another
+                                            order.
+                                          </p>
+                                          <label>
+                                            Shiprocket order ID
+                                            <input
+                                              name="remoteOrderId"
+                                              type="number"
+                                              min="1"
+                                              required
+                                            />
+                                          </label>
+                                          <button
+                                            className="small-button"
+                                            disabled={busy}
+                                          >
+                                            Reconcile existing shipment
+                                          </button>
+                                        </form>
+                                      )}
+                                    </details>
+                                  )}
                                 </td>
                                 <td>{rupees(o.total)}</td>
                                 <td>{o.payment}</td>
@@ -2669,6 +2945,9 @@ export default function Storefront({ children }: { children: ReactNode }) {
                                   >
                                     <select
                                       name="status"
+                                      disabled={
+                                        o.shipment?.provider === "shiprocket"
+                                      }
                                       aria-label={"Status for " + o.id}
                                       defaultValue={o.status}
                                     >
@@ -2688,6 +2967,9 @@ export default function Storefront({ children }: { children: ReactNode }) {
                                     </select>
                                     <input
                                       name="tracking"
+                                      disabled={
+                                        o.shipment?.provider === "shiprocket"
+                                      }
                                       aria-label={"Tracking for " + o.id}
                                       placeholder="Tracking reference"
                                       defaultValue={o.tracking || ""}
@@ -2698,6 +2980,7 @@ export default function Storefront({ children }: { children: ReactNode }) {
                                   <button
                                     disabled={
                                       busy ||
+                                      o.shipment?.provider === "shiprocket" ||
                                       ["delivered", "cancelled"].includes(
                                         o.status,
                                       )
@@ -2777,11 +3060,11 @@ export default function Storefront({ children }: { children: ReactNode }) {
                   <div className="admin-requests">
                     <h2>Returns & refunds</h2>
                     <p className="note">
-                      Review customer requests here. Process real refunds in the
-                      payment provider first, verify the result, then record its
-                      reference. These controls do not send money or restock
-                      food returns. Shiprocket return pickups can be connected
-                      later.
+                      Review customer requests and approve the amount before
+                      processing a refund. When online refund processing is
+                      enabled, Razorpay confirms the payout result. Otherwise
+                      record a verified provider or COD refund reference. Food
+                      returns are never restocked automatically.
                     </p>
                     {!adminData.requests.length ? (
                       <div className="empty-state">
@@ -2800,91 +3083,143 @@ export default function Storefront({ children }: { children: ReactNode }) {
                             {x.order_data.address.phone} · Order total:{" "}
                             {rupees(x.total)}
                           </p>
-                          {!!requestTransitions(x.kind, x.status).length && (
-                            <form
-                              className="request-form"
-                              onSubmit={(e) => {
-                                e.preventDefault();
-                                const f = new FormData(e.currentTarget);
-                                void adminSave("return", {
-                                  id: x.id,
-                                  expectedVersion: x.version,
-                                  status: f.get("status"),
-                                  note: f.get("note"),
-                                  refundAmount: Math.round(
-                                    Number(f.get("refundAmount")) * 100,
-                                  ),
-                                  refundReference:
-                                    f.get("refundReference") || "",
-                                });
-                              }}
-                            >
-                              <div className="address-grid">
-                                <label>
-                                  Next status
-                                  <select name="status" required>
-                                    {requestTransitions(x.kind, x.status).map(
-                                      (s) => (
-                                        <option key={s} value={s}>
-                                          {requestStatus[s]}
-                                        </option>
-                                      ),
-                                    )}
-                                  </select>
-                                </label>
-                                <label>
-                                  Refund amount (₹)
-                                  <input
-                                    name="refundAmount"
-                                    type="number"
-                                    min={0}
-                                    max={x.total / 100}
-                                    step="0.01"
-                                    required
-                                    defaultValue={x.refund_amount / 100}
-                                    readOnly={x.status === "refund_pending"}
-                                  />
-                                </label>
-                                {x.status === "refund_pending" && (
-                                  <label className="full">
-                                    Verified refund reference
+                          {x.status === "refund_pending" &&
+                            x.payment === "paid" &&
+                            adminData.settings.refunds && (
+                              <div className="refund-tools">
+                                <p>
+                                  Approved refund: {rupees(x.refund_amount)}.
+                                  This action submits the approved amount to
+                                  Razorpay.
+                                </p>
+                                <button
+                                  className="small-button"
+                                  disabled={
+                                    busy ||
+                                    (adminData.operations || []).some(
+                                      (a: any) => a.id === "refund-" + x.id,
+                                    )
+                                  }
+                                  onClick={() =>
+                                    void adminSave("refund/process", {
+                                      id: x.id,
+                                      expectedVersion: x.version,
+                                    })
+                                  }
+                                >
+                                  Process approved online refund
+                                </button>
+                                <button
+                                  className="small-button"
+                                  disabled={
+                                    busy ||
+                                    !(adminData.operations || []).some(
+                                      (a: any) =>
+                                        a.id === "refund-" + x.id &&
+                                        a.status !== "failed",
+                                    )
+                                  }
+                                  onClick={() =>
+                                    void adminSave("refund/sync", {
+                                      id: x.id,
+                                      expectedVersion: x.version,
+                                    })
+                                  }
+                                >
+                                  Sync refund result
+                                </button>
+                              </div>
+                            )}
+                          {!!requestTransitions(x.kind, x.status).length &&
+                            !(adminData.operations || []).some(
+                              (a: any) =>
+                                a.id === "refund-" + x.id &&
+                                a.status !== "failed",
+                            ) && (
+                              <form
+                                className="request-form"
+                                onSubmit={(e) => {
+                                  e.preventDefault();
+                                  const f = new FormData(e.currentTarget);
+                                  void adminSave("return", {
+                                    id: x.id,
+                                    expectedVersion: x.version,
+                                    status: f.get("status"),
+                                    note: f.get("note"),
+                                    refundAmount: Math.round(
+                                      Number(f.get("refundAmount")) * 100,
+                                    ),
+                                    refundReference:
+                                      f.get("refundReference") || "",
+                                  });
+                                }}
+                              >
+                                <div className="address-grid">
+                                  <label>
+                                    Next status
+                                    <select name="status" required>
+                                      {requestTransitions(x.kind, x.status).map(
+                                        (s) => (
+                                          <option key={s} value={s}>
+                                            {requestStatus[s]}
+                                          </option>
+                                        ),
+                                      )}
+                                    </select>
+                                  </label>
+                                  <label>
+                                    Refund amount (₹)
                                     <input
-                                      name="refundReference"
+                                      name="refundAmount"
+                                      type="number"
+                                      min={0}
+                                      max={x.total / 100}
+                                      step="0.01"
                                       required
-                                      maxLength={180}
-                                      placeholder={
-                                        adminData.settings.demo
-                                          ? "Preview reference"
-                                          : "Provider refund or bank transfer reference"
-                                      }
+                                      defaultValue={x.refund_amount / 100}
+                                      readOnly={x.status === "refund_pending"}
                                     />
                                   </label>
-                                )}
-                                <label className="full">
-                                  Update visible to the customer
-                                  <textarea
-                                    name="note"
-                                    required
-                                    minLength={5}
-                                    maxLength={1200}
-                                    rows={3}
-                                    placeholder="Explain the decision, return instructions or verified refund update."
-                                  />
-                                </label>
-                              </div>
-                              <p className="muted">
-                                Enter a positive amount for Refund pending. Keep
-                                the amount at zero for review, return handling
-                                or a resolution without a refund.
-                              </p>
-                              <button
-                                className="button outline"
-                                disabled={busy}
-                              >
-                                Save customer update
-                              </button>
-                            </form>
-                          )}
+                                  {x.status === "refund_pending" && (
+                                    <label className="full">
+                                      Verified refund reference
+                                      <input
+                                        name="refundReference"
+                                        required
+                                        maxLength={180}
+                                        placeholder={
+                                          adminData.settings.demo
+                                            ? "Preview reference"
+                                            : "Provider refund or bank transfer reference"
+                                        }
+                                      />
+                                    </label>
+                                  )}
+                                  <label className="full">
+                                    Update visible to the customer
+                                    <textarea
+                                      name="note"
+                                      required
+                                      minLength={5}
+                                      maxLength={1200}
+                                      rows={3}
+                                      placeholder="Explain the decision, return instructions or verified refund update."
+                                    />
+                                  </label>
+                                </div>
+                                <p className="muted">
+                                  Enter a positive amount for Refund pending.
+                                  Keep the amount at zero for review, return
+                                  handling or a resolution without a refund.
+                                </p>
+                                <button
+                                  className="button outline"
+                                  disabled={busy}
+                                >
+                                  Save customer update
+                                </button>
+                              </form>
+                            )}
                         </div>
                       ))
                     )}
@@ -3112,10 +3447,7 @@ export default function Storefront({ children }: { children: ReactNode }) {
                       ["Razorpay payments", adminData.settings.payments],
                       ["Invoice email delivery", adminData.settings.email],
                       ["Business address", adminData.settings.business],
-                      [
-                        "Shiprocket (connect later)",
-                        adminData.settings.shiprocket,
-                      ],
+                      ["Shiprocket shipping", adminData.settings.shiprocket],
                     ].map(([label, connected]) => (
                       <div className="setup-row" key={String(label)}>
                         <span>{label}</span>
@@ -3124,6 +3456,30 @@ export default function Storefront({ children }: { children: ReactNode }) {
                         </strong>
                       </div>
                     ))}
+                    <div className="invoice-queue">
+                      <h3>Invoice email queue</h3>
+                      <p>
+                        {(adminData.invoiceJobs || []).length} invoices awaiting
+                        delivery or review.
+                      </p>
+                      {(adminData.invoiceJobs || []).map((j: any) => (
+                        <p key={j.order_id}>
+                          {j.order_id} · {j.status} · {j.attempts} attempts
+                        </p>
+                      ))}
+                      <button
+                        className="small-button"
+                        disabled={busy || !adminData.settings.email}
+                        onClick={() => void adminSave("invoice-queue", {})}
+                      >
+                        Process queued invoices
+                      </button>
+                      <p className="muted">
+                        {adminData.settings.invoiceWorker
+                          ? "Invoice worker authentication is configured. Schedule the protected worker endpoint in hosting."
+                          : "Configure the invoice worker secret to enable scheduled retries."}
+                      </p>
+                    </div>
                     <p>
                       Configure credentials securely in the hosting environment.
                       Product prices, verified ingredients, business details,
@@ -3827,7 +4183,7 @@ function Policy({ type, config }: { type: string; config: any }) {
       ],
       [
         "Dispatch and tracking",
-        "The store records packing, shipping and delivery status, the courier, tracking reference and an estimated delivery date when available. Your account shows the latest saved details. Automatic courier booking and live courier updates are pending a later Shiprocket integration.",
+        "The store records packing, shipping and delivery status, the courier, tracking reference and an estimated delivery date when available. Your account shows the latest saved details. When the merchant enables Shiprocket, the store can book a measured parcel and synchronize its courier updates. Otherwise the store records shipment details manually.",
       ],
       [
         "Delivery estimates",
@@ -3853,7 +4209,7 @@ function Policy({ type, config }: { type: string; config: any }) {
       ],
       [
         "Refund processing",
-        "Your account shows request review, approved returns, refund progress and dated store updates. Approved online refunds must be processed by the merchant through Razorpay. The store records the completed refund reference after verification; this website does not transfer refund money automatically. The merchant must confirm the reporting window, processing time and cash-on-delivery refund procedure before launch.",
+        "Your account shows request review, approved returns, refund progress and dated store updates. Approved online refunds must be processed by the merchant through Razorpay. The store records the completed refund reference after verification; the enabled Razorpay refund tool submits only the merchant-approved amount and verifies its result. Cash-on-delivery refunds require the merchant’s separate payment process. The merchant must confirm the reporting window, processing time and cash-on-delivery refund procedure before launch.",
       ],
     ],
     contact: [

@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { securityHeaders } from "./lib/security-headers";
 const config: NextConfig = {
   poweredByHeader: false,
   serverExternalPackages: ["mysql2"],
@@ -6,11 +7,10 @@ const config: NextConfig = {
     return [
       {
         source: "/:path*",
-        headers: [
-          { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "X-Frame-Options", value: "SAMEORIGIN" },
-        ],
+        headers: Object.entries(securityHeaders).map(([key, value]) => ({
+          key,
+          value,
+        })),
       },
     ];
   },

@@ -2,6 +2,7 @@ import { storeDatabase, type Statement } from "./database";
 import { sampleProducts, type CartItem } from "./catalog";
 import { invoicePdf } from "./invoice";
 import { requestReasons, requestTransitions } from "./customer";
+import { createOperations, shippingReady, providerJson } from "./operations";
 const cfg = () => process.env;
 const db = storeDatabase;
 const demo = () => cfg().DEMO_MODE === "true";
@@ -53,6 +54,124 @@ const b64url = (a: Uint8Array) =>
     .replace(/\//g, "_")
     .replace(/=+$/, "");
 let initialized = false;
+
+let lastRateCleanup = 0;
+async function rateLimit(scope: string, identity: string, limit: number) {
+  const minute = Math.floor(now() / 60000);
+  if (lastRateCleanup !== minute) {
+    await db().batch([
+      db().prepare("DELETE FROM rate_limits WHERE expires<?").bind(now()),
+      db().prepare("DELETE FROM sessions WHERE expires<?").bind(now()),
+      db().prepare("DELETE FROM oauth_states WHERE expires<?").bind(now()),
+    ]);
+    lastRateCleanup = minute;
+  }
+  const hash = b64url(
+    new Uint8Array(
+      await crypto.subtle.digest("SHA-256", new TextEncoder().encode(identity)),
+    ),
+  );
+  const key = scope + ":" + minute + ":" + hash;
+  const r = await db().batch([
+    db()
+      .prepare(
+        "INSERT OR IGNORE INTO rate_limits (id,attempts,expires) VALUES (?,0,?)",
+      )
+      .bind(key, (minute + 2) * 60000),
+    db()
+      .prepare("UPDATE rate_limits SET attempts=attempts+1 WHERE id=?")
+      .bind(key),
+    db().prepare("SELECT attempts FROM rate_limits WHERE id=?").bind(key),
+  ]);
+  if (r[2].results[0].attempts > limit)
+    fail("Too many requests. Please wait a minute and try again.", 429);
+}
+const operations = createOperations(db, cfg);
+async function enqueueInvoice(o: any) {
+  if (demo() || JSON.parse(o.data).demo) return;
+  await db()
+    .prepare(
+      "INSERT OR IGNORE INTO invoice_jobs (order_id,status,payload,attempts,first_attempt,next_attempt,lease,updated) SELECT id,'waiting','',0,0,0,'',? FROM orders WHERE id=? AND status!='cancelled' AND EXISTS (SELECT 1 FROM invoices WHERE order_id=orders.id)",
+    )
+    .bind(now(), o.id)
+    .run();
+}
+async function processInvoiceQueue() {
+  if (demo() || !cfg().RESEND_API_KEY || !cfg().INVOICE_FROM_EMAIL)
+    fail("Invoice email is not configured for live orders.", 503);
+  const due = await db()
+    .prepare(
+      "SELECT order_id FROM invoice_jobs WHERE status IN ('waiting','sending') AND next_attempt<=? ORDER BY next_attempt LIMIT 2",
+    )
+    .bind(now())
+    .all<any>();
+  let sent = 0,
+    deferred = 0;
+  for (const job of due.results) {
+    const o = await db()
+      .prepare("SELECT * FROM orders WHERE id=?")
+      .bind(job.order_id)
+      .first<any>();
+    try {
+      if (o) {
+        await invoiceEmail(o);
+        sent++;
+      }
+    } catch {
+      deferred++;
+    }
+  }
+  await db().batch([
+    db().prepare("DELETE FROM sessions WHERE expires<?").bind(now()),
+    db().prepare("DELETE FROM oauth_states WHERE expires<?").bind(now()),
+    db().prepare("DELETE FROM rate_limits WHERE expires<?").bind(now()),
+  ]);
+  return { sent, deferred };
+}
+async function completeRefund(x: any, result: any) {
+  if (result.status !== "processed") return;
+  const history = JSON.parse(x.history);
+  history.push({
+    status: "resolved",
+    note: "Razorpay confirmed the approved refund. Reference: " + result.id,
+    at: now(),
+  });
+  const changed = await db()
+    .prepare(
+      "UPDATE service_requests SET status='resolved',refund_reference=?,history=?,version=version+1,updated=? WHERE id=? AND version=? AND status='refund_pending' AND refund_amount=?",
+    )
+    .bind(
+      result.id,
+      JSON.stringify(history),
+      now(),
+      x.id,
+      x.version,
+      result.amount,
+    )
+    .run();
+  if (changed.meta.changes !== 1)
+    fail(
+      "The case changed while the provider confirmed the refund. Refresh and sync it.",
+      409,
+    );
+}
+async function syncShipment(o: any) {
+  if (!o.tracking) fail("Assign an AWB before syncing tracking.", 409);
+  const details = await operations.tracking(o.id, o.tracking);
+  await db().batch([
+    db()
+      .prepare(
+        "UPDATE order_shipments SET courier=?,tracking_url=?,eta=?,version=version+1,updated=? WHERE order_id=? AND provider='shiprocket'",
+      )
+      .bind(details.courier, details.trackingUrl, details.eta, now(), o.id),
+    db()
+      .prepare(
+        "UPDATE orders SET status=CASE WHEN ?='delivered' AND status IN ('packed','shipped') THEN 'delivered' WHEN ?='shipped' AND status='packed' THEN 'shipped' ELSE status END WHERE id=? AND status!='cancelled'",
+      )
+      .bind(details.status || "", details.status || "", o.id),
+  ]);
+}
+
 async function seed() {
   if (initialized) return;
   const statements: Statement[] = [];
@@ -182,6 +301,9 @@ async function quote(items: CartItem[], code?: string) {
   const lines = [];
   for (const x of items) {
     if (
+      !x ||
+      typeof x !== "object" ||
+      typeof x.variantId !== "string" ||
       ids.has(x.variantId) ||
       !Number.isInteger(x.quantity) ||
       x.quantity < 1 ||
@@ -299,7 +421,7 @@ function equal(a: string, b: string) {
 }
 async function razor(path: string, data?: any) {
   const c = cfg();
-  const response = await fetch("https://api.razorpay.com/v1/" + path, {
+  return providerJson("https://api.razorpay.com/v1/" + path, {
     method: data ? "POST" : "GET",
     headers: {
       Authorization:
@@ -308,9 +430,6 @@ async function razor(path: string, data?: any) {
     },
     body: data ? JSON.stringify(data) : undefined,
   });
-  if (!response.ok)
-    fail("Payment service is unavailable. Please try again.", 502);
-  return response.json() as Promise<any>;
 }
 async function invoiceResponse(o: any) {
   const inv = await db()
@@ -335,33 +454,56 @@ async function invoiceResponse(o: any) {
   );
 }
 async function invoiceEmail(o: any) {
-  if (demo() || !cfg().RESEND_API_KEY || !cfg().INVOICE_FROM_EMAIL)
+  if (
+    demo() ||
+    JSON.parse(o.data).demo ||
+    !cfg().RESEND_API_KEY ||
+    !cfg().INVOICE_FROM_EMAIL
+  )
     fail("Invoice email delivery is not configured for live orders.", 503);
   if (o.email_sent) return { sent: true, alreadySent: true };
   if (o.status === "cancelled")
     fail("Cancelled orders cannot be emailed.", 409);
-  const u = await db()
-    .prepare("SELECT email FROM users WHERE id=?")
-    .bind(o.user_id)
-    .first<any>();
-  if (!u?.email) fail("The customer has no verified email address.", 409);
-  const inv = await db()
-    .prepare("SELECT * FROM invoices WHERE order_id=?")
+  await enqueueInvoice(o);
+  let job = await db()
+    .prepare("SELECT * FROM invoice_jobs WHERE order_id=?")
     .bind(o.id)
     .first<any>();
-  if (!inv) fail("An invoice is not available for this order yet.", 409);
-  const pdf = invoicePdf(o, inv, {
-    address: cfg().BUSINESS_ADDRESS,
-    gst: cfg().GSTIN,
-  });
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: "Bearer " + cfg().RESEND_API_KEY,
-      "Content-Type": "application/json",
-      "Idempotency-Key": "invoice-" + o.id,
-    },
-    body: JSON.stringify({
+  if (!job) fail("An invoice is not available for this order yet.", 409);
+  if (
+    job.status === "review" ||
+    (job.first_attempt && now() - job.first_attempt > 23 * 3600000)
+  ) {
+    await db()
+      .prepare(
+        "UPDATE invoice_jobs SET status='review',updated=? WHERE order_id=?",
+      )
+      .bind(now(), o.id)
+      .run();
+    fail(
+      "Email delivery needs provider reconciliation before another send. The safe retry window has elapsed.",
+      409,
+    );
+  }
+  if (!job.payload) {
+    const u = await db()
+      .prepare("SELECT email FROM users WHERE id=?")
+      .bind(o.user_id)
+      .first<any>();
+    const inv = await db()
+      .prepare("SELECT * FROM invoices WHERE order_id=?")
+      .bind(o.id)
+      .first<any>();
+    if (!u?.email || !inv)
+      fail(
+        "A verified customer email and confirmed invoice are required.",
+        409,
+      );
+    const pdf = invoicePdf(o, inv, {
+      address: cfg().BUSINESS_ADDRESS,
+      gst: cfg().GSTIN,
+    });
+    const payload = JSON.stringify({
       from: cfg().INVOICE_FROM_EMAIL,
       to: [u.email],
       subject: "Your Avaruchi order " + o.id,
@@ -372,23 +514,73 @@ async function invoiceEmail(o: any) {
           content: btoa(String.fromCharCode(...pdf)),
         },
       ],
-    }),
-  });
-  if (!response.ok)
-    fail("Invoice email provider rejected the request. Please retry.", 502);
-  await db()
-    .prepare("UPDATE orders SET email_sent=1 WHERE id=?")
-    .bind(o.id)
+    });
+    await db()
+      .prepare(
+        "UPDATE invoice_jobs SET payload=? WHERE order_id=? AND payload=''",
+      )
+      .bind(payload, o.id)
+      .run();
+  }
+  const lease = token();
+  const claimed = await db()
+    .prepare(
+      "UPDATE invoice_jobs SET status='sending',lease=?,first_attempt=CASE WHEN first_attempt=0 THEN ? ELSE first_attempt END,attempts=attempts+1,next_attempt=?,updated=? WHERE order_id=? AND status IN ('waiting','sending') AND next_attempt<=?",
+    )
+    .bind(lease, now(), now() + 60000, now(), o.id, now())
     .run();
-  return { sent: true, alreadySent: false };
+  if (claimed.meta.changes !== 1)
+    fail(
+      "Invoice email is queued or already being sent. Refresh its status shortly.",
+      409,
+    );
+  job = await db()
+    .prepare("SELECT * FROM invoice_jobs WHERE order_id=?")
+    .bind(o.id)
+    .first<any>();
+  try {
+    const result = await providerJson("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + cfg().RESEND_API_KEY,
+        "Content-Type": "application/json",
+        "Idempotency-Key": "invoice-" + o.id,
+      },
+      body: job.payload,
+    });
+    if (typeof result.id !== "string" || !result.id)
+      fail("Email provider did not confirm an accepted email.", 502);
+    await db().batch([
+      db().prepare("UPDATE orders SET email_sent=1 WHERE id=?").bind(o.id),
+      db()
+        .prepare(
+          "UPDATE invoice_jobs SET status='sent',lease='',updated=? WHERE order_id=? AND lease=?",
+        )
+        .bind(now(), o.id, lease),
+    ]);
+    return { sent: true, alreadySent: false };
+  } catch (e) {
+    await db()
+      .prepare(
+        "UPDATE invoice_jobs SET status='waiting',lease='',next_attempt=?,updated=? WHERE order_id=? AND lease=?",
+      )
+      .bind(
+        now() + Math.min(3600000, 60000 * 2 ** Math.min(job.attempts, 6)),
+        now(),
+        o.id,
+        lease,
+      )
+      .run();
+    throw e;
+  }
 }
 async function confirmPayment(o: any, paymentId: string) {
   await db().batch([
     db()
       .prepare(
-        "UPDATE orders SET payment='paid',payment_id=?,status=CASE WHEN status='pending' THEN 'confirmed' ELSE status END WHERE id=? AND status!='cancelled'",
+        "UPDATE orders SET payment='paid',payment_id=?,status=CASE WHEN status='pending' THEN 'confirmed' ELSE status END WHERE id=? AND status!='cancelled' AND (payment_id IS NULL OR payment_id=?)",
       )
-      .bind(paymentId, o.id),
+      .bind(paymentId, o.id, paymentId),
     db()
       .prepare(
         "INSERT OR IGNORE INTO invoices (order_id,created) SELECT id,? FROM orders WHERE id=? AND payment='paid' AND status!='cancelled'",
@@ -399,6 +591,7 @@ async function confirmPayment(o: any, paymentId: string) {
     .prepare("SELECT * FROM orders WHERE id=?")
     .bind(o.id)
     .first<any>();
+  await enqueueInvoice(fresh);
   await invoiceEmail(fresh).catch(() => {});
 }
 async function cancelAndRestore(id: string, allowUnpaid = false) {
@@ -437,6 +630,81 @@ export async function handle(
   path: string,
 ): Promise<Response> {
   try {
+    if (!demo()) {
+      let publicUrl: URL;
+      try {
+        publicUrl = new URL(cfg().SITE_URL || "");
+      } catch {
+        fail("Configure the store's public HTTPS URL before live mode.", 503);
+      }
+      if (
+        publicUrl!.protocol !== "https:" ||
+        publicUrl!.username ||
+        publicUrl!.password ||
+        publicUrl!.pathname !== "/" ||
+        publicUrl!.search ||
+        publicUrl!.hash
+      )
+        fail("Configure a canonical HTTPS site origin before live mode.", 503);
+      for (const key of ["SHIPPING_FEE", "FREE_SHIPPING_THRESHOLD"])
+        if (
+          cfg()[key] !== undefined &&
+          (!Number.isSafeInteger(Number(cfg()[key])) ||
+            Number(cfg()[key]) < 0 ||
+            Number(cfg()[key]) > 10000000)
+        )
+          fail("Store shipping settings need correction.", 503);
+    }
+    if (!["GET", "POST"].includes(request.method))
+      return json({ error: "Method not allowed." }, 405, {
+        Allow: "GET, POST",
+      });
+    if (path === "health" && request.method === "GET") {
+      await db().prepare("SELECT 1 healthy").first();
+      return json({ ok: true });
+    }
+    if (path === "jobs/invoices" && request.method === "POST") {
+      if (
+        !cfg().CRON_SECRET ||
+        cfg().CRON_SECRET!.length < 32 ||
+        !equal(
+          request.headers.get("authorization") || "",
+          "Bearer " + cfg().CRON_SECRET,
+        )
+      )
+        fail("Worker authentication required.", 401);
+      return json(await processInvoiceQueue());
+    }
+    if (path === "delivery-events" && request.method === "POST") {
+      if (!shippingReady(cfg()) || demo())
+        fail("Courier events are not configured.", 503);
+      if (
+        !equal(
+          request.headers.get("x-api-key") || "",
+          cfg().SHIPROCKET_WEBHOOK_TOKEN!,
+        )
+      )
+        fail("Courier event authentication failed.", 401);
+      const event = await body(request);
+      if (
+        typeof event.awb !== "string" ||
+        !/^[A-Za-z0-9-]{4,100}$/.test(event.awb)
+      )
+        fail("Invalid courier event.");
+      const matches = await db()
+        .prepare(
+          "SELECT orders.* FROM orders JOIN order_shipments ON order_shipments.order_id=orders.id WHERE orders.tracking=? AND order_shipments.provider='shiprocket'",
+        )
+        .bind(event.awb)
+        .all<any>();
+      if (matches.results.length > 1)
+        fail(
+          "Ambiguous courier reference. Merchant reconciliation required.",
+          409,
+        );
+      if (matches.results[0]) await syncShipment(matches.results[0]); // Re-read authoritative tracking; never trust webhook status or replay ordering.
+      return json({ received: true });
+    }
     if (path === "webhook" && request.method === "POST") {
       if (!cfg().RAZORPAY_WEBHOOK_SECRET)
         return json({ error: "Webhook is not configured." }, 503);
@@ -448,20 +716,67 @@ export async function handle(
         )
       )
         return json({ error: "Invalid signature." }, 401);
-      const event = JSON.parse(raw),
-        p = event.payload?.payment?.entity;
+      let event;
+      try {
+        event = JSON.parse(raw);
+      } catch {
+        fail("Invalid webhook body.");
+      }
+      const p = event.payload?.payment?.entity;
       if (event.event === "payment.captured" && p) {
         const o = await db()
           .prepare("SELECT * FROM orders WHERE razorpay_id=?")
           .bind(p.order_id)
           .first<any>();
-        if (o && p.amount === o.total && p.currency === "INR")
+        if (
+          o &&
+          typeof p.id === "string" &&
+          p.status === "captured" &&
+          p.amount === o.total &&
+          p.currency === "INR"
+        )
           await confirmPayment(o, p.id);
+      }
+      const refundEvent = event.payload?.refund?.entity;
+      if (
+        ["refund.processed", "refund.failed"].includes(event.event) &&
+        refundEvent &&
+        typeof refundEvent.payment_id === "string" &&
+        cfg().RAZORPAY_REFUNDS_ENABLED === "true" &&
+        !demo()
+      ) {
+        const rows = await db()
+          .prepare(
+            "SELECT service_requests.* FROM service_requests JOIN orders ON orders.id=service_requests.order_id WHERE service_requests.status='refund_pending' AND orders.payment_id=?",
+          )
+          .bind(refundEvent.payment_id)
+          .all<any>();
+        for (const x of rows.results) {
+          const operation = await db()
+            .prepare("SELECT data FROM provider_operations WHERE id=?")
+            .bind("refund-" + x.id)
+            .first<any>();
+          if (!operation || JSON.parse(operation.data).id !== refundEvent.id)
+            continue;
+          const o = await db()
+            .prepare("SELECT * FROM orders WHERE id=?")
+            .bind(x.order_id)
+            .first<any>();
+          await completeRefund(x, await operations.syncRefund(x, o));
+        }
       }
       return json({ received: true });
     }
-    await seed();
     if (request.method !== "GET") csrf(request);
+    if (path.startsWith("auth/"))
+      await rateLimit("authentication", "store", 120);
+    if (path === "quote")
+      await rateLimit(
+        "quote",
+        cookie(request, "avr_session") || "anonymous",
+        120,
+      );
+    await seed();
     if (path === "catalog" && request.method === "GET")
       return json({ products: await catalog() });
     if (path === "session" && request.method === "GET") {
@@ -593,7 +908,7 @@ export async function handle(
         return stateRecord;
       });
       if (!stored) fail("Sign-in session expired. Please try again.", 401);
-      const res = await fetch("https://oauth2.googleapis.com/token", {
+      const tokens = await providerJson("https://oauth2.googleapis.com/token", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({
@@ -607,15 +922,19 @@ export async function handle(
             "/api/auth/google/callback",
         }),
       });
-      if (!res.ok) fail("Unable to complete Google sign-in.", 401);
-      const tokens = (await res.json()) as any;
-      const infoRes = await fetch(
+      if (typeof tokens.access_token !== "string" || !tokens.access_token)
+        fail("Google sign-in failed.", 401);
+      const info = await providerJson(
         "https://openidconnect.googleapis.com/v1/userinfo",
         { headers: { Authorization: "Bearer " + tokens.access_token } },
       );
-      if (!infoRes.ok) fail("Google account verification failed.", 401);
-      const info = (await infoRes.json()) as any;
-      if (!info.sub || !info.email_verified)
+      if (
+        typeof info.sub !== "string" ||
+        !/^[A-Za-z0-9_-]{1,120}$/.test(info.sub) ||
+        info.email_verified !== true ||
+        typeof info.email !== "string" ||
+        info.email.length > 320
+      )
         fail("Use a verified Google account.", 401);
       const uid = "google:" + info.sub,
         s = token();
@@ -643,6 +962,12 @@ export async function handle(
       return json(await quote(b.items, b.coupon));
     }
     const u = await user(request);
+    if (request.method === "POST")
+      await rateLimit(
+        path === "orders" ? "checkout" : "write",
+        u.id,
+        path === "orders" ? 20 : 180,
+      );
     if (path === "saved" && request.method === "POST") {
       const b = await body(request);
       const cart = Array.isArray(b.cart)
@@ -650,6 +975,8 @@ export async function handle(
             .slice(0, 12)
             .filter(
               (x: any) =>
+                x &&
+                typeof x === "object" &&
                 typeof x.variantId === "string" &&
                 Number.isInteger(x.quantity) &&
                 x.quantity > 0 &&
@@ -729,18 +1056,44 @@ export async function handle(
     }
     if (path === "orders" && request.method === "POST") {
       const b = await body(request);
-      if (!textField(b.idempotency, 100)) fail("Checkout session missing.");
+      if (
+        typeof b.idempotency !== "string" ||
+        !/^[A-Za-z0-9_-]{8,100}$/.test(b.idempotency)
+      )
+        fail("Checkout session missing.");
       const old = await db()
         .prepare(
           "SELECT orders.*,invoices.id invoice_id FROM orders LEFT JOIN invoices ON invoices.order_id=orders.id WHERE user_id=? AND idempotency=?",
         )
         .bind(u.id, b.idempotency)
         .first<any>();
-      if (old)
+      if (old) {
+        const previous = JSON.parse(old.data);
+        if (
+          JSON.stringify(
+            previous.items.map((x: any) => ({
+              variantId: x.variantId,
+              quantity: x.quantity,
+            })),
+          ) !== JSON.stringify(b.items) ||
+          previous.coupon !== textField(b.coupon, 30).toUpperCase() ||
+          b.method !==
+            (old.payment === "cod"
+              ? "cod"
+              : old.payment === "demo"
+                ? "demo"
+                : "online") ||
+          JSON.stringify(previous.address) !== JSON.stringify(b.address)
+        )
+          fail(
+            "This checkout key belongs to a different basket, address or payment method. Refresh checkout.",
+            409,
+          );
         return json({
           order: viewOrder(old),
           keyId: cfg().RAZORPAY_KEY_ID || null,
         });
+      }
       const q = await quote(b.items, b.coupon),
         a = b.address || {};
       const address = {
@@ -786,7 +1139,9 @@ export async function handle(
           !cfg().RAZORPAY_WEBHOOK_SECRET)
       )
         fail("Online payments are not configured.", 503);
-      const id = "AVR-" + crypto.randomUUID().slice(0, 8).toUpperCase(),
+      const id =
+          "AVR-" +
+          crypto.randomUUID().replace(/-/g, "").slice(0, 16).toUpperCase(),
         data = { ...q, address, demo: demo() };
       // The NOT NULL guard aborts the entire database transaction if any stock goes below zero.
       const statements = [
@@ -842,12 +1197,16 @@ export async function handle(
             .bind(payment.id, id)
             .run();
         } catch (e) {
-          await cancelAndRestore(id, true);
+          if (!(e as any).uncertain) await cancelAndRestore(id, true);
+          // A timeout may have created a provider order. Keep stock reserved until reconciliation.
           throw e;
         }
       }
       const order = await findOrder(id, u);
-      if (method !== "online") await invoiceEmail(order).catch(() => {});
+      if (method !== "online") {
+        await enqueueInvoice(order);
+        await invoiceEmail(order).catch(() => {});
+      }
       return json(
         {
           order: viewOrder(order),
@@ -967,20 +1326,34 @@ export async function handle(
     if (path.startsWith("admin")) {
       if (!admin(u, request)) fail("Store administrator access required.", 403);
       if (path === "admin" && request.method === "GET") {
-        const [orders, stocks, coupons, shipments, requests] = await db().batch(
-          [
-            db().prepare(
-              "SELECT orders.*,invoices.id invoice_id FROM orders LEFT JOIN invoices ON invoices.order_id=orders.id ORDER BY orders.created DESC LIMIT 200",
-            ),
-            db().prepare("SELECT * FROM variants ORDER BY product_id,weight"),
-            db().prepare("SELECT * FROM coupons"),
-            db().prepare("SELECT * FROM order_shipments"),
-            db().prepare(
-              "SELECT service_requests.*,orders.total,orders.data order_data,orders.payment FROM service_requests JOIN orders ON orders.id=service_requests.order_id ORDER BY service_requests.updated DESC LIMIT 200",
-            ),
-          ],
-        );
+        const [
+          orders,
+          stocks,
+          coupons,
+          shipments,
+          requests,
+          operationRows,
+          mailJobs,
+        ] = await db().batch([
+          db().prepare(
+            "SELECT orders.*,invoices.id invoice_id FROM orders LEFT JOIN invoices ON invoices.order_id=orders.id ORDER BY orders.created DESC LIMIT 200",
+          ),
+          db().prepare("SELECT * FROM variants ORDER BY product_id,weight"),
+          db().prepare("SELECT * FROM coupons"),
+          db().prepare("SELECT * FROM order_shipments"),
+          db().prepare(
+            "SELECT service_requests.*,orders.total,orders.data order_data,orders.payment FROM service_requests JOIN orders ON orders.id=service_requests.order_id ORDER BY service_requests.updated DESC LIMIT 200",
+          ),
+          db().prepare(
+            "SELECT id,order_id,kind,status,data,updated FROM provider_operations ORDER BY updated DESC LIMIT 600",
+          ),
+          db().prepare(
+            "SELECT order_id,status,attempts,next_attempt FROM invoice_jobs WHERE status!='sent' ORDER BY updated DESC LIMIT 100",
+          ),
+        ]);
         return json({
+          operations: operationRows.results,
+          invoiceJobs: mailJobs.results,
           orders: orders.results.map((o: any) => ({
             ...viewOrder(o),
             shipment:
@@ -1001,9 +1374,147 @@ export async function handle(
               !demo() && !!(cfg().RESEND_API_KEY && cfg().INVOICE_FROM_EMAIL),
             business: !!cfg().BUSINESS_ADDRESS,
             demo: demo(),
-            shiprocket: false,
+            shiprocket: shippingReady(cfg()) && !demo(),
+            invoiceWorker: !!(
+              cfg().CRON_SECRET && cfg().CRON_SECRET!.length >= 32
+            ),
+            refunds:
+              !demo() &&
+              cfg().RAZORPAY_REFUNDS_ENABLED === "true" &&
+              !!(cfg().RAZORPAY_KEY_ID && cfg().RAZORPAY_KEY_SECRET),
           },
         });
+      }
+
+      if (
+        ["admin/refund/process", "admin/refund/sync"].includes(path) &&
+        request.method === "POST"
+      ) {
+        const b = await body(request),
+          x = await db()
+            .prepare("SELECT * FROM service_requests WHERE id=?")
+            .bind(textField(b.id))
+            .first<any>();
+        if (!x) fail("Request not found.", 404);
+        if (x.version !== b.expectedVersion || x.status !== "refund_pending")
+          fail("Refresh the approved refund before processing.", 409);
+        if (demo() || cfg().RAZORPAY_REFUNDS_ENABLED !== "true")
+          fail("Online refund processing is disabled.", 503);
+        const o = await db()
+          .prepare("SELECT * FROM orders WHERE id=?")
+          .bind(x.order_id)
+          .first<any>();
+        const result = path.endsWith("/process")
+          ? await operations.refund(x, o)
+          : await operations.syncRefund(x, o);
+        await completeRefund(x, result);
+        return json({ ok: true, refund: result });
+      }
+      if (path === "admin/payment/reconcile" && request.method === "POST") {
+        const b = await body(request),
+          o = await db()
+            .prepare("SELECT * FROM orders WHERE id=?")
+            .bind(textField(b.id))
+            .first<any>();
+        if (!o) fail("Order not found.", 404);
+        if (
+          demo() ||
+          JSON.parse(o.data).demo ||
+          o.status !== "pending" ||
+          o.payment !== "unpaid" ||
+          o.razorpay_id
+        )
+          fail("Only an unresolved live checkout can be reconciled.", 409);
+        if (
+          typeof b.remoteOrderId !== "string" ||
+          !/^order_[A-Za-z0-9]+$/.test(b.remoteOrderId)
+        )
+          fail("Enter the Razorpay order ID.");
+        const remote = await razor(
+          "orders/" + encodeURIComponent(b.remoteOrderId),
+        );
+        if (
+          remote.id !== b.remoteOrderId ||
+          remote.receipt !== o.id ||
+          remote.amount !== o.total ||
+          remote.currency !== "INR"
+        )
+          fail("The provider order does not match this checkout.", 409);
+        const changed = await db()
+          .prepare(
+            "UPDATE orders SET razorpay_id=? WHERE id=? AND status='pending' AND payment='unpaid' AND razorpay_id IS NULL",
+          )
+          .bind(remote.id, o.id)
+          .run();
+        if (changed.meta.changes !== 1)
+          fail("This checkout changed. Refresh before continuing.", 409);
+        return json({ ok: true });
+      }
+      if (path === "admin/invoice-queue" && request.method === "POST")
+        return json(await processInvoiceQueue());
+      if (path.startsWith("admin/shipping/") && request.method === "POST") {
+        const b = await body(request),
+          o = await db()
+            .prepare(
+              "SELECT orders.*,users.email FROM orders JOIN users ON users.id=orders.user_id WHERE orders.id=?",
+            )
+            .bind(textField(b.id))
+            .first<any>();
+        if (!o) fail("Order not found.", 404);
+        if (demo() || JSON.parse(o.data).demo || !shippingReady(cfg()))
+          fail("Shiprocket is unavailable until live setup is complete.", 503);
+        if (!["packed", "shipped", "delivered"].includes(o.status))
+          fail("Pack this order before using Shiprocket.", 409);
+        const action = path.slice("admin/shipping/".length);
+        if (
+          ["create", "awb", "pickup"].includes(action) &&
+          o.status !== "packed"
+        )
+          fail("Booking actions require a packed order.", 409);
+        if (action === "create") {
+          await operations.createShipment(o, o.email, b);
+          await db()
+            .prepare(
+              "INSERT OR IGNORE INTO order_shipments (order_id,courier,tracking_url,eta,provider,version,updated) VALUES (?,'Shiprocket','','','shiprocket',0,?)",
+            )
+            .bind(o.id, now())
+            .run();
+        } else if (action === "awb") {
+          const a = await operations.assignAwb(o.id);
+          await db().batch([
+            db()
+              .prepare(
+                "UPDATE orders SET tracking=? WHERE id=? AND status IN ('packed','shipped')",
+              )
+              .bind(a.awb, o.id),
+            db()
+              .prepare(
+                "UPDATE order_shipments SET provider='shiprocket',courier=?,version=version+1,updated=? WHERE order_id=?",
+              )
+              .bind(a.courier, now(), o.id),
+          ]);
+        } else if (action === "pickup") {
+          if (o.status !== "packed")
+            fail("Pickup can only be requested for a packed order.", 409);
+          await operations.pickup(o.id);
+        } else if (action === "sync") await syncShipment(o);
+        else if (action === "reconcile") {
+          await operations.reconcileShipment(o, b.remoteOrderId);
+          await db()
+            .prepare(
+              "INSERT OR IGNORE INTO order_shipments (order_id,courier,tracking_url,eta,provider,version,updated) VALUES (?,'Shiprocket','','','shiprocket',0,?)",
+            )
+            .bind(o.id, now())
+            .run();
+        } else fail("Shipping action not found.", 404);
+        if (["create", "reconcile"].includes(action))
+          await db()
+            .prepare(
+              "UPDATE order_shipments SET provider='shiprocket',courier='Shiprocket',tracking_url='',eta='',version=version+1,updated=? WHERE order_id=? AND provider='manual'",
+            )
+            .bind(now(), o.id)
+            .run();
+        return json({ ok: true });
       }
       if (path === "admin/order" && request.method === "POST") {
         const b = await body(request),
@@ -1012,6 +1523,15 @@ export async function handle(
             .bind(textField(b.id))
             .first<any>();
         if (!o) fail("Order not found.", 404);
+        const managed = await db()
+          .prepare("SELECT provider FROM order_shipments WHERE order_id=?")
+          .bind(o.id)
+          .first<any>();
+        if (managed?.provider === "shiprocket")
+          fail(
+            "Sync Shiprocket to update the managed order status and tracking.",
+            409,
+          );
         const transitions: Record<string, string[]> = {
           pending: ["cancelled"],
           confirmed: ["packed", "cancelled"],
@@ -1066,7 +1586,9 @@ export async function handle(
         if (["pending", "cancelled"].includes(o.status))
           fail("Shipment details are unavailable for this order.", 409);
         const saved = await db()
-          .prepare("SELECT version FROM order_shipments WHERE order_id=?")
+          .prepare(
+            "SELECT version,provider FROM order_shipments WHERE order_id=?",
+          )
           .bind(o.id)
           .first<any>();
         if (
@@ -1074,6 +1596,8 @@ export async function handle(
           b.expectedVersion !== (saved?.version || 0)
         )
           fail("Shipment details changed. Refresh before saving.", 409);
+        if (saved?.provider === "shiprocket")
+          fail("Sync Shiprocket to update managed courier details.", 409);
         const s = shipmentInput(b);
         const results = await db().batch([
           db()
@@ -1108,6 +1632,15 @@ export async function handle(
             .bind(textField(b.id))
             .first<any>();
         if (!x) fail("Request not found.", 404);
+        const payout = await db()
+          .prepare("SELECT status FROM provider_operations WHERE id=?")
+          .bind("refund-" + x.id)
+          .first<any>();
+        if (payout && payout.status !== "failed")
+          fail(
+            "This case has an online refund operation. Sync its provider result before editing it.",
+            409,
+          );
         if (b.expectedVersion !== x.version)
           fail("This request changed. Refresh before saving.", 409);
         if (!requestTransitions(x.kind, x.status).includes(b.status))
@@ -1153,7 +1686,7 @@ export async function handle(
         history.push({ status: b.status, note: b.note.trim(), at: now() });
         const changed = await db()
           .prepare(
-            "UPDATE service_requests SET status=?,refund_amount=?,refund_reference=?,history=?,version=version+1,updated=? WHERE id=? AND version=?",
+            "UPDATE service_requests SET status=?,refund_amount=?,refund_reference=?,history=?,version=version+1,updated=? WHERE id=? AND version=? AND NOT EXISTS (SELECT 1 FROM provider_operations WHERE id=? AND status!='failed')",
           )
           .bind(
             b.status,
@@ -1163,6 +1696,7 @@ export async function handle(
             now(),
             x.id,
             x.version,
+            "refund-" + x.id,
           )
           .run();
         if (changed.meta.changes !== 1)

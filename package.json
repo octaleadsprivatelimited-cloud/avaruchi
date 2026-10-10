@@ -12,7 +12,12 @@
     "start": "next start --hostname 0.0.0.0",
     "db:migrate": "node scripts/migrate.mjs",
     "test:integration": "node tests/integration.mjs",
-    "test:security": "node tests/admin-security.mjs"
+    "test:security": "node tests/admin-security.mjs",
+    "test:customer": "node tests/customer-panel.mjs",
+    "test:providers": "node tests/provider-end-to-end.mjs",
+    "test:regressions": "node tests/security-regressions.mjs",
+    "check:config": "node scripts/check-config.mjs",
+    "prestart": "npm run check:config"
   },
   "dependencies": {
     "@next/env": "16.3.8",

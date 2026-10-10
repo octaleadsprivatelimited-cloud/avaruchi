@@ -23,7 +23,7 @@ The app requires a Hostinger plan with **Node.js web application hosting**, plus
 2. Choose **Next.js**, **Node.js 22.x**, the project root containing `package.json`, installation `npm ci`, build `npm run build` and start `npm start` if these fields are presented. Let Hostinger detect the framework. The Next.js build directory is `.next`; do not choose a static export. The start script binds to `0.0.0.0` and respects Hostinger's `PORT` environment variable.
 3. Select Hostinger's **temporary domain**. The avaruchi.com brand domain has not yet been purchased. Domain purchase is separate from deploying this code.
 4. Create a MySQL database using **Website Dashboard → Databases → Management**. Save its password securely and enter the database connection values directly in Hostinger's environment settings. Use the exact database host shown by Hostinger.
-5. Open that database in phpMyAdmin and import `database/001_store.sql` followed by `database/002_customer_service.sql`. The schema creates InnoDB tables and preserves existing table data. Alternatively, from an authenticated shell with the app's environment loaded, run `npm run db:migrate`. Schema migration is deliberately separate from the build; the build succeeds without a database connection.
+5. Open that database in phpMyAdmin and import `database/001_store.sql` followed by `database/002_customer_service.sql` and `database/003_provider_security.sql`. The schema creates InnoDB tables and preserves existing table data. Alternatively, from an authenticated shell with the app's environment loaded, run `npm run db:migrate`. Schema migration is deliberately separate from the build; the build succeeds without a database connection.
 6. Set these environment values for the first demonstration deployment:
 
 ```text
@@ -43,6 +43,7 @@ CATALOG_APPROVED=false
 Environment values stay in Hostinger and do not belong in the source ZIP. `.env.example` lists every supported setting. After environment changes, redeploy/restart the application as required by hPanel.
 
 Official Hostinger references:
+
 - [Node.js hosting options](https://www.hostinger.com/support/node-js-hosting-options-at-hostinger/)
 - [MySQL connection setup](https://www.hostinger.com/support/connecting-a-hostinger-mysql-database-to-a-node-js-application/)
 - [Environment variables](https://www.hostinger.com/support/how-to-add-environment-variables-during-node-js-application-deployment/)
@@ -68,7 +69,7 @@ For emailed invoice attachments, configure `RESEND_API_KEY` and `INVOICE_FROM_EM
 
 Live orders are blocked until the merchant's business address and catalog approval are supplied. Missing Google, payment or email credentials are shown honestly in the application. No successful live provider connection is claimed by this package.
 
-Courier booking and live courier updates are not integrated. The administrator records packing, shipping, tracking reference and delivery. Captured or Razorpay-linked payment cancellation/refunds require reconciliation in Razorpay. Invoice email can be retried from administration; there is no background email retry scheduler. PDFs are order invoices; a complete GST accounting integration is not included.
+Manual courier details remain available. The optional Shiprocket adapter creates measured parcel orders, assigns AWBs, requests pickup and verifies delivery updates when enabled. Razorpay refunds submit the previously approved amount when explicitly enabled. Uncertain payment or shipment creation requires reconciliation instead of another booking. Invoice emails have a durable retry queue and a protected worker endpoint that must be scheduled by the hosting owner. PDFs are order invoices; complete GST accounting integration is not included.
 
 ## Local development
 
@@ -101,7 +102,7 @@ Verified for this delivery: Node.js 22.23.3 on Linux, a successful production bu
 
 `app/storefront.tsx` holds the shared store state and page content. Each `app/**/page.tsx` renders that content through the persistent store context, with its own metadata and URL. Navigation uses Next.js links and router transitions, while basket state persists across pages.
 
-`lib/server.ts` handles the store API. `lib/database.ts` provides parameterized MySQL queries, upserts and atomic InnoDB transactions. `lib/invoice.ts` renders branded A4 PDFs without filesystem storage. `database/001_store.sql` is the initial schema and `database/002_customer_service.sql` adds shipment and return/refund records. For an existing store, import the second file before deploying this update. The migration script runs both files and preserves existing data.
+`lib/server.ts` handles the store API. `lib/database.ts` provides parameterized MySQL queries, upserts and atomic InnoDB transactions. `lib/invoice.ts` renders branded A4 PDFs without filesystem storage. `database/001_store.sql` is the initial schema and `database/002_customer_service.sql` adds shipment and return/refund records. For an existing store, import all subsequent numbered SQL files before deploying this update. The migration script runs all numbered files and preserves existing data.
 
 Product data and photography are illustrative concepts. `public/images/hero.png` and `public/images/pickles.png` were generated for this brand concept and are not photos of verified production stock. Replace them with the merchant's real product photographs before live sales.
 
@@ -121,14 +122,34 @@ Automated checks cover authorization denial, session revocation, foreign-origin 
 
 The account page has Overview, Orders, Address & mobile, Returns & refunds, Invoices and Account help sections, with a familiar marketplace sidebar and task shortcuts. Address saving waits for the database response and validates the contact details on the server. Existing order addresses remain immutable. Customers can search/filter their orders, see their full delivery contact, download invoices, reorder, and use eligible cancellation.
 
-Courier name, AWB/tracking reference, HTTPS tracking link and estimated delivery are entered by the administrator. Shiprocket remains unconnected: no bookings, pickup requests, courier webhooks or live carrier updates run yet. Shipment records have a provider field for the later integration; Shiprocket credentials must stay server-side.
+Courier name, AWB, tracking link and delivery estimates are either saved manually or synchronized from the enabled Shiprocket adapter. Live Shiprocket access remains disabled until merchant credentials, pickup location and webhook token are configured. Credentials stay server-side.
 
 After delivery, customers can open one return/refund case per order for damaged, incorrect, missing or quality-affected jars. Admin review, return transit/receipt, refund pending, resolution and rejection updates are saved with a dated customer-visible history. Duplicate submissions and stale updates return 409. Requests, invoices and shipment data are restricted to their owner or authorized administrator.
 
-Refund controls only record progress. The merchant processes and verifies payouts in Razorpay or its COD refund process before recording a reference. The completed amount cannot exceed the order total or change from the approved amount. No automatic bank transfer, refund API, food restocking, photo upload or background notification is included. Reporting windows and real refund timing still need merchant confirmation.
+Refunds use a reviewed case and an approved amount capped at the order total. When RAZORPAY_REFUNDS_ENABLED=true, an administrator can submit that exact amount against the verified captured payment; stable idempotency and a durable operation record prevent a second submission. Signed refund events and administrator sync verify provider results before resolving the case. COD refunds use a separately verified merchant payment and reference. Returned food is never automatically restocked. Return courier pickups, photo uploads and complete GST credit-note accounting are not included. Reporting windows and real refund timing need merchant confirmation.
 
 Run tests/customer-panel.mjs only against disposable local demo storage. The new flow passed 63 checks on MySQL and D1, including contact validation, account isolation, unsafe link denial, concurrent submissions, return stages and refund record limits.
 
 ## Marketplace panel design
 
 The account overview links to working order, address, invoice, wishlist and support tools. Order cards show product imagery, purchase metadata, shipment status and direct order/reorder/invoice actions. Administration starts with actual store counts, attention items and recent orders. Its sidebar opens orders, returns, inventory, products, coupons and settings; orders include search, status filters and 25-row pagination, and inventory includes search. Both panels use square borders, warm paper and forest green, custom icons, skeleton loading, responsive navigation and reduced-motion support.
+
+## Provider setup and recovery
+
+All new shipping and payout switches default to false. The preview stays in demonstration mode, with live actions disabled. The provider tests use simulated responses and do not establish live credentials, delivery or payout success.
+
+For Shiprocket, set SHIPROCKET_ENABLED=true, the API user's SHIPROCKET_EMAIL and SHIPROCKET_PASSWORD, the exact configured SHIPROCKET_PICKUP_LOCATION and a random SHIPROCKET_WEBHOOK_TOKEN of at least 32 characters. In Shiprocket, configure the webhook at `https://<domain>/api/delivery-events` with that token in x-api-key. The store verifies each courier event by re-reading tracking from Shiprocket, matches its saved shipment and AWB, and never regresses a delivered order. Pack the order, enter the actual parcel dimensions/weight, create the shipment, assign the AWB and request pickup in that sequence. Failed/uncertain creation is reconciled against an existing Shiprocket order; unresolved AWB/pickup actions must be checked in Shiprocket and must not be repeated blindly. Reverse logistics still needs the merchant's food-return workflow.
+
+For approved Razorpay refunds set RAZORPAY_REFUNDS_ENABLED=true. Enable payment.captured, refund.processed and refund.failed signed events at `/api/webhook`. Only captured online payments can be submitted to the refund API; demo and COD orders cannot. The merchant approves the amount before submission. A provider timeout leaves the case frozen until sync finds the matching refund. A confirmed failure permits manual reconciliation; the same action never starts another payout. Uncertain payment-order creation keeps inventory reserved and the order pending. The admin reconciliation form verifies its Razorpay receipt, amount and currency before attaching the original provider order.
+
+Set CRON_SECRET to a unique random token of at least 32 characters. Schedule a POST to `https://<domain>/api/jobs/invoices` every minute using `Authorization: Bearer <CRON_SECRET>` in the request header. Keep the secret in the scheduler's private configuration, never in a URL or repository. Each call processes at most two due invoices. Failures use exponential backoff, a frozen payload and the same Resend idempotency key. After the safe 23-hour retry window, an ambiguous send needs provider review; it is not sent again automatically. The admin Store settings page shows waiting/review jobs and can process due invoices. Schedule installation is a hosting task; this repository does not install an external scheduler.
+
+Run `npm run check:config` before deployment. `npm start` runs it automatically and rejects incomplete live configuration without printing secret values. `/api/health` checks database connectivity; it does not verify provider access or merchant details. Run numbered migrations before starting the updated application. Back up production MySQL before applying migrations; the provided migrations are additive and preserve existing order rows.
+
+## Security regression coverage
+
+The Hostinger edition passes the checkout/inventory/invoice integration suite, 67 admin-security assertions, 63 customer-panel assertions, 75 additional hardening assertions and 97 simulated-provider assertions. Tests cover PKCE and one-use OAuth state, HTTP-only sessions, customer isolation, exact administrator allowlisting, CSRF, bounded bodies and provider responses, persistent request throttles, signature verification, stale updates, stock transactions, payout approval locks, duplicate bookings, authoritative and out-of-order courier events, payment reconciliation and durable invoice retries. GitHub Actions runs these checks on an isolated MariaDB service and Node.js 22.
+
+Security headers restrict framing, object embedding and browser permissions; the CSP allows Next/Motion's inline bootstrap/styles and Razorpay's checkout assets. No arbitrary provider destination URL is accepted. Secrets are excluded from Git and ZIP archives. Test counts and a clean dependency audit do not guarantee the absence of all bugs or vulnerabilities. Production OAuth, capture/refunds, sender verification, pickup serviceability, merchant policy accuracy, HTTPS, backups, hosting access, firewall/rate controls and the external scheduler require verification when the owner's accounts are ready.
+
+Provider API references: [Shiprocket](https://apidocs.shiprocket.in/), [Razorpay idempotent refunds](https://github.com/razorpay/markdown-docs/blob/master/api/refunds/normal-refunds-idempotent.md), [Resend idempotency](https://resend.com/changelog/idempotency-keys).

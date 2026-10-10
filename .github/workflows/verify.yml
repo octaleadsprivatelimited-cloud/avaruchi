@@ -1,0 +1,56 @@
+name: Verify store
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      database:
+        image: mariadb:11.4
+        env:
+          MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "1"
+          MARIADB_DATABASE: avaruchi_ci_test
+        ports: ["3306:3306"]
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: "3306"
+      DB_USER: root
+      DB_NAME: avaruchi_ci_test
+      DEMO_MODE: "true"
+      DEMO_ADMIN_ENABLED: "false"
+      ADMIN_GOOGLE_SUB: ci-test-admin
+      TEST_ALLOW_DATABASE_FIXTURES: "true"
+      SITE_URL: http://127.0.0.1:5184
+      TEST_ORIGIN: http://127.0.0.1:5184
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm audit --omit=dev
+      - run: npm run db:migrate
+      - run: npm run build
+      - name: Verify flows
+        run: |
+          npm start -- --port 5184 > /tmp/avaruchi-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:5184/api/health; then break; fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:5184/api/health
+          npm run test:security
+          npm run test:customer
+          npm run test:integration
+          npm run test:regressions
+          npm run test:providers
