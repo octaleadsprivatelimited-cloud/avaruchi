@@ -37,7 +37,7 @@ try {
           module: ts.ModuleKind.ES2022,
         },
       })
-      .outputText.replace(/from "\.\/(\w+)"/g, 'from "./$1.mjs"');
+      .outputText.replace(/from "\.\/([\w-]+)"/g, 'from "./$1.mjs"');
     await writeFile(
       temp + "/" + name + ".mjs",
       compiled +
