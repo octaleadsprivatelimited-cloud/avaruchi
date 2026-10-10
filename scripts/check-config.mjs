@@ -3,6 +3,8 @@ nextEnv.loadEnvConfig(process.cwd());
 const c = process.env,
   missing = [];
 for (const name of ["DB_NAME", "DB_USER"]) if (!c[name]) missing.push(name);
+if (c.ADMIN_GOOGLE_SUB && !/^[A-Za-z0-9_-]{1,255}$/.test(c.ADMIN_GOOGLE_SUB))
+  missing.push("ADMIN_GOOGLE_SUB must identify exactly one Google account");
 if (c.DEMO_MODE !== "true") {
   for (const name of [
     "SITE_URL",

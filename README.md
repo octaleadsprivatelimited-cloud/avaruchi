@@ -114,7 +114,7 @@ Motion uses staged hero entrances, scroll reveals, product staggering, route fad
 
 ## Administrator security and verification
 
-Admin routes require a valid server session and an explicit Google subject allowlist. Private demo administration additionally requires DEMO_MODE=true, DEMO_ADMIN_ENABLED=true and an exact ADMIN_DEMO_USER_ID. Missing configuration denies access. Disable both demo flags for a public live store. Admin inventory and order forms submit their original values so stale updates return 409 rather than overwriting a purchase or another administrator. Invoice PDFs require customer ownership or separately authorized administration. Invoice email errors are reported; the setup panel requires complete credential pairs.
+Admin routes require a valid server session and an single configured Google subject. Private demo administration additionally requires DEMO_MODE=true, DEMO_ADMIN_ENABLED=true and an exact ADMIN_DEMO_USER_ID. Missing configuration denies access. Disable both demo flags for a public live store. Admin inventory and order forms submit their original values so stale updates return 409 rather than overwriting a purchase or a second browser session. Invoice PDFs require customer ownership or separately authorized administration. Invoice email errors are reported; the setup panel requires complete credential pairs.
 
 Automated checks cover authorization denial, session revocation, foreign-origin requests, customer invoice isolation, input validation, stale updates, stock concurrency and order transitions. These checks do not establish the absence of all vulnerabilities. Live Google, Razorpay and Resend flows and the final Hostinger configuration still require deployment verification.
 
@@ -153,3 +153,9 @@ The Hostinger edition passes the checkout/inventory/invoice integration suite, 6
 Security headers restrict framing, object embedding and browser permissions; the CSP allows Next/Motion's inline bootstrap/styles and Razorpay's checkout assets. No arbitrary provider destination URL is accepted. Secrets are excluded from Git and ZIP archives. Test counts and a clean dependency audit do not guarantee the absence of all bugs or vulnerabilities. Production OAuth, capture/refunds, sender verification, pickup serviceability, merchant policy accuracy, HTTPS, backups, hosting access, firewall/rate controls and the external scheduler require verification when the owner's accounts are ready.
 
 Provider API references: [Shiprocket](https://apidocs.shiprocket.in/), [Razorpay idempotent refunds](https://github.com/razorpay/markdown-docs/blob/master/api/refunds/normal-refunds-idempotent.md), [Resend idempotency](https://resend.com/changelog/idempotency-keys).
+
+### Single administrator
+
+The store has one administrator identity. Set ADMIN_GOOGLE_SUB to exactly one verified Google subject ID. It takes precedence over preview administration, even when demo flags remain enabled. Comma-separated IDs, spaces, prefixed IDs and malformed values fail closed. When no Google administrator is configured, the owner-private demonstration can use the one exact ADMIN_DEMO_USER_ID with both demo flags enabled. Platform headers, matching email addresses, customer profiles and client-supplied roles cannot grant administrator rights. Changing the configured subject immediately removes the former account's admin authorization, including existing sessions. No customer or in-app admin invitation can create a second administrator.
+
+Run `node tests/admin-access.mjs` to verify exclusive access and account replacement.

@@ -22,6 +22,7 @@ let conn, closePool;
 try {
   for (const name of [
     "server",
+    "admin-access",
     "operations",
     "database",
     "catalog",

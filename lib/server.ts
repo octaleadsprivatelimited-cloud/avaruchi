@@ -1,3 +1,4 @@
+import { hasAdministrator } from "./admin-access";
 import { storeDatabase, type Statement } from "./database";
 import { sampleProducts, type CartItem } from "./catalog";
 import { invoicePdf } from "./invoice";
@@ -230,17 +231,7 @@ async function user(r: Request, required = true) {
   return found;
 }
 function admin(u: any, r: Request) {
-  return (
-    !!u &&
-    ((u.kind === "google" &&
-      !!cfg().ADMIN_GOOGLE_SUB &&
-      u.id === "google:" + cfg().ADMIN_GOOGLE_SUB) ||
-      (demo() &&
-        cfg().DEMO_ADMIN_ENABLED === "true" &&
-        u.kind === "demo" &&
-        !!cfg().ADMIN_DEMO_USER_ID &&
-        u.id === cfg().ADMIN_DEMO_USER_ID))
-  );
+  return hasAdministrator(u, cfg());
 }
 function csrf(r: Request) {
   const origin = r.headers.get("origin");

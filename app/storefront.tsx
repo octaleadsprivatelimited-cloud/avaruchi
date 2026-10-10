@@ -3440,7 +3440,11 @@ export default function Storefront({ children }: { children: ReactNode }) {
                   <div className="setup-panel">
                     <h2>Store connections</h2>
                     <p className="muted">
-                      Administrator account: <code>{user.id}</code>
+                      Single administrator account: <code>{user.id}</code>
+                    </p>
+                    <p className="muted">
+                      Only this account can manage orders, inventory and
+                      refunds.
                     </p>
                     {[
                       ["Google sign-in", adminData.settings.google],

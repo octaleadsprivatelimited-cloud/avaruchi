@@ -17,7 +17,8 @@
     "test:providers": "node tests/provider-end-to-end.mjs",
     "test:regressions": "node tests/security-regressions.mjs",
     "check:config": "node scripts/check-config.mjs",
-    "prestart": "npm run check:config"
+    "prestart": "npm run check:config",
+    "test:admin-access": "node tests/admin-access.mjs"
   },
   "dependencies": {
     "@next/env": "16.3.8",
