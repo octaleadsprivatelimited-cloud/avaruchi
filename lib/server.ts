@@ -231,7 +231,18 @@ async function user(r: Request, required = true) {
   return found;
 }
 function admin(u: any, r: Request) {
-  return hasAdministrator(u, cfg());
+  const {
+    ADMIN_GOOGLE_SUB,
+    ADMIN_DEMO_USER_ID,
+    DEMO_MODE,
+    DEMO_ADMIN_ENABLED,
+  } = cfg();
+  return hasAdministrator(u, {
+    ADMIN_GOOGLE_SUB,
+    ADMIN_DEMO_USER_ID,
+    DEMO_MODE,
+    DEMO_ADMIN_ENABLED,
+  });
 }
 function csrf(r: Request) {
   const origin = r.headers.get("origin");
