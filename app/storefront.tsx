@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   AnimatePresence,
   MotionConfig,
@@ -15,6 +15,8 @@ import {
 } from "@/lib/customer";
 import {
   createContext,
+  Suspense,
+  useCallback,
   useContext,
   useEffect,
   useId,
@@ -502,6 +504,13 @@ function BrandMark() {
     </>
   );
 }
+// Keep query-only Next.js navigation in sync without hiding the server-rendered storefront.
+function UrlStateSync({ onChange }: { onChange: (query: string) => void }) {
+  const params = useSearchParams();
+  const query = params.toString();
+  useEffect(() => onChange(query), [query, onChange]);
+  return null;
+}
 function ReferenceHero({ products }: { products: Product[] }) {
   const [slide, setSlide] = useState(0);
   const reduced = useReducedMotion();
@@ -740,29 +749,66 @@ export default function Storefront({ children }: { children: ReactNode }) {
     view === "product"
       ? products.find((p) => p.id === pathname.split("/")[2]) || null
       : null;
-  const navigate = (next: string) => {
+  const navigate = (next: string, query: Record<string, string> = {}) => {
     setError("");
     setPanel(null);
-    router.push(pagePath(next));
+    const params = new URLSearchParams(query);
+    if (next === "checkout" && appliedCoupon)
+      params.set("coupon", appliedCoupon);
+    const suffix = params.toString();
+    router.push(pagePath(next) + (suffix ? "?" + suffix : ""));
   };
+  const syncQuery = useCallback(
+    (query: string) => {
+      const params = new URLSearchParams(query);
+      if (view === "account") {
+        const tab = params.get("tab");
+        if (
+          tab &&
+          [
+            "overview",
+            "orders",
+            "address",
+            "returns",
+            "invoices",
+            "help",
+          ].includes(tab)
+        )
+          setAccountTab(tab);
+        else setAccountTab("overview");
+        const order = params.get("order");
+        if (order && /^AVR-[A-F0-9]{16}$/.test(order)) {
+          setAccountTab("orders");
+          setExpanded(order);
+          setOrderFilter("all");
+          setOrderSearch("");
+        }
+      }
+      if (view === "wishlist") {
+        setCategory("All pickles");
+        setSearch("");
+      }
+      if (view === "shop") {
+        const selectedCategory = params.get("category");
+        if (
+          selectedCategory &&
+          [
+            "All pickles",
+            "Classics",
+            "Andhra favourites",
+            "Bold flavours",
+          ].includes(selectedCategory)
+        )
+          setCategory(selectedCategory);
+        else setCategory("All pickles");
+        setSearch(params.get("search") || "");
+      }
+    },
+    [view],
+  );
   useEffect(() => {
     setPanel(null);
     setHeaderSearch(false);
-    if (view === "shop") {
-      const params = new URLSearchParams(window.location.search);
-      const selectedCategory = params.get("category");
-      if (
-        selectedCategory &&
-        [
-          "All pickles",
-          "Classics",
-          "Andhra favourites",
-          "Bold flavours",
-        ].includes(selectedCategory)
-      )
-        setCategory(selectedCategory);
-      setSearch(params.get("search") || "");
-    }
     setError("");
     setProductWeight(0);
     setProductQty(1);
@@ -1010,7 +1056,7 @@ export default function Storefront({ children }: { children: ReactNode }) {
         ondismiss: () => {
           setBusy(false);
           setPanel(null);
-          navigate("account");
+          navigate("account", { tab: "orders", order: o.id });
           notify("Payment was not completed. You can retry from your orders.");
         },
       },
@@ -3588,26 +3634,28 @@ export default function Storefront({ children }: { children: ReactNode }) {
                         Save coupon
                       </button>
                     </form>
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Code</th>
-                          <th>Discount</th>
-                          <th>Minimum</th>
-                          <th>State</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {adminData.coupons.map((c: any) => (
-                          <tr key={c.code}>
-                            <td>{c.code}</td>
-                            <td>{c.percent}%</td>
-                            <td>{rupees(c.minimum)}</td>
-                            <td>{c.active ? "Active" : "Disabled"}</td>
+                    <div className="table-scroll">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Code</th>
+                            <th>Discount</th>
+                            <th>Minimum</th>
+                            <th>State</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {adminData.coupons.map((c: any) => (
+                            <tr key={c.code}>
+                              <td>{c.code}</td>
+                              <td>{c.percent}%</td>
+                              <td>{rupees(c.minimum)}</td>
+                              <td>{c.active ? "Active" : "Disabled"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 )}
                 {adminTab === "setup" && (
@@ -3919,6 +3967,9 @@ export default function Storefront({ children }: { children: ReactNode }) {
   return (
     <MotionConfig reducedMotion="user">
       <div className="reference-store">
+        <Suspense fallback={null}>
+          <UrlStateSync onChange={syncQuery} />
+        </Suspense>
         <a className="skip-link" href="#main">
           Skip to content
         </a>
@@ -3958,6 +4009,11 @@ export default function Storefront({ children }: { children: ReactNode }) {
                   ].map((c) => (
                     <Link
                       key={c}
+                      onClick={(e) =>
+                        e.currentTarget
+                          .closest("details")
+                          ?.removeAttribute("open")
+                      }
                       href={"/shop?category=" + encodeURIComponent(c)}
                     >
                       {c}
@@ -4008,7 +4064,8 @@ export default function Storefront({ children }: { children: ReactNode }) {
               id="header-search"
               onSubmit={(e) => {
                 e.preventDefault();
-                window.location.assign(
+                setHeaderSearch(false);
+                router.push(
                   "/shop?search=" + encodeURIComponent(headerQuery.trim()),
                 );
               }}
@@ -4280,8 +4337,7 @@ export default function Storefront({ children }: { children: ReactNode }) {
                     className="button outline"
                     onClick={() => {
                       setSuccess(null);
-                      navigate("account");
-                      setExpanded(success.id);
+                      navigate("account", { tab: "orders", order: success.id });
                     }}
                   >
                     Track your order
