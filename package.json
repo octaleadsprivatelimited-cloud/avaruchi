@@ -19,7 +19,8 @@
     "check:config": "node scripts/check-config.mjs",
     "prestart": "npm run check:config",
     "test:admin-access": "node tests/admin-access.mjs",
-    "test:failures": "node tests/store-failures.mjs"
+    "test:failures": "node tests/store-failures.mjs",
+    "test:panels": "node tests/panel-history.mjs"
   },
   "dependencies": {
     "@next/env": "16.3.8",

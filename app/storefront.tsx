@@ -752,6 +752,10 @@ export default function Storefront({ children }: { children: ReactNode }) {
     [expanded, setExpanded] = useState<string | null>(null);
   const checkoutRef = useRef<any>(null);
   const submissionRef = useRef(false);
+  const [historyPages, setHistoryPages] = useState<any>({});
+  const mergeHistory = (previous: any[], incoming: any[]) => [
+    ...new Map([...previous, ...incoming].map((row) => [row.id, row])).values(),
+  ];
   const [headerSearch, setHeaderSearch] = useState(false);
   const [headerQuery, setHeaderQuery] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
@@ -842,12 +846,30 @@ export default function Storefront({ children }: { children: ReactNode }) {
     const b = await api("catalog");
     setProducts(b.products);
   }
-  async function loadOrders() {
+  async function loadOrders(section?: "orders" | "requests") {
     setOrdersLoading(true);
     try {
-      const b = await api("orders");
-      setOrders(b.orders);
-      setRequests(b.requests || []);
+      const params = new URLSearchParams();
+      if (section === "orders" && historyPages.orders?.next)
+        params.set("before", historyPages.orders.next);
+      if (section === "requests" && historyPages.requests?.next)
+        params.set("requestsBefore", historyPages.requests.next);
+      const focus =
+        new URLSearchParams(window.location.search).get("order") || expanded;
+      if (focus && !section) params.set("focus", focus);
+      const b = await api("orders" + (params.size ? "?" + params : ""));
+      if (section !== "requests")
+        setOrders((prev) =>
+          section === "orders" ? mergeHistory(prev, b.orders) : b.orders,
+        );
+      setRequests((prev) =>
+        section
+          ? mergeHistory(prev, [...b.requests, ...(b.orderRequests || [])])
+          : mergeHistory(b.requests, b.orderRequests || []),
+      );
+      setHistoryPages((prev: any) =>
+        section ? { ...prev, [section]: b.pagination[section] } : b.pagination,
+      );
       if (view === "account") clearCheckout();
     } catch (e: any) {
       setError(e.message);
@@ -856,10 +878,38 @@ export default function Storefront({ children }: { children: ReactNode }) {
       setOrdersLoading(false);
     }
   }
-  async function loadAdmin() {
+  async function loadAdmin(section?: "orders" | "requests", focus?: string) {
     setBusy(true);
     try {
-      setAdminData(await api("admin"));
+      const params = new URLSearchParams();
+      if (section && adminData?.pagination?.[section]?.next)
+        params.set(section + "Before", adminData.pagination[section].next);
+      if (focus)
+        params.set(focus.startsWith("CASE-") ? "case" : "order", focus);
+      const b = await api("admin" + (params.size ? "?" + params : ""));
+      setAdminData((prev: any) =>
+        section && prev
+          ? {
+              ...b,
+              orders:
+                section === "orders"
+                  ? mergeHistory(prev.orders, b.orders)
+                  : prev.orders,
+              requests:
+                section === "requests"
+                  ? mergeHistory(prev.requests, b.requests)
+                  : prev.requests,
+              operations: mergeHistory(
+                prev.operations || [],
+                b.operations || [],
+              ),
+              pagination: {
+                ...prev.pagination,
+                [section]: b.pagination[section],
+              },
+            }
+          : b,
+      );
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -1088,9 +1138,9 @@ export default function Storefront({ children }: { children: ReactNode }) {
       );
     setBusy(true);
     try {
-      const latest = (await api("orders")).orders.find(
-        (order: any) => order.id === o.id,
-      );
+      const latest = (
+        await api("orders?focus=" + encodeURIComponent(o.id))
+      ).orders.find((order: any) => order.id === o.id);
       if (!latest) throw new Error("Order not found. Refresh your orders.");
       if (latest.payment === "paid") {
         await complete(latest);
@@ -1257,7 +1307,12 @@ export default function Storefront({ children }: { children: ReactNode }) {
           ? "Invoice email accepted by the delivery provider."
           : "Changes saved.",
       );
-      await loadAdmin();
+      await loadAdmin(
+        undefined,
+        typeof data.id === "string" && /^(AVR-|CASE-)/.test(data.id)
+          ? data.id
+          : undefined,
+      );
       await refreshProducts();
     } catch (e: any) {
       setError(e.message);
@@ -1295,9 +1350,7 @@ export default function Storefront({ children }: { children: ReactNode }) {
           .toLowerCase()
           .includes(orderSearch.toLowerCase())),
   );
-  const openRequests = requests.filter(
-    (x) => !["resolved", "rejected"].includes(x.status),
-  );
+  const openRequestCount = historyPages.requests?.open || 0;
   const adminOrders = (adminData?.orders || []).filter(
     (o: any) =>
       (adminFilter === "all" || o.status === adminFilter) &&
@@ -1750,8 +1803,8 @@ export default function Storefront({ children }: { children: ReactNode }) {
                       >
                         <PortalIcon name={id} />
                         <span>{label}</span>
-                        {id === "returns" && !!openRequests.length && (
-                          <b>{openRequests.length}</b>
+                        {id === "returns" && !!openRequestCount && (
+                          <b>{openRequestCount}</b>
                         )}
                       </button>
                     ))}
@@ -2504,6 +2557,39 @@ export default function Storefront({ children }: { children: ReactNode }) {
                         )}
                       </>
                     )}
+                    {["orders", "invoices", "returns"].includes(accountTab) && (
+                      <div className="history-pagination">
+                        <p>
+                          {accountTab === "returns"
+                            ? requests.length
+                            : orders.length}{" "}
+                          records loaded.{" "}
+                          {historyPages[
+                            accountTab === "returns" ? "requests" : "orders"
+                          ]?.total ?? 0}{" "}
+                          in your history. Search and filters apply to loaded
+                          records.
+                        </p>
+                        {historyPages[
+                          accountTab === "returns" ? "requests" : "orders"
+                        ]?.next && (
+                          <button
+                            className="button outline"
+                            disabled={ordersLoading || busy}
+                            onClick={() =>
+                              void loadOrders(
+                                accountTab === "returns"
+                                  ? "requests"
+                                  : "orders",
+                              )
+                            }
+                          >
+                            Load older{" "}
+                            {accountTab === "returns" ? "requests" : "orders"}
+                          </button>
+                        )}
+                      </div>
+                    )}
                     {accountTab === "help" && (
                       <div className="account-help">
                         <h2>A little help for your order.</h2>
@@ -2628,20 +2714,9 @@ export default function Storefront({ children }: { children: ReactNode }) {
                     >
                       <PortalIcon name={id} />
                       <span>{label}</span>
-                      {id === "returns" &&
-                        !!adminData.requests.filter(
-                          (x: any) =>
-                            !["resolved", "rejected"].includes(x.status),
-                        ).length && (
-                          <b>
-                            {
-                              adminData.requests.filter(
-                                (x: any) =>
-                                  !["resolved", "rejected"].includes(x.status),
-                              ).length
-                            }
-                          </b>
-                        )}
+                      {id === "returns" && !!adminData.summary.openRequests && (
+                        <b>{adminData.summary.openRequests}</b>
+                      )}
                     </button>
                   ))}
                 </nav>
@@ -2715,17 +2790,11 @@ export default function Storefront({ children }: { children: ReactNode }) {
                     <div className="admin-stats">
                       <div>
                         <span>Orders</span>
-                        <strong>{adminData.orders.length}</strong>
+                        <strong>{adminData.summary.orders}</strong>
                       </div>
                       <div>
                         <span>Order value</span>
-                        <strong>
-                          {rupees(
-                            adminData.orders
-                              .filter((o: any) => o.status !== "cancelled")
-                              .reduce((n: number, o: any) => n + o.total, 0),
-                          )}
-                        </strong>
+                        <strong>{rupees(adminData.summary.orderValue)}</strong>
                       </div>
                       <div>
                         <span>Jars in stock</span>
@@ -2738,14 +2807,7 @@ export default function Storefront({ children }: { children: ReactNode }) {
                       </div>
                       <div>
                         <span>Open requests</span>
-                        <strong>
-                          {
-                            adminData.requests.filter(
-                              (x: any) =>
-                                !["resolved", "rejected"].includes(x.status),
-                            ).length
-                          }
-                        </strong>
+                        <strong>{adminData.summary.openRequests}</strong>
                       </div>
                     </div>
                     <div className="seller-task-list">
@@ -2754,18 +2816,13 @@ export default function Storefront({ children }: { children: ReactNode }) {
                         [
                           "orders",
                           "Orders to pack",
-                          adminData.orders.filter(
-                            (o: any) => o.status === "confirmed",
-                          ).length,
+                          adminData.summary.toPack,
                           "Review orders",
                         ],
                         [
                           "returns",
                           "Open customer requests",
-                          adminData.requests.filter(
-                            (x: any) =>
-                              !["resolved", "rejected"].includes(x.status),
-                          ).length,
+                          adminData.summary.openRequests,
                           "Review requests",
                         ],
                         [
@@ -3302,8 +3359,20 @@ export default function Storefront({ children }: { children: ReactNode }) {
                                         o.status,
                                         ...((
                                           {
-                                            pending: ["cancelled"],
-                                            confirmed: ["packed", "cancelled"],
+                                            pending:
+                                              !["paid", "unpaid"].includes(
+                                                o.payment,
+                                              ) && !o.razorpay_id
+                                                ? ["cancelled"]
+                                                : [],
+                                            confirmed: [
+                                              "packed",
+                                              ...(!["paid", "unpaid"].includes(
+                                                o.payment,
+                                              ) && !o.razorpay_id
+                                                ? ["cancelled"]
+                                                : []),
+                                            ],
                                             packed: ["shipped"],
                                             shipped: ["delivered"],
                                           } as any
@@ -3330,7 +3399,12 @@ export default function Storefront({ children }: { children: ReactNode }) {
                                       o.shipment?.provider === "shiprocket" ||
                                       ["delivered", "cancelled"].includes(
                                         o.status,
-                                      )
+                                      ) ||
+                                      (o.status === "pending" &&
+                                        (["paid", "unpaid"].includes(
+                                          o.payment,
+                                        ) ||
+                                          !!o.razorpay_id))
                                     }
                                     form={"order-form-" + o.id}
                                     className="small-button"
@@ -3382,6 +3456,22 @@ export default function Storefront({ children }: { children: ReactNode }) {
                           : "New orders will appear here."}
                       </p>
                     )}
+                    <div className="history-pagination">
+                      <p>
+                        {adminData.orders.length} of{" "}
+                        {adminData.pagination.orders.total} orders loaded.
+                        Search and filters apply to loaded orders.
+                      </p>
+                      {adminData.pagination.orders.next && (
+                        <button
+                          className="button outline"
+                          disabled={busy}
+                          onClick={() => void loadAdmin("orders")}
+                        >
+                          Load older orders
+                        </button>
+                      )}
+                    </div>
                     <div className="table-pagination">
                       <span>
                         Page {currentAdminPage + 1} of {adminPageCount}
@@ -3430,6 +3520,18 @@ export default function Storefront({ children }: { children: ReactNode }) {
                             {x.order_data.address.phone} · Order total:{" "}
                             {rupees(x.total)}
                           </p>
+                          {(adminData.operations || []).some(
+                            (op: any) =>
+                              op.id === "refund-" + x.id &&
+                              op.status === "failed",
+                          ) && (
+                            <p className="note">
+                              The provider reports a failed refund. Verify the
+                              payment and any alternate refund before recording
+                              completion. A second online payout is blocked for
+                              this case.
+                            </p>
+                          )}
                           {x.status === "refund_pending" &&
                             x.payment === "paid" &&
                             adminData.settings.refunds && (
@@ -3461,9 +3563,7 @@ export default function Storefront({ children }: { children: ReactNode }) {
                                   disabled={
                                     busy ||
                                     !(adminData.operations || []).some(
-                                      (a: any) =>
-                                        a.id === "refund-" + x.id &&
-                                        a.status !== "failed",
+                                      (a: any) => a.id === "refund-" + x.id,
                                     )
                                   }
                                   onClick={() =>
@@ -3569,6 +3669,23 @@ export default function Storefront({ children }: { children: ReactNode }) {
                             )}
                         </div>
                       ))
+                    )}
+                  </div>
+                )}
+                {adminTab === "returns" && (
+                  <div className="history-pagination">
+                    <p>
+                      {adminData.requests.length} of{" "}
+                      {adminData.pagination.requests.total} requests loaded.
+                    </p>
+                    {adminData.pagination.requests.next && (
+                      <button
+                        className="button outline"
+                        disabled={busy}
+                        onClick={() => void loadAdmin("requests")}
+                      >
+                        Load older requests
+                      </button>
                     )}
                   </div>
                 )}

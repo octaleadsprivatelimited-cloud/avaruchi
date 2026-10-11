@@ -20,7 +20,11 @@ export function invoicePdf(
   const wrap = (s: string, length = 78, max = 4) => {
     const lines: string[] = [];
     let line = "";
-    for (const word of String(s).split(/\s+/)) {
+    for (const word of String(s)
+      .split(/\s+/)
+      .flatMap(
+        (word) => word.match(new RegExp(".{1," + length + "}", "g")) || [],
+      )) {
       if ((line + " " + word).length > length && line) {
         lines.push(line);
         line = word;
@@ -29,7 +33,13 @@ export function invoicePdf(
     if (line) lines.push(line);
     return lines.slice(0, max);
   };
-  const cmds: string[] = ["0.949 0.929 0.886 rg 0 0 595 842 re f"];
+  const pages: string[][] = [];
+  let cmds: string[] = [];
+  const startPage = () => {
+    cmds = ["0.949 0.929 0.886 rg 0 0 595 842 re f"];
+    pages.push(cmds);
+  };
+  startPage();
   const text = (
     s: string,
     x: number,
@@ -70,27 +80,38 @@ export function invoicePdf(
   );
   text("Payment: " + order.payment, 365, 719, 9);
   text("avaruchi.com", 45, 745, 10);
-  wrap(
+  const merchantLines = wrap(
     business.address || "Business address awaiting configuration",
     48,
-    2,
-  ).forEach((s, i) => text(s, 45, 729 - i * 13, 9));
-  if (business.gst) text("GSTIN: " + business.gst, 45, 695, 9);
-  line(679);
+    20,
+  );
+  merchantLines.forEach((s, i) => text(s, 45, 729 - i * 13, 9));
+  const merchantBottom = 729 - (merchantLines.length - 1) * 13;
+  if (business.gst) text("GSTIN: " + business.gst, 45, merchantBottom - 18, 9);
+  const headerRule = Math.min(679, merchantBottom - (business.gst ? 32 : 18));
+  line(headerRule);
   if (data.demo)
     text(
       "DEMONSTRATION INVOICE. NO PAYMENT COLLECTED.",
       45,
-      662,
+      headerRule - 17,
       8,
       "F3",
       "0.60 0.22 0.14",
     );
   else
-    text("Thank you for making room for Avaruchi at your table.", 45, 662, 9);
-  text("BILLED TO / DELIVERY ADDRESS", 45, 636, 8, "F3");
-  text(data.address.name, 45, 619, 12, "F3");
-  wrap(
+    text(
+      "Thank you for making room for Avaruchi at your table.",
+      45,
+      headerRule - 17,
+      9,
+    );
+  text("BILLED TO / DELIVERY ADDRESS", 45, headerRule - 43, 8, "F3");
+  let addressY = headerRule - 60;
+  const customerLines = wrap(data.address.name, 75, 5);
+  customerLines.forEach((s, i) => text(s, 45, addressY - i * 14, 11, "F3"));
+  addressY -= customerLines.length * 14 + 4;
+  const addressLines = wrap(
     [
       data.address.line1,
       data.address.line2,
@@ -101,27 +122,51 @@ export function invoicePdf(
       .filter(Boolean)
       .join(", "),
     85,
-    3,
-  ).forEach((s, i) => text(s, 45, 601 - i * 13, 9));
-  text("Mobile: " + data.address.phone, 45, 548, 9);
-  cmds.push("0.89 0.87 0.81 rg 45 505 505 26 re f");
-  text("ITEM / JAR SIZE", 54, 515, 8, "F3");
-  text("QTY", 340, 515, 8, "F3");
-  text("UNIT PRICE", 391, 515, 8, "F3");
-  text("AMOUNT", 475, 515, 8, "F3");
-  let y = 487;
+    20,
+  );
+  addressLines.forEach((s, i) => text(s, 45, addressY - i * 13, 9));
+  addressY -= addressLines.length * 13 + 10;
+  text("Mobile: " + data.address.phone, 45, addressY, 9);
+  const tableHeading = (top: number) => {
+    cmds.push("0.89 0.87 0.81 rg 45 " + (top - 26) + " 505 26 re f");
+    text("ITEM / JAR SIZE", 54, top - 16, 8, "F3");
+    text("QTY", 340, top - 16, 8, "F3");
+    text("UNIT PRICE", 389, top - 16, 8, "F3");
+    text("AMOUNT", 481, top - 16, 8, "F3");
+    return top - 44;
+  };
+  const continuation = () => {
+    startPage();
+    text("avaruchi", 45, 787, 30, "F2");
+    text("ORDER INVOICE / " + number, 45, 755, 10, "F3");
+    text("Order: " + order.id, 45, 735, 9);
+    return tableHeading(708);
+  };
+  const rightAmount = (value: number, right: number, at: number, size = 9) => {
+    const valueText = amount(value);
+    // Helvetica digits, decimal points and spaces fit within this conservative width.
+    text(valueText, right - valueText.length * size * 0.56, at, size);
+  };
+  let y = tableHeading(Math.min(531, addressY - 18));
   for (const item of data.items) {
-    text(
+    const names = wrap(
       item.name + " / " + (item.weight === 1000 ? "1 kg" : item.weight + " g"),
-      54,
-      y,
-      10,
+      44,
+      20,
     );
-    text(String(item.quantity), 345, y, 10);
-    text(amount(item.price), 389, y, 9);
-    text(amount(item.price * item.quantity), 474, y, 9);
-    line(y - 10);
-    y -= 26;
+    const height = Math.max(26, names.length * 13 + 12);
+    if (y - height < 130) y = continuation();
+    names.forEach((name, i) => text(name, 54, y - i * 13, 9));
+    text(String(item.quantity), 345, y, 9);
+    rightAmount(item.price, 461, y);
+    rightAmount(item.price * item.quantity, 548, y);
+    line(y - height + 10);
+    y -= height;
+  }
+  if (y - 125 < 110) {
+    y = continuation();
+    text("ORDER TOTALS", 54, y, 10, "F3");
+    y -= 25;
   }
   y -= 17;
   for (const [label, value] of [
@@ -130,43 +175,62 @@ export function invoicePdf(
     ["Delivery", data.shipping],
   ] as [string, number][]) {
     text(label, 365, y, 9);
-    text(amount(value), 474, y, 9);
+    rightAmount(value, 548, y);
     y -= 18;
   }
   line(y + 7);
   y -= 15;
   text("TOTAL", 365, y, 11, "F3");
-  text(amount(order.total), 459, y, 14, "F3");
+  rightAmount(order.total, 548, y, 13);
   text("Order status: " + order.status, 45, y, 9);
-  line(91);
-  text(
-    data.demo
-      ? "Preview only. No shipment is scheduled."
-      : "Keep this invoice with your order records.",
-    45,
-    72,
-    9,
-  );
-  text("Generated automatically on order confirmation.", 45, 55, 8);
-  text(
-    business.gst
-      ? "This is an order invoice."
-      : "Order invoice. GST registration has not been configured.",
-    45,
-    40,
-    8,
-  );
-  text("1 / 1", 526, 40, 8);
-  const content = cmds.join("\n");
+  pages.forEach((page, index) => {
+    cmds = page;
+    line(91);
+    text(
+      data.demo
+        ? "Preview only. No shipment is scheduled."
+        : "Keep this invoice with your order records.",
+      45,
+      72,
+      9,
+    );
+    text("Generated automatically on order confirmation.", 45, 55, 8);
+    text(
+      business.gst
+        ? "This is an order invoice."
+        : "Order invoice. GST registration has not been configured.",
+      45,
+      40,
+      8,
+    );
+    text(index + 1 + " / " + pages.length, 526, 40, 8);
+  });
   const objects = [
     "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R /F2 5 0 R /F3 6 0 R >> >> /Contents 7 0 R >>",
+    "<< /Type /Pages /Kids [" +
+      pages.map((_, i) => 6 + i * 2 + " 0 R").join(" ") +
+      "] /Count " +
+      pages.length +
+      " >>",
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
     "<< /Type /Font /Subtype /Type1 /BaseFont /Times-Roman >>",
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>",
-    "<< /Length " + content.length + " >>\nstream\n" + content + "\nendstream",
   ];
+  pages.forEach((page, index) => {
+    const content = page.join("\n");
+    objects.push(
+      "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents " +
+        (7 + index * 2) +
+        " 0 R >>",
+    );
+    objects.push(
+      "<< /Length " +
+        content.length +
+        " >>\nstream\n" +
+        content +
+        "\nendstream",
+    );
+  });
   let out = "%PDF-1.4\n";
   const offsets = [0];
   objects.forEach((o, i) => {

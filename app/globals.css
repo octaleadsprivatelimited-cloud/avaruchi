@@ -4787,3 +4787,32 @@ textarea {
   width: auto;
   order: 0;
 }
+
+.history-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin: 22px 0;
+}
+.history-pagination p {
+  flex: 1 1 240px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.portal .request-card,
+.portal .request-description,
+.portal .request-contact,
+.portal .request-history p,
+.portal .refund-summary,
+.portal .order-number strong,
+.portal .shipment-info dd {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+@media (max-width: 600px) {
+  .history-pagination .button {
+    width: 100%;
+  }
+}

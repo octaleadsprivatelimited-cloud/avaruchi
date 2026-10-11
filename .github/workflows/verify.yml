@@ -56,3 +56,4 @@ jobs:
           npm run test:regressions
           npm run test:failures
           npm run test:providers
+          npm run test:panels

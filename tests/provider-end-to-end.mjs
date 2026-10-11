@@ -555,6 +555,42 @@ try {
     admin,
     409,
   );
+  refundStatus = "failed";
+  await status(
+    "admin/refund/sync",
+    { id: x.id, expectedVersion: x.version },
+    admin,
+    200,
+  );
+  x = (await req("admin", undefined, admin)).json.requests.find(
+    (x) => x.id === refundCase,
+  );
+  eq(x.status, "refund_pending");
+  eq(x.refund_reference, "");
+  eq(x.history.filter((h) => h.providerStatus === "failed").length, 1);
+  const failedHistory = x.history.length;
+  await status(
+    "admin/refund/sync",
+    { id: x.id, expectedVersion: x.version },
+    admin,
+    200,
+  );
+  x = (await req("admin", undefined, admin)).json.requests.find(
+    (x) => x.id === refundCase,
+  );
+  eq(x.history.length, failedHistory);
+  const customerFailed = (
+    await req("returns", undefined, customer)
+  ).json.requests.find((r) => r.id === refundCase);
+  assert.match(customerFailed.history.at(-1).note, /refund failed/);
+  checks++;
+  await status(
+    "admin/refund/process",
+    { id: x.id, expectedVersion: x.version },
+    admin,
+    409,
+  );
+  eq(refundCalls, 1);
   refundStatus = "processed";
   await status(
     "admin/refund/sync",

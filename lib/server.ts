@@ -136,6 +136,40 @@ async function processInvoiceQueue() {
   return { sent, deferred };
 }
 async function completeRefund(x: any, result: any) {
+  if (result.status === "failed") {
+    await db()
+      .prepare(
+        "UPDATE provider_operations SET status='failed',updated=? WHERE id=?",
+      )
+      .bind(now(), "refund-" + x.id)
+      .run();
+    const history = JSON.parse(x.history);
+    if (
+      history.some(
+        (h: any) =>
+          h.providerRefundId === result.id && h.providerStatus === "failed",
+      )
+    )
+      return;
+    history.push({
+      status: "refund_pending",
+      note:
+        "Razorpay reported that this refund failed. The store will review the payment before arranging another refund. Reference: " +
+        result.id,
+      providerRefundId: result.id,
+      providerStatus: "failed",
+      at: now(),
+    });
+    const changed = await db()
+      .prepare(
+        "UPDATE service_requests SET history=?,version=version+1,updated=? WHERE id=? AND version=? AND status='refund_pending' AND refund_amount=?",
+      )
+      .bind(JSON.stringify(history), now(), x.id, x.version, result.amount)
+      .run();
+    if (changed.meta.changes !== 1)
+      fail("The case changed. Refresh and sync the refund result.", 409);
+    return;
+  }
   if (result.status !== "processed") return;
   const history = JSON.parse(x.history);
   history.push({
@@ -360,6 +394,35 @@ async function quote(items: CartItem[], code?: string) {
     total: subtotal - discount + shipping,
     coupon: normalized,
   };
+}
+function historyCursor(request: Request, key: string) {
+  const raw = new URL(request.url).searchParams.get(key);
+  if (!raw) return { clause: "", values: [] as any[] };
+  const match = /^(\d{1,16}):([A-Za-z0-9_-]{1,100})$/.exec(raw);
+  if (!match) return fail("Invalid history cursor.");
+  if (!Number.isSafeInteger(Number(match[1])))
+    return fail("Invalid history cursor.");
+  return {
+    clause: " AND (created<? OR (created=? AND id<?))",
+    values: [Number(match[1]), Number(match[1]), match[2]],
+  };
+}
+function historyPage(rows: any[], limit: number, total: number) {
+  const items = rows.slice(0, limit),
+    last = items.at(-1);
+  return {
+    items,
+    pagination: {
+      total,
+      next: rows.length > limit && last ? last.created + ":" + last.id : null,
+    },
+  };
+}
+function focusId(request: Request, key: string, prefix: string) {
+  const value = new URL(request.url).searchParams.get(key);
+  if (value && !new RegExp("^" + prefix + "[A-Za-z0-9-]{1,95}$").test(value))
+    fail("Invalid history reference.");
+  return value;
 }
 async function findOrder(id: string, u: any) {
   const o = await db()
@@ -1041,31 +1104,78 @@ export async function handle(
       return json({ ok: true });
     }
     if (path === "orders" && request.method === "GET") {
-      const result = await db()
-        .prepare(
-          "SELECT orders.*,invoices.id invoice_id FROM orders LEFT JOIN invoices ON invoices.order_id=orders.id WHERE orders.user_id=? ORDER BY orders.created DESC LIMIT 100",
-        )
-        .bind(u.id)
-        .all<any>();
-      const [shipments, requests] = await db().batch([
+      const cursor = historyCursor(request, "before"),
+        caseCursor = historyCursor(request, "requestsBefore");
+      const [result, count, requests, caseCount] = await db().batch([
         db()
           .prepare(
-            "SELECT order_shipments.* FROM order_shipments JOIN orders ON orders.id=order_shipments.order_id WHERE orders.user_id=?",
+            "SELECT * FROM orders WHERE user_id=?" +
+              cursor.clause +
+              " ORDER BY created DESC,id DESC LIMIT 51",
           )
+          .bind(u.id, ...cursor.values),
+        db()
+          .prepare("SELECT COUNT(*) total FROM orders WHERE user_id=?")
           .bind(u.id),
         db()
           .prepare(
-            "SELECT * FROM service_requests WHERE user_id=? ORDER BY created DESC LIMIT 100",
+            "SELECT * FROM service_requests WHERE user_id=?" +
+              caseCursor.clause +
+              " ORDER BY created DESC,id DESC LIMIT 51",
+          )
+          .bind(u.id, ...caseCursor.values),
+        db()
+          .prepare(
+            "SELECT COUNT(*) total,SUM(status NOT IN ('resolved','rejected')) openRequests FROM service_requests WHERE user_id=?",
           )
           .bind(u.id),
       ]);
+      const page = historyPage(result.results, 50, count.results[0].total),
+        cases = historyPage(requests.results, 50, caseCount.results[0].total);
+      const focus = focusId(request, "focus", "AVR-");
+      if (focus && !page.items.some((o) => o.id === focus))
+        page.items.unshift(await findOrder(focus, u));
+      const ids = page.items.map((o) => o.id),
+        marks = ids.map(() => "?").join(",") || "NULL";
+      const [invoices, shipments, services] = await db().batch([
+        db()
+          .prepare(
+            "SELECT order_id,id FROM invoices WHERE order_id IN (" +
+              marks +
+              ")",
+          )
+          .bind(...ids),
+        db()
+          .prepare(
+            "SELECT * FROM order_shipments WHERE order_id IN (" + marks + ")",
+          )
+          .bind(...ids),
+        db()
+          .prepare(
+            "SELECT * FROM service_requests WHERE user_id=? AND order_id IN (" +
+              marks +
+              ")",
+          )
+          .bind(u.id, ...ids),
+      ]);
+      const orders = page.items.map((o) => ({
+        ...viewOrder(o),
+        invoice_id:
+          invoices.results.find((i) => i.order_id === o.id)?.id || null,
+        shipment: shipments.results.find((sh) => sh.order_id === o.id) || null,
+      }));
+      const orderRequests = services.results.map(viewRequest);
       return json({
-        orders: result.results.map((o: any) => ({
-          ...viewOrder(o),
-          shipment:
-            shipments.results.find((s: any) => s.order_id === o.id) || null,
-        })),
-        requests: requests.results.map(viewRequest),
+        orders,
+        requests: cases.items.map(viewRequest),
+        orderRequests,
+        pagination: {
+          orders: page.pagination,
+          requests: {
+            ...cases.pagination,
+            open: Number(caseCount.results[0].openRequests || 0),
+          },
+        },
       });
     }
     if (path === "orders" && request.method === "POST") {
@@ -1284,13 +1394,26 @@ export async function handle(
       return invoiceResponse(o);
     }
     if (path === "returns" && request.method === "GET") {
-      const result = await db()
-        .prepare(
-          "SELECT * FROM service_requests WHERE user_id=? ORDER BY created DESC LIMIT 100",
-        )
-        .bind(u.id)
-        .all<any>();
-      return json({ requests: result.results.map(viewRequest) });
+      const cursor = historyCursor(request, "before");
+      const [result, count] = await db().batch([
+        db()
+          .prepare(
+            "SELECT * FROM service_requests WHERE user_id=?" +
+              cursor.clause +
+              " ORDER BY created DESC,id DESC LIMIT 51",
+          )
+          .bind(u.id, ...cursor.values),
+        db()
+          .prepare(
+            "SELECT COUNT(*) total FROM service_requests WHERE user_id=?",
+          )
+          .bind(u.id),
+      ]);
+      const page = historyPage(result.results, 50, count.results[0].total);
+      return json({
+        requests: page.items.map(viewRequest),
+        pagination: page.pagination,
+      });
     }
     if (path === "returns" && request.method === "POST") {
       const b = await body(request),
@@ -1357,40 +1480,136 @@ export async function handle(
     if (path.startsWith("admin")) {
       if (!admin(u, request)) fail("Store administrator access required.", 403);
       if (path === "admin" && request.method === "GET") {
+        const orderCursor = historyCursor(request, "ordersBefore"),
+          caseCursor = historyCursor(request, "requestsBefore");
         const [
           orders,
           stocks,
           coupons,
-          shipments,
           requests,
-          operationRows,
           mailJobs,
+          orderSummary,
+          caseSummary,
         ] = await db().batch([
-          db().prepare(
-            "SELECT orders.*,invoices.id invoice_id FROM orders LEFT JOIN invoices ON invoices.order_id=orders.id ORDER BY orders.created DESC LIMIT 200",
-          ),
+          db()
+            .prepare(
+              "SELECT * FROM orders WHERE 1=1" +
+                orderCursor.clause +
+                " ORDER BY created DESC,id DESC LIMIT 101",
+            )
+            .bind(...orderCursor.values),
           db().prepare("SELECT * FROM variants ORDER BY product_id,weight"),
           db().prepare("SELECT * FROM coupons"),
-          db().prepare("SELECT * FROM order_shipments"),
-          db().prepare(
-            "SELECT service_requests.*,orders.total,orders.data order_data,orders.payment FROM service_requests JOIN orders ON orders.id=service_requests.order_id ORDER BY service_requests.updated DESC LIMIT 200",
-          ),
-          db().prepare(
-            "SELECT id,order_id,kind,status,data,updated FROM provider_operations ORDER BY updated DESC LIMIT 600",
-          ),
+          db()
+            .prepare(
+              "SELECT * FROM service_requests WHERE 1=1" +
+                caseCursor.clause +
+                " ORDER BY created DESC,id DESC LIMIT 101",
+            )
+            .bind(...caseCursor.values),
           db().prepare(
             "SELECT order_id,status,attempts,next_attempt FROM invoice_jobs WHERE status!='sent' ORDER BY updated DESC LIMIT 100",
           ),
+          db().prepare(
+            "SELECT COUNT(*) total,COALESCE(SUM(CASE WHEN status!='cancelled' THEN total ELSE 0 END),0) value,SUM(status='confirmed') toPack FROM orders",
+          ),
+          db().prepare(
+            "SELECT COUNT(*) total,SUM(status NOT IN ('resolved','rejected')) openRequests FROM service_requests",
+          ),
         ]);
+        const orderPage = historyPage(
+            orders.results,
+            100,
+            orderSummary.results[0].total,
+          ),
+          casePage = historyPage(
+            requests.results,
+            100,
+            caseSummary.results[0].total,
+          );
+        const orderFocus = focusId(request, "order", "AVR-"),
+          caseFocus = focusId(request, "case", "CASE-");
+        for (const [id, table, page] of [
+          [orderFocus, "orders", orderPage],
+          [caseFocus, "service_requests", casePage],
+        ] as const) {
+          if (id && !page.items.some((row) => row.id === id)) {
+            const row = await db()
+              .prepare("SELECT * FROM " + table + " WHERE id=?")
+              .bind(id)
+              .first<any>();
+            if (!row) fail("History record not found.", 404);
+            page.items.unshift(row);
+          }
+        }
+        const orderIds = [
+            ...new Set([
+              ...orderPage.items.map((o) => o.id),
+              ...casePage.items.map((x) => x.order_id),
+            ]),
+          ],
+          marks = orderIds.map(() => "?").join(",") || "NULL";
+        const [relatedOrders, invoiceRows, shippingRows, relatedOps] =
+          await db().batch([
+            db()
+              .prepare(
+                "SELECT id,data,total,payment FROM orders WHERE id IN (" +
+                  marks +
+                  ")",
+              )
+              .bind(...orderIds),
+            db()
+              .prepare(
+                "SELECT order_id,id FROM invoices WHERE order_id IN (" +
+                  marks +
+                  ")",
+              )
+              .bind(...orderIds),
+            db()
+              .prepare(
+                "SELECT * FROM order_shipments WHERE order_id IN (" +
+                  marks +
+                  ")",
+              )
+              .bind(...orderIds),
+            db()
+              .prepare(
+                "SELECT id,order_id,kind,status,data,updated FROM provider_operations WHERE order_id IN (" +
+                  marks +
+                  ")",
+              )
+              .bind(...orderIds),
+          ]);
         return json({
-          operations: operationRows.results,
+          pagination: {
+            orders: orderPage.pagination,
+            requests: casePage.pagination,
+          },
+          summary: {
+            orders: orderSummary.results[0].total,
+            orderValue: Number(orderSummary.results[0].value),
+            toPack: Number(orderSummary.results[0].toPack || 0),
+            openRequests: Number(caseSummary.results[0].openRequests || 0),
+          },
+          operations: relatedOps.results,
           invoiceJobs: mailJobs.results,
-          orders: orders.results.map((o: any) => ({
+          orders: orderPage.items.map((o: any) => ({
             ...viewOrder(o),
+            invoice_id:
+              invoiceRows.results.find((i) => i.order_id === o.id)?.id || null,
             shipment:
-              shipments.results.find((s: any) => s.order_id === o.id) || null,
+              shippingRows.results.find((s: any) => s.order_id === o.id) ||
+              null,
           })),
-          requests: requests.results.map(viewRequest),
+          requests: casePage.items.map((x) => {
+            const o = relatedOrders.results.find((o) => o.id === x.order_id);
+            return viewRequest({
+              ...x,
+              total: o.total,
+              order_data: o.data,
+              payment: o.payment,
+            });
+          }),
           stocks: stocks.results,
           coupons: coupons.results,
           products: await catalog(),
