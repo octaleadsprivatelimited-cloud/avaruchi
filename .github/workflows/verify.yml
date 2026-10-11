@@ -54,4 +54,5 @@ jobs:
           npm run test:customer
           npm run test:integration
           npm run test:regressions
+          npm run test:failures
           npm run test:providers

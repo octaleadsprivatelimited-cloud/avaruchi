@@ -21,6 +21,7 @@ const temp = await mkdtemp(process.cwd() + "/.data/provider-").catch(
 let conn, closePool;
 try {
   for (const name of [
+    "api-routes",
     "server",
     "admin-access",
     "operations",
@@ -176,7 +177,15 @@ try {
     }
     if (u.endsWith("/v1/orders")) {
       if (mode === "payment-timeout") throw new Error("provider result lost");
-      return ok({ id: "order_checkout", amount: body.amount, currency: "INR" });
+      if (mode === "payment-malformed")
+        return ok({ amount: body.amount, currency: "INR" });
+      if (mode === "payment-declined")
+        return Response.json({ error: "rejected" }, { status: 400 });
+      return ok({
+        id: "order_checkoutfixture",
+        amount: body.amount,
+        currency: "INR",
+      });
     }
     if (u.endsWith("/orders/order_reconcile"))
       return ok({
@@ -188,9 +197,9 @@ try {
     if (u.endsWith("/payments/pay_checkout"))
       return ok({
         id: "pay_checkout",
-        order_id: "order_checkout",
-        status: "captured",
-        amount: 25800,
+        order_id: "order_checkoutfixture",
+        status: mode === "payment-authorized" ? "authorized" : "captured",
+        amount: mode === "payment-wrong-amount" ? 1 : 25800,
         currency: "INR",
       });
     if (u.endsWith("/payments/pay_fixture"))
@@ -574,10 +583,10 @@ try {
   };
   const online = (await status("orders", onlineBody, customer, 201)).json.order;
   eq(online.status, "pending");
-  eq(online.razorpay_id, "order_checkout");
+  eq(online.razorpay_id, "order_checkoutfixture");
   const verify = {
     orderId: online.id,
-    razorpay_order_id: "order_checkout",
+    razorpay_order_id: "order_checkoutfixture",
     razorpay_payment_id: "pay_checkout",
     razorpay_signature: "forged",
   };
@@ -586,8 +595,19 @@ try {
     "sha256",
     process.env.RAZORPAY_KEY_SECRET,
   )
-    .update("order_checkout|pay_checkout")
+    .update("order_checkoutfixture|pay_checkout")
     .digest("hex");
+  mode = "payment-authorized";
+  await status("payments/verify", verify, customer, 409);
+  eq(
+    (await req("orders", undefined, customer)).json.orders.find(
+      (x) => x.id === online.id,
+    ).payment,
+    "unpaid",
+  );
+  mode = "payment-wrong-amount";
+  await status("payments/verify", verify, customer, 409);
+  mode = "normal";
   const verified = await status("payments/verify", verify, customer, 200);
   eq(verified.json.order.payment, "paid");
   eq(verified.json.order.status, "confirmed");
@@ -598,7 +618,7 @@ try {
       payment: {
         entity: {
           id: "pay_checkout",
-          order_id: "order_checkout",
+          order_id: "order_checkoutfixture",
           amount: 25800,
           currency: "INR",
           status: "captured",
@@ -633,6 +653,31 @@ try {
   paymentUncertainOrder = uncertainRows[0].id;
   eq(uncertainRows[0].status, "pending");
   eq(uncertainRows[0].razorpay_id, null);
+  await status("orders", uncertainPayment, customer, 409);
+  const [retryRows] = await conn.execute(
+    "SELECT COUNT(*) count FROM orders WHERE idempotency=?",
+    [uncertainPayment.idempotency],
+  );
+  eq(retryRows[0].count, 1);
+  mode = "payment-malformed";
+  const malformed = { ...onlineBody, idempotency: crypto.randomUUID() };
+  await status("orders", malformed, customer, 502);
+  await status("orders", malformed, customer, 409);
+  mode = "payment-declined";
+  const declined = { ...onlineBody, idempotency: crypto.randomUUID() };
+  const [stockBeforeDeclined] = await conn.execute(
+    "SELECT stock FROM variants WHERE id='amla-250'",
+  );
+  await status("orders", declined, customer, 502);
+  const [stockAfterDeclined] = await conn.execute(
+    "SELECT stock FROM variants WHERE id='amla-250'",
+  );
+  eq(stockAfterDeclined[0].stock, stockBeforeDeclined[0].stock);
+  const [declinedRows] = await conn.execute(
+    "SELECT status FROM orders WHERE idempotency=?",
+    [declined.idempotency],
+  );
+  eq(declinedRows[0].status, "cancelled");
   mode = "normal";
   await status(
     "admin/payment/reconcile",

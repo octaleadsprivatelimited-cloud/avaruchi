@@ -7,6 +7,13 @@ import {
   motion,
   useReducedMotion,
 } from "motion/react";
+import {
+  checkoutAttempt,
+  loadPaymentScript,
+  readStored,
+  safeBasket,
+  writeStored,
+} from "@/lib/browser-recovery";
 import { pagePath, pageView } from "@/lib/routes";
 import {
   requestReasons,
@@ -186,7 +193,10 @@ async function api(path: string, data?: any) {
         "The store returned an unavailable response. Please retry shortly.",
       );
     }
-    if (!r.ok) throw new Error(b.error || "Please try again.");
+    if (!r.ok)
+      throw Object.assign(new Error(b.error || "Please try again."), {
+        status: r.status,
+      });
     return b;
   } catch (error) {
     if (controller.signal.aborted)
@@ -739,8 +749,9 @@ export default function Storefront({ children }: { children: ReactNode }) {
     [adminFilter, setAdminFilter] = useState("all"),
     [adminPage, setAdminPage] = useState(0),
     [inventorySearch, setInventorySearch] = useState(""),
-    [expanded, setExpanded] = useState<string | null>(null),
-    [idempotency, setIdempotency] = useState("");
+    [expanded, setExpanded] = useState<string | null>(null);
+  const checkoutRef = useRef<any>(null);
+  const submissionRef = useRef(false);
   const [headerSearch, setHeaderSearch] = useState(false);
   const [headerQuery, setHeaderQuery] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
@@ -784,6 +795,11 @@ export default function Storefront({ children }: { children: ReactNode }) {
           setOrderSearch("");
         }
       }
+      if (view === "checkout") {
+        const coupon = params.get("coupon") || "";
+        setAppliedCoupon(coupon);
+        setCouponInput(coupon);
+      }
       if (view === "wishlist") {
         setCategory("All pickles");
         setSearch("");
@@ -812,7 +828,6 @@ export default function Storefront({ children }: { children: ReactNode }) {
     setError("");
     setProductWeight(0);
     setProductQty(1);
-    if (view === "checkout") setIdempotency(crypto.randomUUID());
     window.scrollTo(0, 0);
   }, [pathname]);
   async function loadSession() {
@@ -833,8 +848,10 @@ export default function Storefront({ children }: { children: ReactNode }) {
       const b = await api("orders");
       setOrders(b.orders);
       setRequests(b.requests || []);
+      if (view === "account") clearCheckout();
     } catch (e: any) {
       setError(e.message);
+      if (e.status === 401) void loadSession().catch(() => {});
     } finally {
       setOrdersLoading(false);
     }
@@ -866,19 +883,22 @@ export default function Storefront({ children }: { children: ReactNode }) {
           s.config.demo ? "demo" : s.config.payments ? "online" : "cod",
         );
         setProducts(c.products);
-        const local = JSON.parse(
-            localStorage.getItem("avaruchi-basket") || "{}",
-          ),
-          saved = s.saved || local;
+        let local;
+        try {
+          local = readStored(localStorage, "avaruchi-basket");
+        } catch {
+          local = null;
+        }
+        const saved = safeBasket(s.saved || local);
         setCart(saved.cart || []);
         setWishlist(saved.wishlist || []);
         setAddress({ ...blankAddress, ...saved.address });
+        setReady(true);
       } catch (e: any) {
         if (active) setError(e.message);
       } finally {
         if (active) {
           setLoading(false);
-          setReady(true);
         }
       }
     })();
@@ -889,7 +909,11 @@ export default function Storefront({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!ready) return;
     const data = { cart, wishlist, address };
-    localStorage.setItem("avaruchi-basket", JSON.stringify(data));
+    try {
+      writeStored(localStorage, "avaruchi-basket", data);
+    } catch {
+      /* Storage access is optional. */
+    }
     if (!user) return;
     const timer = setTimeout(() => api("saved", data).catch(() => {}), 600);
     return () => clearTimeout(timer);
@@ -905,11 +929,12 @@ export default function Storefront({ children }: { children: ReactNode }) {
   }, [view, user, isAdmin]);
   useEffect(() => {
     setQuoted(null);
-    setAppliedCoupon("");
   }, [cart]);
   useEffect(() => {
-    if (view !== "checkout" || !ready || !cart.length) return;
+    if ((view !== "checkout" && !appliedCoupon) || !ready || !cart.length)
+      return;
     let active = true;
+    setQuoted(null);
     api("quote", { items: cart, coupon: appliedCoupon })
       .then((q) => {
         if (active) setQuoted(q);
@@ -935,6 +960,34 @@ export default function Storefront({ children }: { children: ReactNode }) {
     p: Product;
     v: Product["variants"][0];
   }[];
+  const unavailableItems = cart.filter(
+    (x) => !cartLines.some((line) => line.variantId === x.variantId),
+  );
+  const unavailableNotice =
+    unavailableItems.length > 0 && !loading ? (
+      <div className="form-error" role="alert">
+        <p>
+          {unavailableItems.length} jar sizes in your bag are no longer
+          available.
+        </p>
+        <button
+          type="button"
+          className="link-button"
+          onClick={() =>
+            setCart((prev) =>
+              prev.filter(
+                (x) =>
+                  !unavailableItems.some(
+                    (item) => item.variantId === x.variantId,
+                  ),
+              ),
+            )
+          }
+        >
+          Remove unavailable jars
+        </button>
+      </div>
+    ) : null;
   const count = cart.reduce((s, x) => s + x.quantity, 0),
     subtotal = cartLines.reduce((s, x) => s + x.quantity * x.v.price, 0),
     shipping = subtotal >= config.freeShipping ? 0 : config.shippingFee;
@@ -1000,7 +1053,6 @@ export default function Storefront({ children }: { children: ReactNode }) {
     setBusy(true);
     try {
       setQuoted(await api("quote", { items: cart, coupon: appliedCoupon }));
-      setIdempotency(crypto.randomUUID());
       navigate("checkout");
     } catch (e: any) {
       setError(e.message);
@@ -1008,7 +1060,17 @@ export default function Storefront({ children }: { children: ReactNode }) {
       setBusy(false);
     }
   }
+  function clearCheckout() {
+    checkoutRef.current = null;
+    try {
+      writeStored(sessionStorage, "avaruchi-checkout", null);
+    } catch {
+      /* Optional storage. */
+    }
+  }
   async function complete(order: any) {
+    clearCheckout();
+    setAppliedCoupon("");
     setSuccess(order);
     navigate("account");
     setCart([]);
@@ -1020,69 +1082,120 @@ export default function Storefront({ children }: { children: ReactNode }) {
     void loadOrders();
   }
   async function payOnline(o: any, keyId: string) {
-    if (!(window as any).Razorpay)
-      await new Promise<void>((resolve, reject) => {
-        const script = document.createElement("script");
-        script.src = "https://checkout.razorpay.com/v1/checkout.js";
-        script.onload = () => resolve();
-        script.onerror = () =>
-          reject(new Error("Unable to load payments. Retry from your orders."));
-        document.body.appendChild(script);
-      });
-    new (window as any).Razorpay({
-      key: keyId,
-      amount: o.total,
-      currency: "INR",
-      name: "Avaruchi",
-      description: "Your pickle order",
-      order_id: o.razorpay_id,
-      prefill: {
-        name: address.name,
-        email: user?.email,
-        contact: address.phone,
-      },
-      theme: { color: "#264936" },
-      handler: async (data: any) => {
-        try {
-          const b = await api("payments/verify", { ...data, orderId: o.id });
-          await complete(b.order);
-        } catch (e: any) {
-          setError(e.message);
-          setBusy(false);
-          void loadOrders();
-        }
-      },
-      modal: {
-        ondismiss: () => {
-          setBusy(false);
-          setPanel(null);
-          navigate("account", { tab: "orders", order: o.id });
-          notify("Payment was not completed. You can retry from your orders.");
+    if (!keyId || !o.razorpay_id)
+      throw new Error(
+        "Payment is awaiting store reconciliation. Check your orders before retrying.",
+      );
+    setBusy(true);
+    try {
+      const latest = (await api("orders")).orders.find(
+        (order: any) => order.id === o.id,
+      );
+      if (!latest) throw new Error("Order not found. Refresh your orders.");
+      if (latest.payment === "paid") {
+        await complete(latest);
+        return;
+      }
+      if (latest.status !== "pending" || latest.payment !== "unpaid")
+        throw new Error(
+          "This order is no longer awaiting payment. Refresh your orders.",
+        );
+      await loadPaymentScript();
+      let verifying = false;
+      const payment = new (window as any).Razorpay({
+        key: keyId,
+        amount: latest.total,
+        currency: "INR",
+        name: "Avaruchi",
+        description: "Your pickle order",
+        order_id: latest.razorpay_id,
+        prefill: {
+          name: latest.data.address.name,
+          email: user?.email,
+          contact: latest.data.address.phone,
         },
-      },
-    }).open();
+        theme: { color: "#264936" },
+        handler: async (data: any) => {
+          verifying = true;
+          try {
+            const b = await api("payments/verify", {
+              ...data,
+              orderId: latest.id,
+            });
+            await complete(b.order);
+          } catch (e: any) {
+            navigate("account", { tab: "orders", order: latest.id });
+            setError(
+              e.message + " Check this order before making another payment.",
+            );
+            void loadOrders();
+          } finally {
+            setBusy(false);
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            if (verifying) return;
+            setBusy(false);
+            navigate("account", { tab: "orders", order: latest.id });
+            notify(
+              "Payment was not completed. Review this order before retrying.",
+            );
+          },
+        },
+      });
+      payment.on("payment.failed", () => {
+        notify(
+          "Payment was not confirmed. Check the gateway message and review your order before retrying.",
+        );
+        void loadOrders();
+      });
+      payment.open();
+    } catch (e: any) {
+      setBusy(false);
+      navigate("account", { tab: "orders", order: o.id });
+      throw e;
+    }
   }
   async function placeOrder(e: FormEvent) {
     e.preventDefault();
+    if (submissionRef.current || busy) return;
+    submissionRef.current = true;
     setBusy(true);
     setError("");
     try {
-      const b = await api("orders", {
-        items: cart,
-        coupon: appliedCoupon,
-        address,
-        method,
-        idempotency,
-      });
+      const payload = { items: cart, coupon: appliedCoupon, address, method };
+      let previous = checkoutRef.current;
+      try {
+        previous ||= readStored(sessionStorage, "avaruchi-checkout");
+      } catch {
+        /* Optional storage. */
+      }
+      const attempt = checkoutAttempt(previous, user?.id || "", payload);
+      attempt.submitted = true;
+      checkoutRef.current = attempt;
+      try {
+        writeStored(sessionStorage, "avaruchi-checkout", attempt);
+      } catch {
+        /* Optional storage. */
+      }
+      const b = await api("orders", { ...payload, idempotency: attempt.key });
       if (b.order.status === "cancelled") {
-        setIdempotency(crypto.randomUUID());
-        throw new Error("This checkout was cancelled. Submit a new checkout.");
+        clearCheckout();
+        throw new Error(
+          "This checkout was cancelled. Review your basket before placing a new order.",
+        );
       }
       if (b.order.payment === "unpaid") await payOnline(b.order, b.keyId);
       else await complete(b.order);
     } catch (e: any) {
+      // Validation failures happen before an order is written; allow corrections.
+      if (e.status >= 400 && e.status < 500 && ![409, 429].includes(e.status))
+        clearCheckout();
       setError(e.message);
       setBusy(false);
+    } finally {
+      submissionRef.current = false;
     }
   }
   async function cancelOrder(id: string) {
@@ -1394,9 +1507,14 @@ export default function Storefront({ children }: { children: ReactNode }) {
   );
   const pageContent = (
     <>
-      {error && !panel && !selected && (
+      {error && !panel && (
         <div className="error-banner wrap" role="alert">
           {error}
+          {!ready && (
+            <button onClick={() => window.location.reload()}>
+              Reload store
+            </button>
+          )}
           <button onClick={() => setError("")} aria-label="Dismiss error">
             ×
           </button>
@@ -2161,6 +2279,15 @@ export default function Storefront({ children }: { children: ReactNode }) {
                                           Download invoice PDF
                                         </a>
                                       )}
+                                      {o.status === "pending" &&
+                                        !o.razorpay_id && (
+                                          <p className="muted">
+                                            Payment setup is awaiting store
+                                            reconciliation. Contact the store
+                                            with this order number before
+                                            retrying.
+                                          </p>
+                                        )}
                                       {o.status === "pending" &&
                                         o.razorpay_id && (
                                           <button
@@ -3813,6 +3940,7 @@ export default function Storefront({ children }: { children: ReactNode }) {
               </div>
               <aside>
                 <h3>Your jars</h3>
+                {unavailableNotice}
                 {cartLines.map((x) => (
                   <div className="checkout-line" key={x.variantId}>
                     <span>
@@ -3830,7 +3958,16 @@ export default function Storefront({ children }: { children: ReactNode }) {
                     {error}
                   </p>
                 )}
-                <button className="button full-width" disabled={busy}>
+                <button
+                  className="button full-width"
+                  disabled={
+                    busy ||
+                    loading ||
+                    !quoted ||
+                    !user ||
+                    !(config.demo || config.payments || config.cod)
+                  }
+                >
                   {busy
                     ? "Preparing your order…"
                     : config.demo
@@ -3839,6 +3976,15 @@ export default function Storefront({ children }: { children: ReactNode }) {
                         ? "Place order"
                         : "Pay " + rupees(total)}
                 </button>
+                {error && (
+                  <button
+                    type="button"
+                    className="link-button"
+                    onClick={() => navigate("account", { tab: "orders" })}
+                  >
+                    Review your orders
+                  </button>
+                )}
                 <p className="muted">
                   Your invoice is generated automatically when your order is
                   confirmed.
@@ -3846,6 +3992,15 @@ export default function Storefront({ children }: { children: ReactNode }) {
               </aside>
             </form>
           )}
+        </section>
+      )}
+      {view === "product" && !loading && !selected && (
+        <section className="empty-state wrap">
+          <h1>This jar is unavailable.</h1>
+          <p>Browse the current collection for available flavours.</p>
+          <Link href="/shop" className="button">
+            Shop pickles
+          </Link>
         </section>
       )}
       {view === "product" && selected && (
@@ -4204,11 +4359,17 @@ export default function Storefront({ children }: { children: ReactNode }) {
                 </div>
               ) : (
                 <>
+                  {unavailableNotice}
                   <p className="bag-note">
-                    {subtotal >= config.freeShipping
+                    {(quoted?.subtotal ?? subtotal) - (quoted?.discount ?? 0) >=
+                    config.freeShipping
                       ? "Delivery is on us."
                       : "Add " +
-                        rupees(config.freeShipping - subtotal) +
+                        rupees(
+                          config.freeShipping -
+                            ((quoted?.subtotal ?? subtotal) -
+                              (quoted?.discount ?? 0)),
+                        ) +
                         " more for delivery on us."}
                   </p>
                   <div className="cart-items">

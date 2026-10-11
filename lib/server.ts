@@ -1,9 +1,15 @@
+import { routeMethods } from "./api-routes";
 import { hasAdministrator } from "./admin-access";
 import { storeDatabase, type Statement } from "./database";
 import { sampleProducts, type CartItem } from "./catalog";
 import { invoicePdf } from "./invoice";
 import { requestReasons, requestTransitions } from "./customer";
-import { createOperations, shippingReady, providerJson } from "./operations";
+import {
+  createOperations,
+  shippingReady,
+  providerJson,
+  ProviderError,
+} from "./operations";
 const cfg = () => process.env;
 const db = storeDatabase;
 const demo = () => cfg().DEMO_MODE === "true";
@@ -632,6 +638,14 @@ export async function handle(
   path: string,
 ): Promise<Response> {
   try {
+    const methods = routeMethods(path);
+    if (!methods) return json({ error: "Route not found." }, 404);
+    if (!methods.includes(request.method))
+      return json({ error: "Method not allowed." }, 405, {
+        Allow: methods
+          .flatMap((method) => (method === "GET" ? ["GET", "HEAD"] : [method]))
+          .join(", "),
+      });
     if (!demo()) {
       let publicUrl: URL;
       try {
@@ -657,10 +671,6 @@ export async function handle(
         )
           fail("Store shipping settings need correction.", 503);
     }
-    if (!["GET", "POST"].includes(request.method))
-      return json({ error: "Method not allowed." }, 405, {
-        Allow: "GET, POST",
-      });
     if (path === "health" && request.method === "GET") {
       await db().prepare("SELECT 1 healthy").first();
       return json({ ok: true });
@@ -724,6 +734,8 @@ export async function handle(
       } catch {
         fail("Invalid webhook body.");
       }
+      if (!event || typeof event !== "object" || Array.isArray(event))
+        fail("Invalid webhook body.");
       const p = event.payload?.payment?.entity;
       if (event.event === "payment.captured" && p) {
         const o = await db()
@@ -1058,6 +1070,16 @@ export async function handle(
     }
     if (path === "orders" && request.method === "POST") {
       const b = await body(request);
+      const a = b.address || {};
+      const address = {
+        name: textField(a.name),
+        phone: textField(a.phone, 15),
+        line1: textField(a.line1, 180),
+        line2: textField(a.line2, 180),
+        city: textField(a.city),
+        state: textField(a.state),
+        pincode: textField(a.pincode, 6),
+      };
       if (
         typeof b.idempotency !== "string" ||
         !/^[A-Za-z0-9_-]{8,100}$/.test(b.idempotency)
@@ -1085,10 +1107,19 @@ export async function handle(
               : old.payment === "demo"
                 ? "demo"
                 : "online") ||
-          JSON.stringify(previous.address) !== JSON.stringify(b.address)
+          JSON.stringify(previous.address) !== JSON.stringify(address)
         )
           fail(
             "This checkout key belongs to a different basket, address or payment method. Refresh checkout.",
+            409,
+          );
+        if (
+          old.payment === "unpaid" &&
+          !old.razorpay_id &&
+          old.status !== "cancelled"
+        )
+          fail(
+            "Your payment order is awaiting reconciliation. Review your orders and contact the store before retrying.",
             409,
           );
         return json({
@@ -1096,17 +1127,7 @@ export async function handle(
           keyId: cfg().RAZORPAY_KEY_ID || null,
         });
       }
-      const q = await quote(b.items, b.coupon),
-        a = b.address || {};
-      const address = {
-        name: textField(a.name),
-        phone: textField(a.phone, 15),
-        line1: textField(a.line1, 180),
-        line2: textField(a.line2, 180),
-        city: textField(a.city),
-        state: textField(a.state),
-        pincode: textField(a.pincode, 6),
-      };
+      const q = await quote(b.items, b.coupon);
       if (
         !address.name ||
         address.line1.length < 6 ||
@@ -1194,6 +1215,13 @@ export async function handle(
             receipt: id,
             notes: { avaruchi_order_id: id },
           });
+          if (
+            typeof payment.id !== "string" ||
+            !/^order_[A-Za-z0-9]+$/.test(payment.id) ||
+            payment.amount !== q.total ||
+            payment.currency !== "INR"
+          )
+            throw new ProviderError("api.razorpay.com", true);
           await db()
             .prepare("UPDATE orders SET razorpay_id=? WHERE id=?")
             .bind(payment.id, id)
@@ -1238,6 +1266,7 @@ export async function handle(
         "payments/" + encodeURIComponent(b.razorpay_payment_id),
       );
       if (
+        p.id !== b.razorpay_payment_id ||
         p.order_id !== o.razorpay_id ||
         p.amount !== o.total ||
         p.currency !== "INR" ||

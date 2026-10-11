@@ -18,7 +18,8 @@
     "test:regressions": "node tests/security-regressions.mjs",
     "check:config": "node scripts/check-config.mjs",
     "prestart": "npm run check:config",
-    "test:admin-access": "node tests/admin-access.mjs"
+    "test:admin-access": "node tests/admin-access.mjs",
+    "test:failures": "node tests/store-failures.mjs"
   },
   "dependencies": {
     "@next/env": "16.3.8",
