@@ -17,6 +17,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useId,
   useRef,
   useState,
   type FormEvent,
@@ -412,6 +413,7 @@ function ProductCard({
   onWish: () => void;
 }) {
   const [index, setIndex] = useState(0);
+  const selectId = useId();
   const v = p.variants[index] || p.variants[0];
   return (
     <Reveal
@@ -440,7 +442,9 @@ function ProductCard({
             ? "EXTRA HOT"
             : p.category === "Andhra favourites"
               ? "ANDHRA FAVOURITE"
-              : "PANTRY CLASSIC"}
+              : p.category === "Bold flavours"
+                ? "BOLD FLAVOUR"
+                : "PANTRY CLASSIC"}
         </span>
       </div>
       <div className="product-heading">
@@ -451,11 +455,11 @@ function ProductCard({
       </div>
       <p className="product-subtitle">{p.subtitle}</p>
       <div className="product-actions">
-        <label className="sr-only" htmlFor={"weight-" + p.id}>
+        <label className="sr-only" htmlFor={selectId}>
           Jar size for {p.name}
         </label>
         <select
-          id={"weight-" + p.id}
+          id={selectId}
           value={index}
           onChange={(e) => setIndex(Number(e.target.value))}
         >
@@ -470,12 +474,221 @@ function ProductCard({
           disabled={!v.stock}
           onClick={() => onAdd(v.id)}
         >
-          {v.stock ? "Add to bag +" : "Sold out"}
+          {v.stock ? "Add to cart" : "Sold out"}
         </button>
       </div>
     </Reveal>
   );
 }
+function BrandMark() {
+  return (
+    <>
+      <svg
+        className="brand-leaf"
+        viewBox="0 0 42 42"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path d="M8 33C7 17 18 7 35 6c1 16-8 27-24 29" fill="currentColor" />
+        <path
+          d="M6 38 29 13m-13 16-1-9m7 4 8-1"
+          stroke="var(--paper)"
+          strokeWidth="1.7"
+        />
+      </svg>
+      <span className="brand-name">
+        avaruchi<small>రుచిలో సంప్రదాయం</small>
+      </span>
+    </>
+  );
+}
+function ReferenceHero({ products }: { products: Product[] }) {
+  const [slide, setSlide] = useState(0);
+  const reduced = useReducedMotion();
+  const slides = [
+    {
+      id: "mango",
+      title: "The taste of home, in every jar.",
+      copy: "Classic mango. Familiar tang. A place at your table.",
+      photo: true,
+    },
+    {
+      id: "gongura",
+      title: "An Andhra favourite.",
+      copy: "Discover the distinctive, leafy tang of gongura.",
+      photo: false,
+    },
+    {
+      id: "chilli",
+      title: "A little more fire.",
+      copy: "Bold red chilli pickle for the heat seekers.",
+      photo: false,
+    },
+  ];
+  const item = slides[slide];
+  const product =
+    products.find((p) => p.id === item.id) ||
+    sampleProducts.find((p) => p.id === item.id)!;
+  return (
+    <section
+      className="reference-hero"
+      aria-label="Featured pickles"
+      aria-roledescription="carousel"
+    >
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={item.id}
+          className={
+            "reference-slide " + (item.photo ? "photo-slide" : "jar-slide")
+          }
+          initial={reduced ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: reduced ? 0 : 0.3 }}
+        >
+          {item.photo ? (
+            <img
+              src="/images/hero.png"
+              alt="Avaruchi mango pickle jar with a bowl of spiced mango and chillies"
+              fetchPriority="high"
+            />
+          ) : (
+            <ProductPhoto p={product} className="hero-jar" />
+          )}
+          <div className="reference-hero-copy">
+            <h1>{item.title}</h1>
+            <p>{item.copy}</p>
+            <Link className="hero-shop-link" href={"/shop/" + item.id}>
+              Shop {product.name.toLowerCase()}
+            </Link>
+          </div>
+        </motion.div>
+      </AnimatePresence>
+      <div
+        className="slide-controls"
+        role="group"
+        aria-label="Choose a featured pickle"
+      >
+        {slides.map((s, i) => (
+          <button
+            key={s.id}
+            aria-label={"Show " + s.id + " pickle slide"}
+            aria-pressed={slide === i}
+            onClick={() => setSlide(i)}
+          >
+            <span />
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+function CollectionRow({
+  title,
+  category,
+  products,
+  loading,
+  onAdd,
+  wishlist,
+  onWish,
+}: {
+  title: string;
+  category: string;
+  products: Product[];
+  loading: boolean;
+  onAdd: (id: string) => void;
+  wishlist: string[];
+  onWish: (id: string) => void;
+}) {
+  const track = useRef<HTMLDivElement>(null);
+  const reduced = useReducedMotion();
+  const [edges, setEdges] = useState({ start: true, end: false });
+  const measure = () => {
+    const el = track.current;
+    if (el)
+      setEdges({
+        start: el.scrollLeft < 2,
+        end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 2,
+      });
+  };
+  useEffect(() => {
+    const el = track.current;
+    if (!el) return;
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [loading, products.length]);
+  const scroll = (direction: number) =>
+    track.current?.scrollBy({
+      left: direction * track.current.clientWidth,
+      behavior: reduced ? "auto" : "smooth",
+    });
+  return (
+    <section className="reference-collection wrap" aria-label={title}>
+      <div className="reference-collection-heading">
+        <h2>
+          {title}
+          <svg viewBox="0 0 36 36" aria-hidden="true">
+            <path
+              d="M7 29C7 15 16 8 29 7c0 14-7 21-20 22M5 32 25 11"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            />
+          </svg>
+        </h2>
+        <Link
+          className="collection-view"
+          href={"/shop?category=" + encodeURIComponent(category)}
+        >
+          View all
+        </Link>
+      </div>
+      {loading ? (
+        <Skeleton />
+      ) : (
+        <div className="collection-rail">
+          <button
+            className="collection-arrow"
+            disabled={edges.start}
+            aria-label={"Previous " + title}
+            onClick={() => scroll(-1)}
+          >
+            ‹
+          </button>
+          <div
+            className="collection-track"
+            ref={track}
+            onScroll={measure}
+            tabIndex={0}
+            aria-label={title + " products"}
+          >
+            {products.map((p, i) => (
+              <ProductCard
+                key={p.id}
+                p={p}
+                index={i}
+                onAdd={onAdd}
+                wished={wishlist.includes(p.id)}
+                onWish={() => onWish(p.id)}
+              />
+            ))}
+          </div>
+          <button
+            className="collection-arrow"
+            disabled={edges.end}
+            aria-label={"Next " + title}
+            onClick={() => scroll(1)}
+          >
+            ›
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default function Storefront({ children }: { children: ReactNode }) {
   const pathname = usePathname() || "/";
   const router = useRouter();
@@ -519,6 +732,8 @@ export default function Storefront({ children }: { children: ReactNode }) {
     [inventorySearch, setInventorySearch] = useState(""),
     [expanded, setExpanded] = useState<string | null>(null),
     [idempotency, setIdempotency] = useState("");
+  const [headerSearch, setHeaderSearch] = useState(false);
+  const [headerQuery, setHeaderQuery] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
   const notify = (message: string) => setToast(message);
   const selected =
@@ -532,6 +747,22 @@ export default function Storefront({ children }: { children: ReactNode }) {
   };
   useEffect(() => {
     setPanel(null);
+    setHeaderSearch(false);
+    if (view === "shop") {
+      const params = new URLSearchParams(window.location.search);
+      const selectedCategory = params.get("category");
+      if (
+        selectedCategory &&
+        [
+          "All pickles",
+          "Classics",
+          "Andhra favourites",
+          "Bold flavours",
+        ].includes(selectedCategory)
+      )
+        setCategory(selectedCategory);
+      setSearch(params.get("search") || "");
+    }
     setError("");
     setProductWeight(0);
     setProductQty(1);
@@ -940,7 +1171,7 @@ export default function Storefront({ children }: { children: ReactNode }) {
             {view === "wishlist" ? (
               "Your saved flavours."
             ) : view === "shop" ? (
-              "Find your favourite flavour."
+              "Pickles"
             ) : (
               <>
                 Meet your meal’s
@@ -1004,7 +1235,7 @@ export default function Storefront({ children }: { children: ReactNode }) {
         <span>
           {view === "home"
             ? "8 flavours, endless pairings"
-            : list.length + " flavours"}
+            : list.length + (list.length === 1 ? " flavour" : " flavours")}
         </span>
       </div>
       {loading ? (
@@ -1127,131 +1358,74 @@ export default function Storefront({ children }: { children: ReactNode }) {
       )}
       {view === "home" && (
         <>
-          <section className="hero wrap">
-            <div className="hero-copy">
-              <Reveal enter delay={0.03}>
-                <span className="eyebrow">OPEN A JAR. FEEL AT HOME.</span>
-              </Reveal>
-              <Reveal enter delay={0.1}>
-                <h1>
-                  A little pickle.
-                  <br />
-                  <em>A lot of home.</em>
-                </h1>
-              </Reveal>
-              <Reveal className="hero-description" enter delay={0.17}>
-                <p>
-                  The tang you crave. The heat you love.
-                  <br />
-                  Pickles for the everyday meals
-                  <br className="desktop" /> that mean everything.
+          <ReferenceHero products={products} />
+          <Reveal as="section" className="reference-intro wrap">
+            <div>
+              <h2>Pickles for the everyday Andhra table</h2>
+              <p>
+                Avaruchi brings familiar tang and bold spice to the meals you
+                love. Explore mango, gongura, tomato and more, choose your jar
+                size, and find a new favourite for your table.
+              </p>
+              <p>
+                Warm rice, a crisp dosa, a comforting bowl of dal. There is
+                always room for a little pickle.
+              </p>
+              <strong>
+                Free delivery on orders from {rupees(config.freeShipping)}.
+              </strong>
+              {config.demo && (
+                <p className="intro-offer">
+                  Try the sample checkout with code PICKLE10. Preview orders
+                  only.
                 </p>
-              </Reveal>
-              <Reveal enter delay={0.24}>
-                <Link className="button hero-button" href={pagePath("shop")}>
-                  Find your flavour <span>↗</span>
-                </Link>
-              </Reveal>
-              <div className="hero-footnote">
-                <svg
-                  width="38"
-                  height="38"
-                  viewBox="0 0 40 40"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M10 32c15-3 22-11 21-26C16 7 7 16 10 32Z"
-                    stroke="currentColor"
-                    strokeWidth="1.2"
-                  />
-                  <path
-                    d="m9 34 19-23M16 26l-1-9M21 21l7-1"
-                    stroke="currentColor"
-                    strokeWidth="1.2"
-                  />
-                </svg>
-                <span>
-                  Rooted in Andhra flavours.
-                  <br /> Made for your table.
-                </span>
-              </div>
-            </div>
-            <Reveal as="figure" className="hero-photo" enter delay={0.12}>
-              <img
-                src="/images/hero.png"
-                alt="Avaruchi mango pickle jar and a bowl of spiced mango with chillies and a brass spoon"
-                fetchPriority="high"
-              />
-              <figcaption>
-                <span>THE GOOD KIND OF FIERY.</span>
-                <span>Mango. Mustard. Memories.</span>
-              </figcaption>
-            </Reveal>
-          </section>
-          <div className="flavour-strip">
-            <span>TANGY BY NATURE</span>
-            <span className="strip-symbol">/</span>
-            <span>BOLD BY THE SPOONFUL</span>
-            <span className="strip-symbol">/</span>
-            <span>BETTER TOGETHER</span>
-            <span className="strip-symbol">/</span>
-            <span>PASS THE PICKLE</span>
-          </div>
-          {shop(4)}
-          <Reveal as="section" className="story-section wrap">
-            <div className="story-art">
-              <ProductPhoto p={products[1] || sampleProducts[1]} />
-              <span className="story-caption">
-                A FAMILIAR FLAVOUR.
-                <br />A NEW PLACE AT THE TABLE.
-              </span>
-            </div>
-            <div className="story-copy">
-              <span className="eyebrow">THE AVARUCHI IDEA</span>
-              <h2>
-                Some flavours
-                <br />
-                feel like coming home.
-              </h2>
-              <p>
-                A jar at the centre of the table. A little rice on your plate.
-                Someone saying, “Have a little more.”
-              </p>
-              <p>
-                Avaruchi is a pickle company inspired by that feeling. Our
-                collection celebrates the tang, warmth, and bold flavours that
-                turn a simple meal into something you look forward to.
-              </p>
-              <Link className="link-button" href={pagePath("journal")}>
-                Make room at your table <span>↗</span>
-              </Link>
+              )}
             </div>
           </Reveal>
-          <Reveal as="section" className="table-section wrap">
-            <span className="eyebrow">THE EVERYDAY RITUAL</span>
-            <h2>A good jar goes a long way.</h2>
-            <div className="ritual-rows">
-              <div>
-                <span>01</span>
-                <h3>Find your pairing.</h3>
-                <p>
-                  Mango with warm rice. Tomato with dosa. Lemon with curd rice.
-                  A small spoon changes the whole plate.
-                </p>
-              </div>
-              <div>
-                <span>02</span>
-                <h3>Keep it fresh.</h3>
-                <p>
-                  Use a clean, dry spoon and close the lid after serving. Follow
-                  the storage instructions on your jar.
-                </p>
-              </div>
+          <CollectionRow
+            title="pickles"
+            category="All pickles"
+            products={products}
+            loading={loading}
+            onAdd={add}
+            wishlist={wishlist}
+            onWish={wish}
+          />
+          <CollectionRow
+            title="Andhra favourites"
+            category="Andhra favourites"
+            products={products.filter(
+              (p) => p.category === "Andhra favourites",
+            )}
+            loading={loading}
+            onAdd={add}
+            wishlist={wishlist}
+            onWish={wish}
+          />
+          <CollectionRow
+            title="bold flavours"
+            category="Bold flavours"
+            products={products.filter((p) => p.category === "Bold flavours")}
+            loading={loading}
+            onAdd={add}
+            wishlist={wishlist}
+            onWish={wish}
+          />
+          <Reveal as="section" className="reference-story wrap">
+            <div>
+              <span className="eyebrow">AT THE TABLE</span>
+              <h2>A small spoon. A familiar ritual.</h2>
+              <p>
+                Find pairing notes for warm rice, breakfast and everyday
+                lunches. Get to know the flavours before choosing your next jar.
+              </p>
+              <Link className="collection-view" href="/journal">
+                Read our pairing notes
+              </Link>
             </div>
-            <Link className="button outline" href={pagePath("shop")}>
-              Choose your next jar <span>↗</span>
-            </Link>
+            <ProductPhoto
+              p={products.find((p) => p.id === "tomato") || sampleProducts[2]}
+            />
           </Reveal>
           <Faq />
         </>
@@ -3744,327 +3918,380 @@ export default function Storefront({ children }: { children: ReactNode }) {
   );
   return (
     <MotionConfig reducedMotion="user">
-      <a className="skip-link" href="#main">
-        Skip to content
-      </a>
-      <div
-        className={
-          "announcement " +
-          (["account", "admin"].includes(view) ? "portal-announcement" : "")
-        }
-      >
-        <span>A little tang. A little heat. A whole lot of home.</span>
-        <span>Delivery on us from {rupees(config.freeShipping)}</span>
-      </div>
-      <div
-        className={
-          "header-shell " +
-          (["account", "admin"].includes(view) ? "portal-header" : "")
-        }
-      >
-        <header className="site-header wrap">
-          <Link className="wordmark" aria-label="Avaruchi home" href="/">
-            avaruchi<span>THE PICKLE COMPANY</span>
-          </Link>
-          <nav aria-label="Main navigation">
-            <Link
-              className={view === "shop" || view === "product" ? "current" : ""}
-              href="/shop"
-            >
-              Shop pickles
-            </Link>
-            <Link
-              className={view === "story" ? "current" : ""}
-              href="/our-story"
-            >
-              Our story
-            </Link>
-            <Link
-              className={view === "journal" ? "current" : ""}
-              href="/journal"
-            >
-              At the table
-            </Link>
-          </nav>
-          <div className="header-actions">
-            <button
-              className="icon-button search-toggle"
-              aria-label="Search"
-              onClick={() => {
-                navigate("shop");
-                setTimeout(() => searchRef.current?.focus(), 60);
-              }}
-            >
-              <Icon name="search" />
-            </button>
-            <Link
-              className="icon-button"
-              aria-label="Your account"
-              href={pagePath("account")}
-            >
-              <Icon name="user" />
-            </Link>
-            <button
-              className="bag-button"
-              aria-label={"Open bag, " + count + " jars"}
-              onClick={() => {
-                setError("");
-                setPanel("cart");
-              }}
-            >
-              <Icon name="bag" />
-              <span>Bag ({count})</span>
-            </button>
-          </div>
-        </header>
-      </div>
-      {config.demo && (
-        <div className="preview-notice">
-          PREVIEW STORE{" "}
-          <span>
-            Sample products and prices. Demo orders only. No payments collected.
-          </span>
-        </div>
-      )}
-      <motion.main
-        id="main"
-        key={pathname}
-        initial={false}
-        animate={reduceMotion ? { opacity: 1 } : { opacity: [0.8, 1] }}
-        transition={{ duration: reduceMotion ? 0 : 0.3, ease: motionEase }}
-      >
-        <StorePageContext.Provider value={pageContent}>
-          {children}
-        </StorePageContext.Provider>
-      </motion.main>
-      <footer
-        className={["account", "admin"].includes(view) ? "portal-footer" : ""}
-      >
-        <div className="footer-main wrap">
-          <div className="footer-brand">
-            <Link className="wordmark" href={pagePath("home")}>
-              avaruchi<span>THE PICKLE COMPANY</span>
-            </Link>
-            <p>
-              A little pickle.
-              <br />A lot of home.
-            </p>
-          </div>
-          <div>
-            <h3>At the table</h3>
-            <Link href={pagePath("shop")}>Shop all pickles</Link>
-            <Link href={pagePath("journal")}>Pairing notes</Link>
-            <Link href={pagePath("wishlist")}>Saved flavours</Link>
-          </div>
-          <div>
-            <h3>Here to help</h3>
-            <Link href={pagePath("account")}>Orders & invoices</Link>
-            <Link href={pagePath("shipping")}>Shipping policy</Link>
-            <Link href={pagePath("returns")}>Returns & refunds</Link>
-            <Link href={pagePath("contact")}>Contact us</Link>
-          </div>
-          <div>
-            <h3>The fine print</h3>
-            <Link href={pagePath("terms")}>Terms of Service</Link>
-            <Link href={pagePath("privacy")}>Privacy policy</Link>
-            {isAdmin && (
-              <Link href={pagePath("admin")}>Store administration</Link>
-            )}
-            <span className="footer-location">
-              Inspired by Andhra.
-              <br />
-              For the everyday table.
+      <div className="reference-store">
+        <a className="skip-link" href="#main">
+          Skip to content
+        </a>
+        <div className="header-shell">
+          <div className="announcement">
+            <span>
+              Bring home your favourite pickle. Free delivery from{" "}
+              {rupees(config.freeShipping)}.
             </span>
           </div>
-        </div>
-        <div className="footer-bottom wrap">
-          <span>© {new Date().getFullYear()} Avaruchi. avaruchi.com</span>
-          <span>
-            {config.demo
-              ? "Concept photography and sample catalog."
-              : "Google sign-in · Secure checkout · Automatic invoices"}
-          </span>
-        </div>
-      </footer>
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            key={toast}
-            className="toast"
-            role="status"
-            initial={reduceMotion ? false : { opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: reduceMotion ? 0 : 0.22 }}
-          >
-            {toast}
-            <button
-              aria-label="Dismiss notification"
-              onClick={() => setToast("")}
+          <header className="site-header wrap">
+            <Link
+              className="wordmark reference-brand"
+              aria-label="Avaruchi home"
+              href="/"
             >
-              ×
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      <AnimatePresence>
-        {panel === "cart" && (
-          <Modal
-            key="cart"
-            title={"Your bag (" + count + ")"}
-            drawer
-            onClose={() => setPanel(null)}
-          >
-            {!cart.length ? (
-              <div className="empty-state">
-                <h3>A jar would look good here.</h3>
-                <p>Find a flavour you love and add it to your bag.</p>
-                <Link className="button" href={pagePath("shop")}>
-                  Browse pickles
-                </Link>
-              </div>
-            ) : (
-              <>
-                <p className="bag-note">
-                  {subtotal >= config.freeShipping
-                    ? "Delivery is on us."
-                    : "Add " +
-                      rupees(config.freeShipping - subtotal) +
-                      " more for delivery on us."}
-                </p>
-                <div className="cart-items">
-                  {cartLines.map((x) => (
-                    <div className="cart-item" key={x.variantId}>
-                      <ProductPhoto p={x.p} />
-                      <div>
-                        <h3>{x.p.name}</h3>
-                        <p>
-                          {weightLabel(x.v.weight)} · {rupees(x.v.price)}
-                        </p>
-                        <div className="quantity">
-                          <button
-                            aria-label={"Decrease " + x.p.name}
-                            onClick={() => change(x.variantId, x.quantity - 1)}
-                          >
-                            −
-                          </button>
-                          <span>{x.quantity}</span>
-                          <button
-                            aria-label={"Increase " + x.p.name}
-                            onClick={() => change(x.variantId, x.quantity + 1)}
-                          >
-                            +
-                          </button>
-                        </div>
-                        <button
-                          className="remove-link"
-                          onClick={() => change(x.variantId, 0)}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                      <strong>{rupees(x.quantity * x.v.price)}</strong>
-                    </div>
+              <BrandMark />
+            </Link>
+            <nav aria-label="Main navigation">
+              <Link className={view === "home" ? "current" : ""} href="/">
+                Home
+              </Link>
+              <details className="products-menu">
+                <summary
+                  className={
+                    view === "shop" || view === "product" ? "current" : ""
+                  }
+                >
+                  Products <span aria-hidden="true">⌄</span>
+                </summary>
+                <div className="products-dropdown">
+                  {[
+                    "All pickles",
+                    "Classics",
+                    "Andhra favourites",
+                    "Bold flavours",
+                  ].map((c) => (
+                    <Link
+                      key={c}
+                      href={"/shop?category=" + encodeURIComponent(c)}
+                    >
+                      {c}
+                    </Link>
                   ))}
                 </div>
-                <div className="coupon-form">
-                  <label className="sr-only" htmlFor="coupon">
-                    Coupon code
-                  </label>
-                  <input
-                    id="coupon"
-                    placeholder="Have a coupon?"
-                    value={couponInput}
-                    onChange={(e) => setCouponInput(e.target.value)}
-                  />
+              </details>
+              <Link
+                className={view === "journal" ? "current" : ""}
+                href="/journal"
+              >
+                Stories
+              </Link>
+            </nav>
+            <div className="header-actions">
+              <button
+                className="icon-button search-toggle"
+                aria-label="Search"
+                aria-expanded={headerSearch}
+                aria-controls="header-search"
+                onClick={() => setHeaderSearch(!headerSearch)}
+              >
+                <Icon name="search" />
+              </button>
+              <button
+                className="bag-button"
+                aria-label={"Open bag, " + count + " jars"}
+                onClick={() => {
+                  setError("");
+                  setPanel("cart");
+                }}
+              >
+                <Icon name="bag" />
+                <span className="bag-count">{count}</span>
+              </button>
+              <Link
+                className="icon-button"
+                aria-label="Your account"
+                href="/account"
+              >
+                <Icon name="user" />
+              </Link>
+            </div>
+          </header>
+          {headerSearch && (
+            <form
+              className="header-search wrap"
+              id="header-search"
+              onSubmit={(e) => {
+                e.preventDefault();
+                window.location.assign(
+                  "/shop?search=" + encodeURIComponent(headerQuery.trim()),
+                );
+              }}
+            >
+              <label htmlFor="header-query" className="sr-only">
+                Search pickles
+              </label>
+              <input
+                id="header-query"
+                autoFocus
+                value={headerQuery}
+                onChange={(e) => setHeaderQuery(e.target.value)}
+                placeholder="Search a flavour or ingredient"
+              />
+              <button type="submit">Search</button>
+              <button
+                type="button"
+                aria-label="Close search"
+                onClick={() => setHeaderSearch(false)}
+              >
+                ×
+              </button>
+            </form>
+          )}
+        </div>
+        {config.demo && (
+          <div className="preview-notice">
+            PREVIEW STORE{" "}
+            <span>
+              Sample products and prices. Demo orders only. No payments
+              collected.
+            </span>
+          </div>
+        )}
+        <motion.main
+          id="main"
+          key={pathname}
+          initial={false}
+          animate={reduceMotion ? { opacity: 1 } : { opacity: [0.8, 1] }}
+          transition={{ duration: reduceMotion ? 0 : 0.3, ease: motionEase }}
+        >
+          <StorePageContext.Provider value={pageContent}>
+            {children}
+          </StorePageContext.Provider>
+        </motion.main>
+        <footer
+          className={["account", "admin"].includes(view) ? "portal-footer" : ""}
+        >
+          <div className="footer-main wrap">
+            <div className="footer-brand">
+              <Link
+                className="wordmark reference-brand"
+                href={pagePath("home")}
+                aria-label="Avaruchi home"
+              >
+                <BrandMark />
+              </Link>
+              <p>
+                A little pickle.
+                <br />A lot of home.
+              </p>
+            </div>
+            <div>
+              <h3>At the table</h3>
+              <Link href="/our-story">Our story</Link>
+              <Link href={pagePath("shop")}>Shop all pickles</Link>
+              <Link href={pagePath("journal")}>Pairing notes</Link>
+              <Link href={pagePath("wishlist")}>Saved flavours</Link>
+            </div>
+            <div>
+              <h3>Here to help</h3>
+              <Link href={pagePath("account")}>Orders & invoices</Link>
+              <Link href={pagePath("shipping")}>Shipping policy</Link>
+              <Link href={pagePath("returns")}>Returns & refunds</Link>
+              <Link href={pagePath("contact")}>Contact us</Link>
+            </div>
+            <div>
+              <h3>The fine print</h3>
+              <Link href={pagePath("terms")}>Terms of Service</Link>
+              <Link href={pagePath("privacy")}>Privacy policy</Link>
+              {isAdmin && (
+                <Link href={pagePath("admin")}>Store administration</Link>
+              )}
+              <span className="footer-location">
+                Inspired by Andhra.
+                <br />
+                For the everyday table.
+              </span>
+            </div>
+          </div>
+          <div className="footer-bottom wrap">
+            <span>© {new Date().getFullYear()} Avaruchi. avaruchi.com</span>
+            <span>
+              {config.demo
+                ? "Concept photography and sample catalog."
+                : "Google sign-in · Secure checkout · Automatic invoices"}
+            </span>
+          </div>
+        </footer>
+        <AnimatePresence>
+          {toast && (
+            <motion.div
+              key={toast}
+              className="toast"
+              role="status"
+              initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: reduceMotion ? 0 : 0.22 }}
+            >
+              {toast}
+              <button
+                aria-label="Dismiss notification"
+                onClick={() => setToast("")}
+              >
+                ×
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <AnimatePresence>
+          {panel === "cart" && (
+            <Modal
+              key="cart"
+              title={"Your bag (" + count + ")"}
+              drawer
+              onClose={() => setPanel(null)}
+            >
+              {!cart.length ? (
+                <div className="empty-state">
+                  <h3>A jar would look good here.</h3>
+                  <p>Find a flavour you love and add it to your bag.</p>
+                  <Link className="button" href={pagePath("shop")}>
+                    Browse pickles
+                  </Link>
+                </div>
+              ) : (
+                <>
+                  <p className="bag-note">
+                    {subtotal >= config.freeShipping
+                      ? "Delivery is on us."
+                      : "Add " +
+                        rupees(config.freeShipping - subtotal) +
+                        " more for delivery on us."}
+                  </p>
+                  <div className="cart-items">
+                    {cartLines.map((x) => (
+                      <div className="cart-item" key={x.variantId}>
+                        <ProductPhoto p={x.p} />
+                        <div>
+                          <h3>{x.p.name}</h3>
+                          <p>
+                            {weightLabel(x.v.weight)} · {rupees(x.v.price)}
+                          </p>
+                          <div className="quantity">
+                            <button
+                              aria-label={"Decrease " + x.p.name}
+                              onClick={() =>
+                                change(x.variantId, x.quantity - 1)
+                              }
+                            >
+                              −
+                            </button>
+                            <span>{x.quantity}</span>
+                            <button
+                              aria-label={"Increase " + x.p.name}
+                              onClick={() =>
+                                change(x.variantId, x.quantity + 1)
+                              }
+                            >
+                              +
+                            </button>
+                          </div>
+                          <button
+                            className="remove-link"
+                            onClick={() => change(x.variantId, 0)}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                        <strong>{rupees(x.quantity * x.v.price)}</strong>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="coupon-form">
+                    <label className="sr-only" htmlFor="coupon">
+                      Coupon code
+                    </label>
+                    <input
+                      id="coupon"
+                      placeholder="Have a coupon?"
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value)}
+                    />
+                    <button
+                      className="small-button"
+                      disabled={busy}
+                      onClick={applyCoupon}
+                    >
+                      Apply
+                    </button>
+                  </div>
+                  {config.demo && (
+                    <p className="muted">
+                      Try PICKLE10 on sample baskets of ₹499 or more.
+                    </p>
+                  )}
+                  {summary}
+                  {error && (
+                    <p className="form-error" role="alert">
+                      {error}
+                    </p>
+                  )}
                   <button
-                    className="small-button"
-                    disabled={busy}
-                    onClick={applyCoupon}
+                    className="button full-width"
+                    disabled={busy || loading}
+                    onClick={checkout}
                   >
-                    Apply
+                    {busy ? "Checking your basket…" : "Continue to checkout"}{" "}
+                    <span>↗</span>
+                  </button>
+                  <button
+                    className="link-button continue-shop"
+                    onClick={() => setPanel(null)}
+                  >
+                    Keep exploring
+                  </button>
+                </>
+              )}
+            </Modal>
+          )}
+          {success && (
+            <Modal
+              key="success"
+              title="Your table is one jar closer."
+              onClose={() => setSuccess(null)}
+            >
+              <div className="success-content">
+                <span className="eyebrow">ORDER CONFIRMED / {success.id}</span>
+                <h2>
+                  Good things
+                  <br />
+                  are in your bag.
+                </h2>
+                <p>
+                  {success.data.demo
+                    ? "Your demo order is saved. No payment was collected and no shipment is scheduled."
+                    : "Your order is confirmed. Follow its progress from your account."}
+                </p>
+                <div className="success-summary">
+                  {success.data.items.map((x: any) => (
+                    <p key={x.variantId}>
+                      <span>
+                        {x.name} · {weightLabel(x.weight)} × {x.quantity}
+                      </span>
+                      <strong>{rupees(x.price * x.quantity)}</strong>
+                    </p>
+                  ))}
+                  <p>
+                    <strong>Total</strong>
+                    <strong>{rupees(success.total)}</strong>
+                  </p>
+                </div>
+                <div className="order-buttons">
+                  <a className="button" href={"/api/invoice/" + success.id}>
+                    Download invoice PDF
+                  </a>
+                  <button
+                    className="button outline"
+                    onClick={() => {
+                      setSuccess(null);
+                      navigate("account");
+                      setExpanded(success.id);
+                    }}
+                  >
+                    Track your order
                   </button>
                 </div>
-                {config.demo && (
-                  <p className="muted">
-                    Try PICKLE10 on sample baskets of ₹499 or more.
-                  </p>
-                )}
-                {summary}
-                {error && (
-                  <p className="form-error" role="alert">
-                    {error}
-                  </p>
-                )}
-                <button
-                  className="button full-width"
-                  disabled={busy || loading}
-                  onClick={checkout}
-                >
-                  {busy ? "Checking your basket…" : "Continue to checkout"}{" "}
-                  <span>↗</span>
-                </button>
-                <button
-                  className="link-button continue-shop"
-                  onClick={() => setPanel(null)}
-                >
-                  Keep exploring
-                </button>
-              </>
-            )}
-          </Modal>
-        )}
-        {success && (
-          <Modal
-            key="success"
-            title="Your table is one jar closer."
-            onClose={() => setSuccess(null)}
-          >
-            <div className="success-content">
-              <span className="eyebrow">ORDER CONFIRMED / {success.id}</span>
-              <h2>
-                Good things
-                <br />
-                are in your bag.
-              </h2>
-              <p>
-                {success.data.demo
-                  ? "Your demo order is saved. No payment was collected and no shipment is scheduled."
-                  : "Your order is confirmed. Follow its progress from your account."}
-              </p>
-              <div className="success-summary">
-                {success.data.items.map((x: any) => (
-                  <p key={x.variantId}>
-                    <span>
-                      {x.name} · {weightLabel(x.weight)} × {x.quantity}
-                    </span>
-                    <strong>{rupees(x.price * x.quantity)}</strong>
-                  </p>
-                ))}
-                <p>
-                  <strong>Total</strong>
-                  <strong>{rupees(success.total)}</strong>
-                </p>
               </div>
-              <div className="order-buttons">
-                <a className="button" href={"/api/invoice/" + success.id}>
-                  Download invoice PDF
-                </a>
-                <button
-                  className="button outline"
-                  onClick={() => {
-                    setSuccess(null);
-                    navigate("account");
-                    setExpanded(success.id);
-                  }}
-                >
-                  Track your order
-                </button>
-              </div>
-            </div>
-          </Modal>
-        )}
-      </AnimatePresence>
+            </Modal>
+          )}
+        </AnimatePresence>
+      </div>
     </MotionConfig>
   );
 }
