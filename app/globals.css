@@ -4818,6 +4818,13 @@ textarea {
 }
 
 /* Supplied brand artwork and merchant identity. */
+.reference-store .footer-location,
+.reference-store .footer-bottom {
+  color: #41483b;
+}
+.reference-store .footer-location a {
+  font-size: 13px;
+}
 .reference-store .reference-brand {
   gap: 12px;
   min-width: 0;
