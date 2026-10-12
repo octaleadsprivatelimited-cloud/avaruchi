@@ -27,6 +27,8 @@ try {
     "operations",
     "database",
     "catalog",
+    "brand",
+    "invoice-logo",
     "invoice",
     "customer",
   ]) {
@@ -167,6 +169,16 @@ try {
       });
     if (u === "https://api.resend.com/emails") {
       mailCalls++;
+      if (mailCalls === 1) {
+        const attachment = Buffer.from(body.attachments[0].content, "base64");
+        eq(attachment.subarray(0, 8).toString(), "%PDF-1.4");
+        eq(attachment.toString().includes("Lakshmis Tapasi Treats"), true);
+        eq(
+          attachment.length > 131072,
+          true,
+          "Branded invoice exceeds one spread-call limit",
+        );
+      }
       assert.equal(
         new Headers(init.headers).get("idempotency-key").startsWith("invoice-"),
         true,

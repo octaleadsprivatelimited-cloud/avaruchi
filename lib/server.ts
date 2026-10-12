@@ -56,6 +56,12 @@ const esc = (s: string) =>
         x
       ]!,
   );
+const base64Bytes = (bytes: Uint8Array) => {
+  const chunks: string[] = [];
+  for (let offset = 0; offset < bytes.length; offset += 32768)
+    chunks.push(String.fromCharCode(...bytes.subarray(offset, offset + 32768)));
+  return btoa(chunks.join(""));
+};
 const b64url = (a: Uint8Array) =>
   btoa(String.fromCharCode(...a))
     .replace(/\+/g, "-")
@@ -587,7 +593,7 @@ async function invoiceEmail(o: any) {
       attachments: [
         {
           filename: "Avaruchi-" + o.id + ".pdf",
-          content: btoa(String.fromCharCode(...pdf)),
+          content: base64Bytes(pdf),
         },
       ],
     });
