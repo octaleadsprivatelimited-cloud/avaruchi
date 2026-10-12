@@ -4439,11 +4439,9 @@ export default function Storefront({ children }: { children: ReactNode }) {
             <span>
               © {new Date().getFullYear()} {BRAND.legalName}. Avaruchi.
             </span>
-            <span>
-              {config.demo
-                ? "Concept photography and sample catalog."
-                : "Google sign-in · Secure checkout · Automatic invoices"}
-            </span>
+            {!config.demo && (
+              <span>Google sign-in · Secure checkout · Automatic invoices</span>
+            )}
             <span className="developer-credit">
               Developed By{" "}
               <a
