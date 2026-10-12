@@ -4816,3 +4816,189 @@ textarea {
     width: 100%;
   }
 }
+
+/* Supplied brand artwork and merchant identity. */
+.reference-store .reference-brand {
+  gap: 12px;
+  min-width: 0;
+}
+.reference-store .brand-logo {
+  width: 60px;
+  height: 60px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+.reference-store .brand-name small {
+  max-width: 200px;
+  font-size: 10px;
+  line-height: 1.6;
+  text-align: left;
+  margin-top: 6px;
+}
+.reference-store .footer-brand .brand-logo {
+  width: 72px;
+  height: 72px;
+}
+.reference-store .footer-brand .brand-name {
+  font-size: 32px;
+}
+.reference-store .footer-brand .business-footer {
+  font-size: 12px;
+  line-height: 1.8;
+  margin-top: 18px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.business-footer strong,
+.business-footer span {
+  display: block;
+}
+.business-footer a {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--green);
+}
+.business-artwork {
+  margin: 0;
+}
+.business-artwork img,
+.brand-story-art {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+.business-contact {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr);
+  gap: 42px;
+  align-items: center;
+  margin: 36px 0 48px;
+}
+.business-details {
+  min-width: 0;
+}
+.business-details h2 {
+  font-size: clamp(26px, 3vw, 36px);
+  line-height: 1.2;
+  margin: 12px 0;
+}
+.business-tagline {
+  font-family: "Noto Sans Telugu", sans-serif;
+  color: var(--green);
+  line-height: 1.8;
+  margin: 18px 0 26px;
+}
+.business-details dl {
+  margin: 0;
+}
+.business-details dl > div {
+  padding: 13px 0;
+  border-top: 1px solid var(--rule);
+}
+.business-details dt {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+.business-details dd {
+  margin: 0;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+.business-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.merchant-identity {
+  border-block: 1px solid var(--rule);
+  margin: 28px 0;
+  padding: 20px 0;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.merchant-identity p {
+  margin: 8px 0;
+}
+.merchant-identity a {
+  display: inline-block;
+  margin-right: 18px;
+}
+.story-business-line {
+  font-size: 13px;
+  color: var(--green);
+  margin-top: 24px;
+}
+@media (max-width: 1000px) {
+  .reference-store .brand-logo {
+    width: 50px;
+    height: 50px;
+  }
+  .reference-store .wordmark .brand-name {
+    font-size: 32px;
+  }
+  .reference-store .brand-name small {
+    font-size: 9px;
+    max-width: 174px;
+  }
+}
+@media (max-width: 600px) {
+  .reference-store .reference-brand {
+    gap: 8px;
+  }
+  .reference-store .brand-logo {
+    width: 46px;
+    height: 46px;
+  }
+  .reference-store .wordmark .brand-name {
+    font-size: 27px;
+    letter-spacing: -1px;
+  }
+  .reference-store .brand-name small {
+    max-width: 146px;
+    font-size: 8px;
+    line-height: 1.6;
+    margin-top: 4px;
+  }
+  .business-contact {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+  .business-artwork {
+    max-width: 350px;
+    margin-inline: auto;
+  }
+  .business-actions .button {
+    width: 100%;
+    text-align: center;
+  }
+  .reference-store .footer-brand .reference-brand {
+    align-items: center;
+  }
+  .reference-store .footer-brand .brand-logo {
+    width: 54px;
+    height: 54px;
+  }
+  .reference-store .footer-brand .brand-name {
+    font-size: 27px;
+  }
+}
+@media (max-width: 360px) {
+  .reference-store .brand-logo {
+    width: 38px;
+    height: 38px;
+  }
+  .reference-store .wordmark .brand-name {
+    font-size: 24px;
+  }
+  .reference-store .brand-name small {
+    max-width: 124px;
+    font-size: 7.5px;
+  }
+  .reference-store .header-actions .icon-button,
+  .reference-store .bag-button {
+    width: 36px;
+    min-width: 36px;
+  }
+}

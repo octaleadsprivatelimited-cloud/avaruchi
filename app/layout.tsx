@@ -1,17 +1,19 @@
 import type { Metadata } from "next";
+import { BRAND } from "@/lib/brand";
 import "./globals.css";
 import Storefront from "./storefront";
 
 export const metadata: Metadata = {
   title: {
-    default: "Avaruchi | A little pickle. A lot of home.",
+    default: "Avaruchi | ప్రతి ముద్దలో తెలుగు సంప్రదాయం",
     template: "%s | Avaruchi",
   },
   description:
-    "Explore Avaruchi's pickle collection. Shop flavours, build your basket, and follow every order.",
+    "Avaruchi by Lakshmis Tapasi Treats, established in 2026 in Ramanthapur, Hyderabad. ప్రతి ముద్దలో తెలుగు సంప్రదాయం. Shop pickles and follow your orders.",
   icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
+    icon: BRAND.logoIcon,
+    shortcut: BRAND.logoIcon,
+    apple: BRAND.logoIcon,
   },
 };
 

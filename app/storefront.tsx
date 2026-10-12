@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { BRAND } from "@/lib/brand";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   AnimatePresence,
@@ -168,7 +169,7 @@ const initialConfig = {
   google: false,
   payments: false,
   cod: true,
-  address: "",
+  address: BRAND.address,
   gst: "",
   support: "",
   shippingFee: 5900,
@@ -495,21 +496,15 @@ function ProductCard({
 function BrandMark() {
   return (
     <>
-      <svg
-        className="brand-leaf"
-        viewBox="0 0 42 42"
-        fill="none"
-        aria-hidden="true"
-      >
-        <path d="M8 33C7 17 18 7 35 6c1 16-8 27-24 29" fill="currentColor" />
-        <path
-          d="M6 38 29 13m-13 16-1-9m7 4 8-1"
-          stroke="var(--paper)"
-          strokeWidth="1.7"
-        />
-      </svg>
+      <img
+        className="brand-logo"
+        src={BRAND.logoSmall}
+        width={192}
+        height={192}
+        alt=""
+      />
       <span className="brand-name">
-        avaruchi<small>రుచిలో సంప్రదాయం</small>
+        avaruchi<small lang="te">{BRAND.tagline}</small>
       </span>
     </>
   );
@@ -1630,18 +1625,24 @@ export default function Storefront({ children }: { children: ReactNode }) {
           />
           <Reveal as="section" className="reference-story wrap">
             <div>
-              <span className="eyebrow">AT THE TABLE</span>
-              <h2>A small spoon. A familiar ritual.</h2>
+              <span className="eyebrow">ESTABLISHED {BRAND.established}</span>
+              <h2>Avaruchi. A familiar ritual.</h2>
               <p>
-                Find pairing notes for warm rice, breakfast and everyday
-                lunches. Get to know the flavours before choosing your next jar.
+                Avaruchi is the pickle brand of {BRAND.legalName}, based in{" "}
+                {BRAND.address}. Find pairing notes for warm rice, breakfast and
+                everyday lunches.
               </p>
               <Link className="collection-view" href="/journal">
                 Read our pairing notes
               </Link>
             </div>
-            <ProductPhoto
-              p={products.find((p) => p.id === "tomato") || sampleProducts[2]}
+            <img
+              className="brand-story-art"
+              src={BRAND.logo}
+              width={640}
+              height={640}
+              loading="lazy"
+              alt="Avaruchi supplied brand artwork"
             />
           </Reveal>
           <Faq />
@@ -4395,9 +4396,11 @@ export default function Storefront({ children }: { children: ReactNode }) {
               >
                 <BrandMark />
               </Link>
-              <p>
-                A little pickle.
-                <br />A lot of home.
+              <p className="business-footer">
+                <strong>{BRAND.legalName}</strong>
+                <span>{BRAND.address}</span>
+                <span>Established {BRAND.established}</span>
+                <a href={BRAND.telephoneUrl}>{BRAND.phone}</a>
               </p>
             </div>
             <div>
@@ -4422,14 +4425,20 @@ export default function Storefront({ children }: { children: ReactNode }) {
                 <Link href={pagePath("admin")}>Store administration</Link>
               )}
               <span className="footer-location">
-                Inspired by Andhra.
-                <br />
-                For the everyday table.
+                <a
+                  href={BRAND.whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  WhatsApp the store
+                </a>
               </span>
             </div>
           </div>
           <div className="footer-bottom wrap">
-            <span>© {new Date().getFullYear()} Avaruchi. avaruchi.com</span>
+            <span>
+              © {new Date().getFullYear()} {BRAND.legalName}. Avaruchi.
+            </span>
             <span>
               {config.demo
                 ? "Concept photography and sample catalog."
@@ -4680,7 +4689,7 @@ function Policy({ type, config }: { type: string; config: any }) {
     terms: [
       [
         "Using this store",
-        "These terms describe purchases from Avaruchi. In preview mode, products, prices and orders are demonstrations and do not create a supply or payment commitment. The merchant’s legal name, address and final commercial terms must be completed before live sales.",
+        "These terms describe purchases from Avaruchi, operated by Lakshmis Tapasi Treats in Ramanthapur, Hyderabad. In preview mode, products, prices and orders are demonstrations and do not create a supply or payment commitment. Final commercial terms and food-business registration details must be confirmed before live sales.",
       ],
       [
         "Accounts",
@@ -4734,7 +4743,7 @@ function Policy({ type, config }: { type: string; config: any }) {
       ],
       [
         "Your choices and contact",
-        "Signing out clears the account session. You can update your saved address or remove saved flavours. For privacy requests, use the verified merchant support contact once published. This draft must be reviewed with the merchant’s actual contact details and data practices before accepting real orders.",
+        "Signing out clears the account session. You can update your saved address or remove saved flavours. For privacy requests, contact Lakshmis Tapasi Treats on 9932433243 or through the published WhatsApp link. This draft must be reviewed with the merchant’s actual contact details and data practices before accepting real orders.",
       ],
     ],
     shipping: [
@@ -4782,16 +4791,6 @@ function Policy({ type, config }: { type: string; config: any }) {
         "Order help",
         "Find your order and invoice in Your account. Include the order number when contacting the store.",
       ],
-      [
-        "Business details",
-        config.address ||
-          "Verified business address, legal entity name and food-business registration details will be published before the store opens.",
-      ],
-      [
-        "Support",
-        config.support ||
-          "A verified customer-support contact has not yet been configured. Preview orders do not create real deliveries.",
-      ],
     ],
   };
   return (
@@ -4802,11 +4801,78 @@ function Policy({ type, config }: { type: string; config: any }) {
       <h1>{titles[type]}</h1>
       {config.demo && (
         <p className="note">
-          Preview document. Business details and final commercial policies must
-          be confirmed before live orders.
+          Preview document. Final commercial policies must be confirmed before
+          live orders.
         </p>
       )}
-      <p className="muted">Last updated: 10 October 2026</p>
+      <p className="muted">Last updated: 12 October 2026</p>
+      {type === "contact" ? (
+        <div className="business-contact">
+          <figure className="business-artwork">
+            <img
+              src={BRAND.logo}
+              width={640}
+              height={640}
+              alt="Avaruchi logo with a traditional pickle jar and Telugu slogan"
+            />
+          </figure>
+          <div className="business-details">
+            <span className="eyebrow">ESTABLISHED {BRAND.established}</span>
+            <h2>{BRAND.legalName}</h2>
+            <p className="business-tagline" lang="te">
+              {BRAND.tagline}
+            </p>
+            <dl>
+              <div>
+                <dt>Business address</dt>
+                <dd>{config.address || BRAND.address}</dd>
+              </div>
+              <div>
+                <dt>Phone</dt>
+                <dd>
+                  <a href={BRAND.telephoneUrl}>{BRAND.phone}</a>
+                </dd>
+              </div>
+              <div>
+                <dt>WhatsApp</dt>
+                <dd>
+                  <a
+                    href={BRAND.whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {BRAND.phone}
+                  </a>
+                </dd>
+              </div>
+            </dl>
+            <div className="business-actions">
+              <a className="button" href={BRAND.telephoneUrl}>
+                Call the store
+              </a>
+              <a
+                className="button outline"
+                href={BRAND.whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Chat on WhatsApp
+              </a>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="merchant-identity">
+          <strong>Avaruchi is operated by {BRAND.legalName}.</strong>
+          <p>
+            {config.address || BRAND.address} · Established {BRAND.established}
+          </p>
+          <a href={BRAND.telephoneUrl}>Call {BRAND.phone}</a>
+          <a href={BRAND.whatsappUrl} target="_blank" rel="noopener noreferrer">
+            WhatsApp {BRAND.phone}
+          </a>
+        </div>
+      )}
       {sections[type].map(([title, copy]) => (
         <section key={title}>
           <h2>{title}</h2>
@@ -4835,6 +4901,13 @@ function StoryPage({ onShop }: { onShop: () => void }) {
         <p className="lead">
           A jar at the centre of the table. A little rice on your plate. Someone
           saying, “Have a little more.”
+        </p>
+        <p className="story-business-line">
+          Established in {BRAND.established} · {BRAND.legalName} ·{" "}
+          {BRAND.address}
+        </p>
+        <p className="business-tagline" lang="te">
+          {BRAND.tagline}
         </p>
       </div>
       <Reveal as="figure" className="story-wide-photo">

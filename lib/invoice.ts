@@ -1,3 +1,5 @@
+import { BRAND } from "./brand";
+import { invoiceLogo } from "./invoice-logo";
 // Compact, dependency-free A4 PDF renderer for the store server.
 export function invoicePdf(
   order: any,
@@ -64,8 +66,11 @@ export function invoicePdf(
     );
   const line = (y: number) =>
     cmds.push("0.71 0.74 0.67 RG 0.5 w 45 " + y + " m 550 " + y + " l S");
-  text("avaruchi", 45, 787, 34, "F2");
-  text("THE PICKLE COMPANY", 46, 768, 8, "F3");
+  cmds.push("q 80 0 0 80 45 742 cm /Logo Do Q");
+  text("Avaruchi", 140, 787, 30, "F2");
+  text(business.name || BRAND.legalName, 140, 768, 9, "F3");
+  text("Established " + BRAND.established, 140, 751, 8);
+  text("avaruchi.com", 140, 735, 9);
   text("ORDER INVOICE", 365, 793, 9, "F3");
   text(number, 365, 773, 11, "F3");
   text("Order: " + order.id, 365, 751, 9);
@@ -79,14 +84,11 @@ export function invoicePdf(
     9,
   );
   text("Payment: " + order.payment, 365, 719, 9);
-  text("avaruchi.com", 45, 745, 10);
-  const merchantLines = wrap(
-    business.address || "Business address awaiting configuration",
-    48,
-    20,
-  );
-  merchantLines.forEach((s, i) => text(s, 45, 729 - i * 13, 9));
-  const merchantBottom = 729 - (merchantLines.length - 1) * 13;
+  const merchantLines = wrap(business.address || BRAND.address, 48, 20);
+  merchantLines.forEach((s, i) => text(s, 45, 714 - i * 13, 9));
+  const phoneY = 714 - merchantLines.length * 13;
+  text("Phone / WhatsApp: " + (business.phone || BRAND.phone), 45, phoneY, 9);
+  const merchantBottom = phoneY;
   if (business.gst) text("GSTIN: " + business.gst, 45, merchantBottom - 18, 9);
   const headerRule = Math.min(679, merchantBottom - (business.gst ? 32 : 18));
   line(headerRule);
@@ -137,9 +139,11 @@ export function invoicePdf(
   };
   const continuation = () => {
     startPage();
-    text("avaruchi", 45, 787, 30, "F2");
-    text("ORDER INVOICE / " + number, 45, 755, 10, "F3");
-    text("Order: " + order.id, 45, 735, 9);
+    cmds.push("q 52 0 0 52 45 760 cm /Logo Do Q");
+    text("Avaruchi", 110, 787, 30, "F2");
+    text(business.name || BRAND.legalName, 110, 769, 9, "F3");
+    text("ORDER INVOICE / " + number, 45, 740, 10, "F3");
+    text("Order: " + order.id, 45, 724, 9);
     return tableHeading(708);
   };
   const rightAmount = (value: number, right: number, at: number, size = 9) => {
@@ -183,6 +187,7 @@ export function invoicePdf(
   text("TOTAL", 365, y, 11, "F3");
   rightAmount(order.total, 548, y, 13);
   text("Order status: " + order.status, 45, y, 9);
+  const logoObjectId = 6 + pages.length * 2;
   pages.forEach((page, index) => {
     cmds = page;
     line(91);
@@ -219,7 +224,9 @@ export function invoicePdf(
   pages.forEach((page, index) => {
     const content = page.join("\n");
     objects.push(
-      "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> /Contents " +
+      "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> /XObject << /Logo " +
+        logoObjectId +
+        " 0 R >> >> /Contents " +
         (7 + index * 2) +
         " 0 R >>",
     );
@@ -231,6 +238,20 @@ export function invoicePdf(
         "\nendstream",
     );
   });
+  const logoStream = invoiceLogo.data + ">";
+  objects.push(
+    "<< /Type /XObject /Subtype /Image /Width " +
+      invoiceLogo.width +
+      " /Height " +
+      invoiceLogo.height +
+      " /ColorSpace /DeviceRGB /BitsPerComponent 8 /Interpolate true /Filter [/ASCIIHexDecode /FlateDecode] /DecodeParms [null << /Predictor 15 /Colors 3 /BitsPerComponent 8 /Columns " +
+      invoiceLogo.width +
+      " >>] /Length " +
+      logoStream.length +
+      " >>\nstream\n" +
+      logoStream +
+      "\nendstream",
+  );
   let out = "%PDF-1.4\n";
   const offsets = [0];
   objects.forEach((o, i) => {

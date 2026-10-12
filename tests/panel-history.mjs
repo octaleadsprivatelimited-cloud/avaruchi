@@ -228,12 +228,23 @@ try {
   eq(new Set(allAdminCases).size, allAdminCases.length);
   const invalidAdmin = await req("admin?order=" + orderIds[0], customer);
   eq(invalidAdmin.status, 403);
-  const source = ts.transpileModule(await readFile("lib/invoice.ts", "utf8"), {
-    compilerOptions: {
-      module: ts.ModuleKind.ES2022,
-      target: ts.ScriptTarget.ES2022,
+  const invoiceSource = (await readFile("lib/invoice.ts", "utf8")).replace(
+    /^import .* from "\.\/(brand|invoice-logo)";\n/gm,
+    "",
+  );
+  const source = ts.transpileModule(
+    [
+      await readFile("lib/brand.ts", "utf8"),
+      await readFile("lib/invoice-logo.ts", "utf8"),
+      invoiceSource,
+    ].join("\n"),
+    {
+      compilerOptions: {
+        module: ts.ModuleKind.ES2022,
+        target: ts.ScriptTarget.ES2022,
+      },
     },
-  }).outputText;
+  ).outputText;
   const { invoicePdf } = await import(
     "data:text/javascript;base64," + Buffer.from(source).toString("base64")
   );
@@ -291,6 +302,17 @@ try {
     {},
   );
   assert.match(new TextDecoder().decode(standard), /\/Count 1/);
+  checks++;
+  assert.match(new TextDecoder().decode(standard), /Lakshmis Tapasi Treats/);
+  checks++;
+  assert.match(
+    new TextDecoder().decode(standard),
+    /Phone \/ WhatsApp: 9932433243/,
+  );
+  checks++;
+  assert.match(new TextDecoder().decode(standard), /Ramanthapur, Hyderabad/);
+  checks++;
+  assert.match(new TextDecoder().decode(standard), /\/Subtype \/Image/);
   checks++;
   if (process.env.TEST_INVOICE_OUTPUT_DIR) {
     await writeFile(

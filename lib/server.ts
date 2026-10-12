@@ -1,4 +1,5 @@
 import { routeMethods } from "./api-routes";
+import { BRAND } from "./brand";
 import { hasAdministrator } from "./admin-access";
 import { storeDatabase, type Statement } from "./database";
 import { sampleProducts, type CartItem } from "./catalog";
@@ -510,7 +511,9 @@ async function invoiceResponse(o: any) {
   if (!inv) fail("The invoice is available after order confirmation.", 404);
   return new Response(
     invoicePdf(o, inv, {
-      address: cfg().BUSINESS_ADDRESS,
+      name: BRAND.legalName,
+      phone: BRAND.phone,
+      address: cfg().BUSINESS_ADDRESS || BRAND.address,
       gst: cfg().GSTIN,
     }) as BodyInit,
     {
@@ -571,7 +574,9 @@ async function invoiceEmail(o: any) {
         409,
       );
     const pdf = invoicePdf(o, inv, {
-      address: cfg().BUSINESS_ADDRESS,
+      name: BRAND.legalName,
+      phone: BRAND.phone,
+      address: cfg().BUSINESS_ADDRESS || BRAND.address,
       gst: cfg().GSTIN,
     });
     const payload = JSON.stringify({
@@ -881,7 +886,7 @@ export async function handle(
           ),
           keyId: c.RAZORPAY_KEY_ID || "",
           cod: c.COD_ENABLED !== "false",
-          address: c.BUSINESS_ADDRESS || "",
+          address: c.BUSINESS_ADDRESS || BRAND.address,
           gst: c.GSTIN || "",
           support: c.SUPPORT_EMAIL || "",
           shippingFee: Number(c.SHIPPING_FEE || 5900),

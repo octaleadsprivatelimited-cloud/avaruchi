@@ -171,3 +171,9 @@ Invoice item names and address blocks wrap, and longer baskets continue on addit
 The panel audit used a disposable loopback MariaDB database and simulated provider responses. Browser checks exercised delivery/courier updates, customer invoice download, refund approval and reference recording, and return review, approval, transit, receipt and resolution. All six customer sections and seven admin sections, plus the expanded customer return form, stayed within the document viewport at 320, 375, 768 and 1440 CSS pixels. Wide tables scroll inside their containers. No production admin account, real refund, shipment or email was created by these checks.
 
 Run `npm run test:panels` only with `TEST_ALLOW_DATABASE_FIXTURES=true` against a loopback database whose name ends in `_test`. The suite checks 243 orders and 153 cases, cursor ties, older-record focus, invoice isolation and PDF pagination. Live Google, Razorpay, Resend and Shiprocket checks are still required when those services are configured.
+
+## Business identity
+
+Avaruchi is the storefront brand operated by **Lakshmis Tapasi Treats**, established in **2026**, at **Ramanthapur, Hyderabad**. The supplied Telugu slogan is **ప్రతి ముద్దలో తెలుగు సంప్రదాయం**. Phone and WhatsApp use **9932433243** (Indian country code +91 for clickable links). `lib/brand.ts` holds these public details. The header, footer, homepage, story, contact/policy pages, icons and PDF invoices use them. No support email or GST/FSSAI number has been invented. Existing environment-based invoice address overrides remain available; configure the complete merchant postal address before live fulfilment.
+
+The owner-supplied logo is retained unchanged at `public/brand/avaruchi-logo-original.png`. Uniformly scaled web copies preserve the full artwork; the 192-pixel RGB PNG is also embedded in PDFs without external image requests. Product photos and the sample catalog remain demonstration content.
