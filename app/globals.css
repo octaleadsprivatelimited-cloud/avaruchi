@@ -5010,14 +5010,7 @@ textarea {
   }
 }
 
-/* Scroll-aware navigation and compact mobile product grids. */
-.reference-store .header-shell {
-  transition: transform 180ms ease;
-}
-.reference-store .header-shell.is-hidden {
-  transform: translateY(-100%);
-  pointer-events: none;
-}
+/* Single-line header labels and compact mobile product grids. */
 .reference-store .announcement {
   white-space: nowrap;
   font-size: clamp(9px, 2.65vw, 14px);
@@ -5095,8 +5088,125 @@ textarea {
     max-width: calc(100% - 10px);
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .reference-store .header-shell {
-    transition: none;
+
+/* Compact footer navigation across storefront and account pages. */
+.reference-store footer .footer-main {
+  grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  padding-block: 32px;
+  align-items: start;
+}
+.reference-store footer .footer-main .footer-links {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  grid-column: auto;
+  gap: 0;
+  margin: 0;
+}
+.reference-store footer .footer-links h3 {
+  display: block;
+  margin: 0 0 6px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.reference-store footer .footer-main .footer-links > a,
+.reference-store footer .footer-location a {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.reference-store footer .footer-location {
+  display: block;
+  margin: 0;
+}
+.reference-store footer .footer-brand {
+  display: block;
+  grid-column: auto;
+}
+.reference-store footer .footer-brand .business-footer {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.reference-store footer .footer-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 20px;
+  padding-block: 14px;
+  line-height: 1.6;
+}
+.reference-store footer .developer-credit a {
+  color: var(--green);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (max-width: 1000px) {
+  .reference-store footer .footer-main {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+    padding-block: 24px;
+  }
+  .reference-store footer .footer-brand {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  .reference-store footer .footer-brand .business-footer {
+    margin: 0;
+  }
+}
+@media (max-width: 600px) {
+  .reference-store footer .footer-main {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 12px;
+    padding-block: 20px;
+  }
+  .reference-store footer .footer-brand {
+    display: block;
+    grid-column: 1 / -1;
+  }
+  .reference-store footer .footer-brand .business-footer {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 12px;
+    margin-top: 10px;
+  }
+  .reference-store footer .business-footer strong {
+    grid-column: 1 / -1;
+  }
+  .reference-store footer .business-footer a {
+    margin: 0;
+  }
+  .reference-store footer .footer-links h3 {
+    font-size: 13px;
+  }
+  .reference-store footer .footer-main .footer-links > a,
+  .reference-store footer .footer-location a {
+    min-height: 36px;
+    font-size: 12px;
+  }
+  .reference-store footer .footer-main .footer-policy-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-column: 1 / -1;
+    gap: 0 12px;
+  }
+  .reference-store footer .footer-policy-links h3 {
+    grid-column: 1 / -1;
+  }
+  .reference-store footer .footer-bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding-block: 12px;
+    font-size: 10px;
   }
 }

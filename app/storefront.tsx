@@ -1,7 +1,6 @@
 "use client";
 import Link from "next/link";
 import { BRAND } from "@/lib/brand";
-import { useScrollHeader } from "@/lib/use-scroll-header";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   AnimatePresence,
@@ -754,7 +753,6 @@ export default function Storefront({ children }: { children: ReactNode }) {
   ];
   const [headerSearch, setHeaderSearch] = useState(false);
   const [headerQuery, setHeaderQuery] = useState("");
-  const scrollHeader = useScrollHeader(pathname, !!panel || headerSearch);
   const searchRef = useRef<HTMLInputElement>(null);
   const notify = (message: string) => setToast(message);
   const selected =
@@ -4248,11 +4246,7 @@ export default function Storefront({ children }: { children: ReactNode }) {
         <a className="skip-link" href="#main">
           Skip to content
         </a>
-        <div
-          ref={scrollHeader.ref}
-          className={"header-shell" + (scrollHeader.hidden ? " is-hidden" : "")}
-          onFocusCapture={scrollHeader.show}
-        >
+        <div className="header-shell">
           <div className="announcement">
             <span>
               Bring home your favourite pickle. Free delivery from{" "}
@@ -4409,21 +4403,21 @@ export default function Storefront({ children }: { children: ReactNode }) {
                 <a href={BRAND.telephoneUrl}>{BRAND.phone}</a>
               </p>
             </div>
-            <div>
+            <div className="footer-links">
               <h3>At the table</h3>
               <Link href="/our-story">Our story</Link>
               <Link href={pagePath("shop")}>Shop all pickles</Link>
               <Link href={pagePath("journal")}>Pairing notes</Link>
               <Link href={pagePath("wishlist")}>Saved flavours</Link>
             </div>
-            <div>
+            <div className="footer-links">
               <h3>Here to help</h3>
               <Link href={pagePath("account")}>Orders & invoices</Link>
               <Link href={pagePath("shipping")}>Shipping policy</Link>
               <Link href={pagePath("returns")}>Returns & refunds</Link>
               <Link href={pagePath("contact")}>Contact us</Link>
             </div>
-            <div>
+            <div className="footer-links footer-policy-links">
               <h3>The fine print</h3>
               <Link href={pagePath("terms")}>Terms of Service</Link>
               <Link href={pagePath("privacy")}>Privacy policy</Link>
@@ -4449,6 +4443,16 @@ export default function Storefront({ children }: { children: ReactNode }) {
               {config.demo
                 ? "Concept photography and sample catalog."
                 : "Google sign-in · Secure checkout · Automatic invoices"}
+            </span>
+            <span className="developer-credit">
+              Developed By{" "}
+              <a
+                href="https://www.octaleads.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Octaleads
+              </a>
             </span>
           </div>
         </footer>
