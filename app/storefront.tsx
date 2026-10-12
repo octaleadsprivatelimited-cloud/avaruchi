@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { BRAND } from "@/lib/brand";
+import { useScrollHeader } from "@/lib/use-scroll-header";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   AnimatePresence,
@@ -753,6 +754,7 @@ export default function Storefront({ children }: { children: ReactNode }) {
   ];
   const [headerSearch, setHeaderSearch] = useState(false);
   const [headerQuery, setHeaderQuery] = useState("");
+  const scrollHeader = useScrollHeader(pathname, !!panel || headerSearch);
   const searchRef = useRef<HTMLInputElement>(null);
   const notify = (message: string) => setToast(message);
   const selected =
@@ -4246,7 +4248,11 @@ export default function Storefront({ children }: { children: ReactNode }) {
         <a className="skip-link" href="#main">
           Skip to content
         </a>
-        <div className="header-shell">
+        <div
+          ref={scrollHeader.ref}
+          className={"header-shell" + (scrollHeader.hidden ? " is-hidden" : "")}
+          onFocusCapture={scrollHeader.show}
+        >
           <div className="announcement">
             <span>
               Bring home your favourite pickle. Free delivery from{" "}

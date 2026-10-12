@@ -179,3 +179,5 @@ Avaruchi is the storefront brand operated by **Lakshmis Tapasi Treats**, establi
 The owner-supplied logo is retained unchanged at `public/brand/avaruchi-logo-original.png`. Uniformly scaled web copies preserve the full artwork; the 192-pixel RGB PNG is also embedded in PDFs without external image requests. Product photos and the sample catalog remain demonstration content.
 
 Branded invoice email attachments are encoded in bounded chunks so embedded logos do not exceed the JavaScript argument limit. The simulated Resend check decodes a larger-than-128-KiB attachment and verifies its PDF signature and legal business name.
+
+The header hides after downward scrolling and returns on upward scrolling, near the page top, or keyboard focus. Open navigation, search and basket controls keep it visible. The announcement and header labels stay on one line. Product collections and shop results use two-column grids through 1000 CSS pixels; horizontal collection rails remain available on wider desktops. Reduced-motion preferences disable the header transition.
