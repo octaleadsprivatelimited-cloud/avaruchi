@@ -1,30 +1,17 @@
 import tailwindcss from "@tailwindcss/vite";
-import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import viteReact from "@vitejs/plugin-react";
-import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
+import { fileURLToPath } from "node:url";
 
-export default defineConfig(({ command }) => ({
+export default defineConfig({
   server: {
     port: 5180,
     strictPort: true,
   },
-  plugins: [
-    tailwindcss(),
-    tanstackStart({
-      server: { entry: "server" },
-    }),
-    ...(command === "build"
-      ? [
-          nitro({
-            preset: process.env.NITRO_PRESET || "vercel",
-          }),
-        ]
-      : []),
-    viteReact(),
-  ],
+  plugins: [tailwindcss(), viteReact()],
   resolve: {
-    tsconfigPaths: true,
-    dedupe: ["react", "react-dom", "@tanstack/react-router"],
+    alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
+    dedupe: ["react", "react-dom"],
   },
-}));
+  build: { outDir: ".output/public", emptyOutDir: true },
+});

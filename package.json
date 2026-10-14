@@ -11,19 +11,20 @@
     "dev": "vite dev",
     "dev:api": "pnpm --dir commerce-api dev",
     "build": "pnpm build:hostinger",
-    "vercel-build": "vite build",
+    "vercel-build": "pnpm build:hostinger",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
     "build:api": "pnpm --dir commerce-api build",
     "test:api": "pnpm --dir commerce-api test",
-    "build:hostinger": "pnpm --dir commerce-api install --frozen-lockfile && pnpm --dir commerce-api build && NODE_ENV=production VITE_COMMERCE_API_URL= NITRO_PRESET=node-middleware vite build",
+    "build:hostinger": "pnpm --dir commerce-api install --frozen-lockfile && pnpm --dir commerce-api build && VITE_COMMERCE_API_URL= pnpm build:frontend",
     "start": "node hostinger.mjs",
     "setup:local": "node scripts/setup-local.mjs",
     "dev:local": "node scripts/dev-local.mjs",
-    "verify": "pnpm lint && pnpm exec tsc --noEmit && pnpm test:api && pnpm build:hostinger && node scripts/check-public-secrets.mjs && node scripts/smoke-built-storefront.mjs && node scripts/smoke-hostinger-startup.mjs",
-    "verify:db": "node scripts/verify-database.mjs"
+    "verify": "pnpm lint && pnpm exec tsc --noEmit && pnpm test:api && pnpm build:hostinger && node scripts/check-public-secrets.mjs && node scripts/smoke-built-storefront.mjs && node scripts/smoke-hostinger-startup.mjs && node scripts/smoke-vercel.mjs",
+    "verify:db": "node scripts/verify-database.mjs",
+    "build:frontend": "NODE_ENV=production vite build && NODE_ENV=production vite build --ssr src/entry-server.tsx --outDir .output/server"
   },
   "overrides": {
     "rolldown": "1.2.1"
@@ -57,10 +58,6 @@
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@tailwindcss/vite": "^4.2.1",
-    "@tanstack/react-query": "^5.101.1",
-    "@tanstack/react-router": "1.170.18",
-    "@tanstack/react-start": "1.168.32",
-    "@tanstack/router-plugin": "1.168.23",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -83,7 +80,8 @@
     "tailwindcss": "^4.2.1",
     "tw-animate-css": "^1.3.4",
     "vaul": "^1.1.2",
-    "zod": "^3.24.2"
+    "zod": "^3.24.2",
+    "react-router": "7.18.4"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
@@ -97,7 +95,6 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^15.15.0",
-    "nitro": "3.0.260603-beta",
     "prettier": "^3.7.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",

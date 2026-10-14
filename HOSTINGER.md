@@ -1,6 +1,6 @@
 # Avaruchi Node.js deployment
 
-Create a new Node.js 24 app for Avaruchi with this project root as its app directory. Use [Avaruchi's source repository](https://github.com/octaleadsprivatelimited-cloud/avaruchi) and Avaruchi's own hosting resources. No deployment workflow is configured.
+Create a new Node.js 24 app for Avaruchi with this project root as its app directory. Use [Avaruchi's source repository](https://github.com/octaleadsprivatelimited-cloud/avaruchi) and Avaruchi's own hosting resources. Vite builds the React UI and server-rendering entry; the existing Express backend runs alongside it.
 
 | Setting | Value |
 | --- | --- |

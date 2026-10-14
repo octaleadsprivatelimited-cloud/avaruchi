@@ -1,5 +1,5 @@
 import { ImagePlus, Save, Trash2 } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Link } from "@/lib/navigation";
 import type { StorefrontConfig } from "@/lib/storefront-config";
 
 export const brandingFields = { logo: "logoUrl", footer: "footerLogoUrl", favicon: "faviconUrl" } as const;

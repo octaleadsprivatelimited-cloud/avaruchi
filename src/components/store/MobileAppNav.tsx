@@ -1,5 +1,5 @@
 import { Home, Package, ShoppingBag, Store, UserRound } from "lucide-react";
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link, useLocation } from "@/lib/navigation";
 import { useEffect } from "react";
 import { useCommerceCartCount } from "@/lib/commerce-cart";
 import { AccountLink } from "./AccountLink";

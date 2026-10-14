@@ -1,6 +1,6 @@
 import { productPath } from "./product-url";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useLocation } from "@tanstack/react-router";
+import { useLocation } from "@/lib/navigation";
 import { X } from "lucide-react";
 import { commerceApi } from "./commerce-api";
 import { canShowOfferOnPath, popupFrequencyAllows } from "./promotion-visibility";
@@ -21,7 +21,7 @@ function writeStorage(kind: "localStorage" | "sessionStorage", key: string, valu
 }
 
 export function PromotionsProvider({ children }: { children: ReactNode }) {
-  const pathname = useLocation({ select: location => location.pathname });
+  const pathname = useLocation().pathname;
   const [config, setConfig] = useState(emptyPromotions);
   const [popup, setPopup] = useState<Popup | null>(null);
   const returning = useRef<boolean | null>(null);
@@ -37,7 +37,12 @@ export function PromotionsProvider({ children }: { children: ReactNode }) {
       const sequence = ++requestSequence;
       try {
         const value = await commerceApi<PromotionConfig>(`/api/v1/storefront/promotions?returning=${returning.current}`, { cache: "no-store" });
-        if (!cancelled && sequence === requestSequence) setConfig(value);
+        if (!cancelled && sequence === requestSequence) {
+          // The cloned oil template is not part of the Avaruchi pickle design.
+          // Keep all merchant-created or edited campaigns available.
+          const banners = value.banners.filter(item => !(item.id === "5d2fb2ae-609d-43d7-b744-b19fd207db56" && item.name === "Oil collection preview" && item.headline === "Your everyday oil collection."));
+          setConfig({ ...value, banners });
+        }
       } catch { /* Keep the latest known settings if an optional promotion request fails. */ }
     };
     void load();

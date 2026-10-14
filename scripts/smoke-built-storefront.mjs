@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createServer, get } from 'node:http';
-import { middleware } from '../.output/server/index.mjs';
+import { storefrontDocument } from '../server/storefront.mjs';
 import { defaultStorefrontConfig } from '../commerce-api/dist/src/storefront-config.js';
 
 // Exercise the actual compiled SSR bundle while no API is listening at PORT.
@@ -13,7 +13,11 @@ globalThis[readerKey] = () => catalog;
 const settingsReaderKey = Symbol.for('avaruchi.publicStorefrontReader');
 let storefrontSettings = { ...defaultStorefrontConfig, manualDeliveryEnabled: true, deliveryCharge: 62, freeShippingThreshold: 800 };
 globalThis[settingsReaderKey] = async () => storefrontSettings;
-const server = createServer((req, res) => middleware(req, res));
+const server = createServer(async (req, res) => {
+  const result = await storefrontDocument({ url: req.url, origin: process.env.APP_URL, storefront: storefrontSettings, products: catalog });
+  res.writeHead(result.status, result.headers);
+  res.end(result.html);
+});
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 const port = server.address().port;
 const request = path => new Promise((resolve, reject) => {
@@ -28,7 +32,7 @@ const request = path => new Promise((resolve, reject) => {
 
 try {
   const nonces = new Set();
-  const pages = ['/', '/shop', '/cart', '/checkout', '/login', '/track', '/account', '/privacy', '/terms', '/shipping-returns', '/contact',
+  const pages = ['/', '/shop', '/cart', '/checkout', '/login', '/track', '/account', '/privacy', '/terms', '/shipping-returns', '/contact', '/our-story', '/journal', '/wishlist', '/shipping', '/returns',
     ...['overview', 'products', 'orders', 'customers', 'returns', 'support', 'inventory', 'payments', 'shipping', 'marketing', 'analytics', 'integrations', 'settings'].map(section => `/admin/${section}`)];
   for (const path of pages) {
     const response = await request(path);
@@ -50,11 +54,11 @@ try {
     }
   }
   const home = await request('/');
-  const heroEnd = home.body.indexOf('</section>', home.body.indexOf('class="hero home-hero"'));
-  const afterHero = home.body.slice(heroEnd + '</section>'.length).match(/<section\b([^>]*)>/)?.[1];
-  assert.ok(afterHero?.includes('id="new"'), 'home favourites must immediately follow the hero');
-  assert.ok(!home.body.includes('Avaruchi favourites') && !home.body.includes('Pure, aromatic and full of flavour.'), 'removed product headings must not remain in rendered markup');
-  assert.ok(home.body.includes('story story-compact'), 'render the compact oil collection');
+  assert.ok(home.body.includes('reference-hero'), 'render the reference pickle hero');
+  assert.ok(home.body.includes('The taste of home, in every jar.'), 'render the reference heading');
+  assert.ok(home.body.includes('/images/hero.png') && home.body.includes('/brand/avaruchi-logo-small.webp'), 'use the reference photography and brand artwork');
+  assert.ok(home.body.includes('reference-story'), 'render the reference brand story');
+  assert.ok(home.body.includes('Our collection is coming together.'), 'an empty backend must stay empty in the new UI');
   assert.ok(home.body.includes('₹62 delivery') && home.body.includes('₹800'), 'SSR must use saved delivery prices before hydration');
   storefrontSettings = { ...storefrontSettings, deliveryCharge: 89, freeShippingThreshold: 799 };
   const updatedShop = await request('/shop');
@@ -85,6 +89,13 @@ try {
   assert.match(product.body, /detail-price[^>]*>₹293\.48/);
   assert.ok(product.body.includes('"price":"293.48"'));
   assert.ok(product.body.includes('variant=oil-1000'));
+  const untrustedText = '</script><script>alert("storefront-xss")</script>';
+  catalog[0].description = untrustedText;
+  storefrontSettings = { ...storefrontSettings, storeName: `Avaruchi ${untrustedText}` };
+  const escaped = await request('/product/smoke-groundnut-oil');
+  assert.equal(escaped.status, 200);
+  assert.ok(!escaped.body.includes(untrustedText), 'merchant text must not escape the HTML or bootstrap script');
+  assert.ok(escaped.body.includes('\\u003c/script>'), 'bootstrap data must escape opening angle brackets');
   console.log(`Built SSR smoke passed: ${pages.length} storefront/account/admin pages render with security headers and distinct bootstrap nonces; real 404s, private transaction caching and variant prices verified.`);
 } finally {
   delete globalThis[readerKey];

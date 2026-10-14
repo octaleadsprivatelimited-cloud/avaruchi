@@ -4,14 +4,14 @@ import { createRequire } from 'node:module';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 const requireApi = createRequire(new URL('./commerce-api/package.json', import.meta.url));
-const serveStatic = requireApi('express').static(fileURLToPath(new URL('./.output/public/', import.meta.url)));
+const serveStatic = requireApi('express').static(fileURLToPath(new URL('./.output/public/', import.meta.url)), { index: false });
 import { prepareHostingerDatabase } from './commerce-api/dist/src/hostinger-startup.js';
 import { createApp } from './commerce-api/dist/src/app.js';
 import { storefrontProductDto } from './commerce-api/dist/src/admin-products.js';
 import { buildMerchantFeed, buildRobots, buildSitemap } from './commerce-api/dist/src/catalog-discovery.js';
 import { startNotificationWorker } from './commerce-api/dist/src/notification-worker.js';
 import { baseSecurityHeaders } from './commerce-api/dist/src/http-security.js';
-import { middleware } from './.output/server/index.mjs';
+import { serveStorefront } from './server/storefront.mjs';
 
 const origin = new URL(process.env.APP_URL || 'http://localhost:5180').origin;
 process.env.CORS_ORIGINS ||= origin;
@@ -71,10 +71,11 @@ const server = createServer(async (req, res) => {
     res.setHeader('Cache-Control', 'private, no-store');
   }
   if (/^\/(api|webhooks|uploads)(\/|$)/.test(path) || ['/health', '/ready'].includes(path)) app(req, res);
-  else serveStatic(req, res, () => Promise.resolve(middleware(req, res)).catch(error => {
-    console.error('Storefront request failed', error);
-    if (!res.headersSent) { res.statusCode = 500; res.end('The store is temporarily unavailable.'); }
-    else res.destroy();
+  else if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405, { Allow: 'GET, HEAD' }); res.end('Method not allowed'); }
+  else serveStatic(req, res, async () => serveStorefront(req, res, {
+    origin,
+    storefront: await readStorefront(new URL(origin).hostname),
+    products: store.listProducts().filter(product => product.status === 'ACTIVE').map(storefrontProductDto),
   }));
 });
 // Hostinger expects listen() within three seconds. Bind before migrations, but

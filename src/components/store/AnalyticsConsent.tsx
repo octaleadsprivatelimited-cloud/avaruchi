@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
-import { useRouter, useRouterState } from "@tanstack/react-router";
+import { useLocation } from "@/lib/navigation";
 import { initializeAnalytics, prepareAnalyticsNavigation, readAnalyticsConsent, saveAnalyticsConsent, syncAnalyticsPage } from "../../lib/analytics";
 import { useStorefrontConfig } from "../../lib/storefront-config";
 import { canShowOfferOnPath } from "../../lib/promotion-visibility";
 
 export function AnalyticsConsent() {
-  const router = useRouter();
   const { analyticsPromptEnabled } = useStorefrontConfig();
-  const pathname = useRouterState({ select: state => state.location.pathname });
+  const pathname = useLocation().pathname;
   const [visible, setVisible] = useState(false);
   const [manuallyOpened, setManuallyOpened] = useState(false);
   const [dismissed, setDismissed] = useState(false);
@@ -29,10 +28,11 @@ export function AnalyticsConsent() {
       setVisible(true);
     };
     window.addEventListener("avaruchi:analytics-preferences", open);
+    const beforeHistory = () => prepareAnalyticsNavigation(window.location.href);
+    window.addEventListener("popstate", beforeHistory, true);
     void initializeAnalytics();
-    const unsubscribe = router.subscribe("onBeforeNavigate", event => prepareAnalyticsNavigation(event.toLocation.href));
-    return () => { unsubscribe(); window.removeEventListener("avaruchi:analytics-preferences", open); };
-  }, [router]);
+    return () => { window.removeEventListener("avaruchi:analytics-preferences", open); window.removeEventListener("popstate", beforeHistory, true); };
+  }, []);
   useEffect(() => {
     if (!manuallyOpened) setVisible(!dismissed && analyticsPromptEnabled && canShowOfferOnPath(pathname) && !readAnalyticsConsent());
   }, [analyticsPromptEnabled, manuallyOpened, pathname, dismissed]);

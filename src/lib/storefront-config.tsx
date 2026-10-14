@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link } from "@/lib/navigation";
 import { commerceApi } from "./commerce-api";
 
 export type StorefrontConfig = {
@@ -63,7 +63,7 @@ export function StorefrontProvider({ children, initialConfig }: { children: Reac
     root.lang = config.locale;
     for (const rel of ["icon", "apple-touch-icon"]) {
       const icon = document.querySelector<HTMLLinkElement>(`link[rel="${rel}"]`);
-      icon?.setAttribute("href", config.faviconUrl || "/favicon.svg");
+      icon?.setAttribute("href", config.faviconUrl && config.faviconUrl !== "/favicon.svg" ? config.faviconUrl : "/brand/avaruchi-logo-icon.png");
       icon?.removeAttribute("type");
     }
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", config.primaryColor);

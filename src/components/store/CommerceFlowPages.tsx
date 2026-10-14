@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@/lib/navigation";
 import { loadPortalSession } from "@/lib/portal-auth";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {

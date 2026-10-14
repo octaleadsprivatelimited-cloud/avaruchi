@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@/lib/navigation";
 import type { MouseEvent, ReactNode } from "react";
 import { loadPortalSession } from "@/lib/portal-auth";
 

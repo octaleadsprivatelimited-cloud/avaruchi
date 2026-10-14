@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { LogOut, Menu, Search, ShoppingBag, X } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Link } from "@/lib/navigation";
 import { useStorefrontConfig } from "@/lib/storefront-config";
 
 export function PortalShell({

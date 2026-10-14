@@ -1,0 +1,5213 @@
+/* Reference storefront styling scoped to the public UI; backend and admin styles remain independent. */
+@import url("https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&family=Noto+Sans+Telugu:wght@400;500&display=swap");
+.avaruchi-ui {
+  --paper: #f2ede2;
+  --green: #264936;
+  --ink: #233b2e;
+  --muted: #696d5c;
+  --rule: #c8c8b6;
+  --red: #9a3924;
+  --sand: #e5decd;
+  --light: #f8f3e9;
+}
+.avaruchi-ui * {
+  box-sizing: border-box;
+}
+.avaruchi-ui {
+  scroll-behavior: auto;
+}
+.avaruchi-ui {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Work Sans", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.avaruchi-ui button,
+.avaruchi-ui input,
+.avaruchi-ui select,
+.avaruchi-ui textarea {
+  font: inherit;
+  color: inherit;
+  border-radius: 0;
+}
+.avaruchi-ui button,
+.avaruchi-ui a,
+.avaruchi-ui input,
+.avaruchi-ui select,
+.avaruchi-ui textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+.avaruchi-ui button {
+  cursor: pointer;
+}
+.avaruchi-ui button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.avaruchi-ui button {
+  border: 0;
+  background: none;
+}
+.avaruchi-ui a {
+  color: inherit;
+  text-underline-offset: 4px;
+}
+.avaruchi-ui h1,
+.avaruchi-ui h2,
+.avaruchi-ui h3,
+.avaruchi-ui p,
+.avaruchi-ui figure {
+  margin: 0;
+}
+.avaruchi-ui h1,
+.avaruchi-ui h2,
+.avaruchi-ui h3 {
+  font-family: "Work Sans", Arial, sans-serif;
+  font-weight: 400;
+  line-height: 1.12;
+}
+.avaruchi-ui p {
+  line-height: 1.75;
+}
+.avaruchi-ui img {
+  display: block;
+  max-width: 100%;
+}
+.avaruchi-ui button:focus-visible,
+.avaruchi-ui a:focus-visible,
+.avaruchi-ui input:focus-visible,
+.avaruchi-ui select:focus-visible,
+.avaruchi-ui summary:focus-visible,
+.avaruchi-ui textarea:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 4px;
+}
+.avaruchi-ui .wrap {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding-left: 64px;
+  padding-right: 64px;
+}
+.avaruchi-ui .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.avaruchi-ui .skip-link {
+  position: fixed;
+  top: -80px;
+  left: 20px;
+  z-index: 100;
+  background: var(--green);
+  color: var(--paper);
+  padding: 12px;
+}
+.avaruchi-ui .skip-link:focus {
+  top: 12px;
+}
+.avaruchi-ui .announcement {
+  background: var(--green);
+  color: var(--paper);
+  display: flex;
+  justify-content: space-between;
+  padding: 9px 64px;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+}
+.avaruchi-ui .site-header {
+  height: 106px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--rule);
+  gap: 32px;
+}
+.avaruchi-ui .wordmark {
+  font-family: "Work Sans", Arial, sans-serif;
+  font-size: 48px;
+  line-height: 1;
+  letter-spacing: -2.5px;
+  padding: 0;
+  text-align: left;
+}
+.avaruchi-ui .wordmark span {
+  display: block;
+  font-family: "Work Sans", Arial, sans-serif;
+  font-size: 8px;
+  letter-spacing: 2.1px;
+  font-weight: 600;
+  margin-top: 9px;
+  padding-left: 3px;
+}
+.avaruchi-ui .site-header nav {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  margin-left: 30px;
+}
+.avaruchi-ui .site-header nav button {
+  font-size: 13px;
+  padding: 8px 0;
+}
+.avaruchi-ui .site-header nav .current {
+  border-bottom: 1px solid var(--ink);
+}
+.avaruchi-ui .header-actions {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+.avaruchi-ui .icon-button {
+  display: grid;
+  place-items: center;
+  padding: 8px;
+}
+.avaruchi-ui .bag-button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+  font-size: 13px;
+  padding: 8px 0;
+}
+.avaruchi-ui .preview-notice {
+  font-size: 9px;
+  letter-spacing: 1px;
+  padding: 5px 64px;
+  border-bottom: 1px solid var(--rule);
+  color: var(--muted);
+}
+.avaruchi-ui .preview-notice span {
+  letter-spacing: 0.01em;
+  margin-left: 14px;
+}
+.avaruchi-ui .hero {
+  display: grid;
+  grid-template-columns: 47% 53%;
+  padding-top: 40px;
+  padding-bottom: 44px;
+  align-items: stretch;
+}
+.avaruchi-ui .hero-copy {
+  padding: 43px 15px 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.avaruchi-ui .eyebrow {
+  font-size: 10px;
+  letter-spacing: 1.8px;
+  font-weight: 600;
+  display: block;
+  line-height: 1.6;
+}
+.avaruchi-ui .hero h1 {
+  font-size: clamp(56px, 5.75vw, 84px);
+  line-height: 1.03;
+  letter-spacing: -2.2px;
+  margin: 24px 0 25px;
+}
+.avaruchi-ui .hero h1 em {
+  color: var(--red);
+  font-weight: 400;
+}
+.avaruchi-ui .hero-copy > p {
+  font-size: 16px;
+  line-height: 1.85;
+  color: var(--muted);
+}
+.avaruchi-ui .button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  min-height: 48px;
+  background: var(--green);
+  color: var(--paper);
+  border: 1px solid var(--green);
+  padding: 13px 22px;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.avaruchi-ui .button span {
+  font-size: 20px;
+  line-height: 1;
+}
+.avaruchi-ui .button.outline {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--ink);
+}
+.avaruchi-ui .hero-button {
+  margin-top: 31px;
+  min-width: 204px;
+}
+.avaruchi-ui .hero-footnote {
+  margin-top: auto;
+  padding-top: 42px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  font-size: 10px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.avaruchi-ui .hero-photo {
+  min-width: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.avaruchi-ui .hero-photo > img {
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+  max-height: 566px;
+  object-fit: cover;
+  object-position: 52% 50%;
+}
+.avaruchi-ui .hero-photo figcaption {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 12px 0 0;
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+.avaruchi-ui .hero-photo figcaption span:last-child {
+  letter-spacing: 0;
+  color: var(--muted);
+  font-size: 10px;
+}
+.avaruchi-ui .flavour-strip {
+  background: var(--sand);
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 22px;
+  padding: 18px 40px;
+  font-size: 10px;
+  letter-spacing: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.avaruchi-ui .strip-symbol {
+  font-size: 14px;
+  color: var(--red);
+}
+.avaruchi-ui .shop-section {
+  padding-top: 70px;
+  padding-bottom: 80px;
+}
+.avaruchi-ui .section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 40px;
+  margin-bottom: 31px;
+}
+.avaruchi-ui .section-heading h2 {
+  font-size: 43px;
+  letter-spacing: -0.8px;
+  margin-top: 14px;
+}
+.avaruchi-ui .section-heading h1 {
+  font-size: 49px;
+  margin-top: 16px;
+  letter-spacing: -1px;
+}
+.avaruchi-ui .section-intro p {
+  color: var(--muted);
+  font-size: 12px;
+}
+.avaruchi-ui .link-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 24px;
+  text-decoration: none;
+  padding: 0 0 4px;
+  border-bottom: 1px solid var(--ink);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.avaruchi-ui .section-intro .link-button {
+  margin-top: 16px;
+}
+.avaruchi-ui .link-button span {
+  font-size: 18px;
+}
+.avaruchi-ui .category-row {
+  display: flex;
+  gap: 30px;
+  align-items: center;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 26px;
+}
+.avaruchi-ui .category-row button {
+  padding: 13px 0 16px;
+  font-size: 11px;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.avaruchi-ui .category-row button.active {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+  font-weight: 600;
+}
+.avaruchi-ui .category-row > span {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--muted);
+}
+.avaruchi-ui .product-grid,
+.avaruchi-ui .skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+}
+.avaruchi-ui .photo-wrap {
+  position: relative;
+}
+.avaruchi-ui .photo-button {
+  display: block;
+  width: 100%;
+  padding: 0;
+}
+.avaruchi-ui .product-photo {
+  background-size: 400% 200%;
+  background-repeat: no-repeat;
+  background-color: var(--sand);
+  aspect-ratio: 1;
+}
+.avaruchi-ui .product-card .product-photo {
+  aspect-ratio: 1/1.15;
+}
+.avaruchi-ui .wish-button {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  background: var(--paper);
+  color: var(--green);
+}
+.avaruchi-ui .wish-button.chosen svg {
+  fill: var(--green);
+}
+.avaruchi-ui .product-tag {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  background: var(--paper);
+  padding: 4px 7px;
+  font-size: 7px;
+  letter-spacing: 0.7px;
+}
+.avaruchi-ui .product-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 5px;
+  margin-top: 18px;
+}
+.avaruchi-ui .product-heading h3 {
+  font-size: 20px;
+  letter-spacing: -0.2px;
+}
+.avaruchi-ui .product-heading > span {
+  font-size: 12px;
+  white-space: nowrap;
+}
+.avaruchi-ui .text-button {
+  padding: 0;
+  text-align: left;
+}
+.avaruchi-ui .product-subtitle {
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 6px;
+}
+.avaruchi-ui .product-actions {
+  display: flex;
+  border: 1px solid var(--rule);
+  margin-top: 15px;
+  min-height: 40px;
+}
+.avaruchi-ui .product-actions select {
+  width: 80px;
+  padding: 8px 11px;
+  border: 0;
+  border-right: 1px solid var(--rule);
+  background: none;
+  font-size: 10px;
+}
+.avaruchi-ui .add-button {
+  flex: 1;
+  font-size: 10px;
+  padding: 7px 8px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.avaruchi-ui .catalog-tools {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 30px;
+  margin: 20px 0;
+}
+.avaruchi-ui .search-field {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--ink);
+  gap: 10px;
+  min-width: 340px;
+}
+.avaruchi-ui .search-field input {
+  border: 0;
+  padding: 10px 0;
+  background: transparent;
+  width: 100%;
+  outline: none;
+}
+.avaruchi-ui .catalog-tools label {
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.avaruchi-ui .catalog-tools select {
+  border: 1px solid var(--rule);
+  padding: 9px;
+  background: none;
+  font-size: 11px;
+}
+.avaruchi-ui .story-section {
+  display: grid;
+  grid-template-columns: 46% 54%;
+  padding-top: 64px;
+  padding-bottom: 70px;
+  background: var(--sand);
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  gap: 0;
+}
+.avaruchi-ui .story-art {
+  position: relative;
+  max-width: 470px;
+}
+.avaruchi-ui .story-art .product-photo {
+  aspect-ratio: 1.12;
+}
+.avaruchi-ui .story-caption {
+  display: block;
+  padding: 13px 0 0;
+  font-size: 8px;
+  letter-spacing: 1.4px;
+  line-height: 1.6;
+}
+.avaruchi-ui .story-copy {
+  padding: 20px 0 0 62px;
+}
+.avaruchi-ui .story-copy h2 {
+  font-size: 43px;
+  letter-spacing: -0.8px;
+  margin: 17px 0 24px;
+}
+.avaruchi-ui .story-copy p {
+  font-size: 13px;
+  color: var(--muted);
+  max-width: 420px;
+  margin-top: 14px;
+}
+.avaruchi-ui .story-copy .link-button {
+  margin-top: 29px;
+}
+.avaruchi-ui .table-section {
+  padding-top: 80px;
+  padding-bottom: 75px;
+}
+.avaruchi-ui .table-section > h2 {
+  font-size: 46px;
+  margin: 14px 0 35px;
+  letter-spacing: -0.8px;
+}
+.avaruchi-ui .ritual-rows {
+  border-top: 1px solid var(--rule);
+  margin-bottom: 30px;
+}
+.avaruchi-ui .ritual-rows > div {
+  display: grid;
+  grid-template-columns: 50px 1fr 1.2fr;
+  align-items: start;
+  gap: 30px;
+  padding: 26px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.avaruchi-ui .ritual-rows > div > span {
+  font-size: 12px;
+  color: var(--red);
+}
+.avaruchi-ui .ritual-rows h3 {
+  font-size: 26px;
+}
+.avaruchi-ui .ritual-rows p {
+  font-size: 13px;
+  color: var(--muted);
+}
+.avaruchi-ui .faq {
+  display: grid;
+  grid-template-columns: 42% 58%;
+  border-top: 1px solid var(--rule);
+  padding-top: 64px;
+  padding-bottom: 74px;
+}
+.avaruchi-ui .faq h2 {
+  font-size: 43px;
+  margin-top: 15px;
+}
+.avaruchi-ui .faq details,
+.avaruchi-ui .product-detail details,
+.avaruchi-ui .admin-products details {
+  border-bottom: 1px solid var(--rule);
+  padding: 17px 0;
+}
+.avaruchi-ui .faq details:first-child {
+  border-top: 1px solid var(--rule);
+}
+.avaruchi-ui summary {
+  cursor: pointer;
+  list-style: none;
+  position: relative;
+  padding-right: 26px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.avaruchi-ui summary::-webkit-details-marker {
+  display: none;
+}
+.avaruchi-ui summary:after {
+  content: "+";
+  position: absolute;
+  right: 0;
+  font-size: 20px;
+  top: -7px;
+  font-weight: 400;
+}
+.avaruchi-ui details[open] > summary:after {
+  content: "−";
+}
+.avaruchi-ui details p {
+  font-size: 12px;
+  color: var(--muted);
+  padding: 15px 0 0;
+}
+.avaruchi-ui .journal {
+  padding-top: 65px;
+  padding-bottom: 90px;
+}
+.avaruchi-ui .journal > h1 {
+  font-size: 66px;
+  max-width: 700px;
+  letter-spacing: -1.5px;
+  margin: 17px 0;
+}
+.avaruchi-ui .lead {
+  font-size: 17px;
+  color: var(--muted);
+}
+.avaruchi-ui .journal-entry {
+  display: grid;
+  grid-template-columns: 35% 65%;
+  margin-top: 42px;
+  border-top: 1px solid var(--rule);
+  padding-top: 36px;
+  gap: 0;
+}
+.avaruchi-ui .journal-entry > div:last-child {
+  padding: 30px 0 20px 55px;
+}
+.avaruchi-ui .journal-entry h2 {
+  font-size: 38px;
+  margin: 15px 0 23px;
+}
+.avaruchi-ui .journal-entry p {
+  max-width: 550px;
+  color: var(--muted);
+  margin-bottom: 27px;
+}
+.avaruchi-ui .account,
+.avaruchi-ui .admin {
+  padding-top: 65px;
+  padding-bottom: 90px;
+  min-height: 65vh;
+}
+.avaruchi-ui .account h1,
+.avaruchi-ui .admin h1 {
+  max-width: 730px;
+}
+.avaruchi-ui .signin-panel {
+  max-width: 570px;
+  border: 1px solid var(--rule);
+  padding: 36px;
+  margin: 45px auto 20px;
+}
+.avaruchi-ui .signin-panel h2 {
+  font-size: 34px;
+}
+.avaruchi-ui .signin-panel > p {
+  margin: 18px 0;
+  color: var(--muted);
+}
+.avaruchi-ui .signin-panel .button {
+  margin-top: 10px;
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  gap: 15px;
+}
+.avaruchi-ui .google-letter {
+  font-family: Arial, sans-serif;
+  font-size: 24px !important;
+}
+.avaruchi-ui .disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.avaruchi-ui .account-bar {
+  display: flex;
+  gap: 25px;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  padding: 20px 0;
+  font-size: 12px;
+  margin-top: 34px;
+}
+.avaruchi-ui .account-bar > span:nth-child(2) {
+  color: var(--muted);
+  font-size: 11px;
+}
+.avaruchi-ui .subheading {
+  font-size: 32px;
+  margin: 40px 0 22px;
+}
+.avaruchi-ui .order-card {
+  border: 1px solid var(--rule);
+  margin-bottom: 18px;
+}
+.avaruchi-ui .order-top {
+  display: grid;
+  grid-template-columns: 1fr 140px 110px 100px;
+  align-items: center;
+  gap: 20px;
+  padding: 24px;
+}
+.avaruchi-ui .order-top p {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.avaruchi-ui .status {
+  display: inline-block;
+  border: 1px solid var(--rule);
+  padding: 3px 10px;
+  font-size: 10px;
+  text-transform: capitalize;
+  width: max-content;
+}
+.avaruchi-ui .status.cancelled {
+  color: var(--red);
+  border-color: var(--red);
+}
+.avaruchi-ui .order-top strong {
+  font-size: 14px;
+}
+.avaruchi-ui .order-details {
+  padding: 0 24px 25px;
+  border-top: 1px solid var(--rule);
+}
+.avaruchi-ui .order-details > p {
+  margin-top: 18px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.avaruchi-ui .tracking-steps {
+  display: flex;
+  gap: 0;
+  list-style: none;
+  margin: 27px 0;
+  padding: 0;
+}
+.avaruchi-ui .tracking-steps li {
+  width: 25%;
+  border-top: 1px solid var(--rule);
+  padding-top: 12px;
+  color: var(--muted);
+  font-size: 10px;
+  text-transform: capitalize;
+}
+.avaruchi-ui .tracking-steps li span {
+  margin-right: 9px;
+  border: 1px solid var(--rule);
+  padding: 2px 6px;
+}
+.avaruchi-ui .tracking-steps li.done {
+  border-color: var(--green);
+  color: var(--green);
+}
+.avaruchi-ui .tracking-steps li.done span {
+  background: var(--green);
+  color: var(--paper);
+}
+.avaruchi-ui .order-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 8px 0;
+  font-size: 12px;
+  border-bottom: 1px solid var(--rule);
+}
+.avaruchi-ui .order-buttons {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+}
+.avaruchi-ui .saved-address {
+  margin-top: 50px;
+  border-top: 1px solid var(--rule);
+  padding-top: 30px;
+  max-width: 800px;
+}
+.avaruchi-ui .saved-address h2 {
+  font-size: 32px;
+  margin-bottom: 23px;
+}
+.avaruchi-ui .saved-address .button {
+  margin-top: 25px;
+}
+.avaruchi-ui .empty-state {
+  text-align: center;
+  padding: 55px 25px;
+}
+.avaruchi-ui .empty-state h3 {
+  font-size: 30px;
+}
+.avaruchi-ui .empty-state p {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 15px 0 25px;
+}
+.avaruchi-ui .policy {
+  max-width: 1000px;
+  padding-top: 60px;
+  padding-bottom: 100px;
+}
+.avaruchi-ui .policy > h1 {
+  font-size: 57px;
+  margin: 18px 0 25px;
+}
+.avaruchi-ui .policy > p {
+  margin: 18px 0;
+}
+.avaruchi-ui .policy section {
+  border-top: 1px solid var(--rule);
+  padding-top: 25px;
+  margin-top: 30px;
+}
+.avaruchi-ui .policy section h2 {
+  font-size: 26px;
+  margin-bottom: 14px;
+}
+.avaruchi-ui .policy section p {
+  color: var(--muted);
+  font-size: 14px;
+}
+.avaruchi-ui .policy .button {
+  margin-top: 30px;
+}
+.avaruchi-ui .note {
+  font-size: 11px;
+  padding: 14px 17px;
+  border: 1px solid var(--rule);
+  background: var(--sand);
+  line-height: 1.7;
+}
+.avaruchi-ui .muted {
+  font-size: 10px !important;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.avaruchi-ui .admin-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  margin: 30px 0;
+}
+.avaruchi-ui .admin-stats > div {
+  padding: 26px 10px;
+}
+.avaruchi-ui .admin-stats span {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+}
+.avaruchi-ui .admin-stats strong {
+  font-family: "Work Sans", Arial, sans-serif;
+  font-size: 34px;
+  font-weight: 400;
+}
+.avaruchi-ui .admin-tabs {
+  display: flex;
+  gap: 30px;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 24px;
+}
+.avaruchi-ui .admin-tabs button {
+  text-transform: capitalize;
+  padding: 12px 0;
+  border-bottom: 2px solid transparent;
+  font-size: 12px;
+}
+.avaruchi-ui .admin-tabs .active {
+  border-color: var(--green);
+}
+.avaruchi-ui .table-scroll {
+  overflow-x: auto;
+}
+.avaruchi-ui table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 12px;
+  text-align: left;
+}
+.avaruchi-ui th {
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 500;
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--ink);
+  white-space: nowrap;
+}
+.avaruchi-ui td {
+  padding: 17px 14px;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: middle;
+}
+.avaruchi-ui td small {
+  color: var(--muted);
+}
+.avaruchi-ui td input,
+.avaruchi-ui td select {
+  max-width: 160px;
+  padding: 8px;
+  display: block;
+  font-size: 11px;
+}
+.avaruchi-ui td form input {
+  margin-top: 8px;
+}
+.avaruchi-ui .small-button {
+  background: var(--green);
+  color: var(--paper);
+  border: 1px solid var(--green);
+  padding: 9px 14px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.avaruchi-ui .admin-products form {
+  max-width: 850px;
+  margin-top: 25px;
+}
+.avaruchi-ui .admin-products label {
+  display: block;
+  margin-bottom: 17px;
+}
+.avaruchi-ui .admin-products textarea {
+  width: 100%;
+  height: 95px;
+}
+.avaruchi-ui .admin-products input {
+  width: 100%;
+}
+.avaruchi-ui .coupon-admin form {
+  display: flex;
+  gap: 17px;
+  align-items: flex-end;
+  margin: 22px 0 35px;
+  flex-wrap: wrap;
+}
+.avaruchi-ui .coupon-admin label {
+  max-width: 220px;
+}
+.avaruchi-ui .coupon-admin h2,
+.avaruchi-ui .setup-panel h2 {
+  font-size: 30px;
+  margin-bottom: 25px;
+}
+.avaruchi-ui .setup-panel {
+  max-width: 800px;
+}
+.avaruchi-ui .setup-panel p {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 24px;
+}
+.avaruchi-ui .setup-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid var(--rule);
+  padding: 17px 0;
+  font-size: 12px;
+}
+.avaruchi-ui .setup-row strong {
+  font-weight: 500;
+  font-size: 11px;
+}
+.avaruchi-ui footer {
+  background: var(--green);
+  color: var(--paper);
+}
+.avaruchi-ui .footer-main {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr 1fr 1fr;
+  gap: 30px;
+  padding-top: 54px;
+  padding-bottom: 50px;
+}
+.avaruchi-ui .footer-brand .wordmark {
+  font-size: 45px;
+}
+.avaruchi-ui .footer-brand p {
+  font-family: "Work Sans", Arial, sans-serif;
+  font-size: 22px;
+  line-height: 1.4;
+  margin-top: 22px;
+  color: #cdcdbc;
+}
+.avaruchi-ui .footer-main h3 {
+  font-family: "Work Sans", Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+.avaruchi-ui .footer-main > div > button:not(.wordmark) {
+  display: block;
+  text-align: left;
+  padding: 0;
+  margin-bottom: 10px;
+  font-size: 10px;
+  color: #d4d7c8;
+}
+.avaruchi-ui .footer-location {
+  display: block;
+  font-size: 10px;
+  color: #bdc7b8;
+  line-height: 1.7;
+  margin-top: 28px;
+}
+.avaruchi-ui .footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  border-top: 1px solid #627b65;
+  font-size: 9px;
+  color: #bdc7b8;
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+.avaruchi-ui .overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgb(28 37 28 / 60%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+}
+.avaruchi-ui .modal {
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  width: min(100%, 1000px);
+  max-height: 92vh;
+  overflow-y: auto;
+  outline: none;
+}
+.avaruchi-ui .modal-head {
+  position: sticky;
+  top: 0;
+  background: var(--paper);
+  z-index: 2;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 27px;
+}
+.avaruchi-ui .modal-head h2 {
+  font-size: 28px;
+}
+.avaruchi-ui .drawer-overlay {
+  justify-content: flex-end;
+  padding: 0;
+}
+.avaruchi-ui .drawer {
+  background: var(--paper);
+  height: 100dvh;
+  width: 500px;
+  max-width: 100%;
+  overflow-y: auto;
+  outline: none;
+}
+.avaruchi-ui .drawer > *:not(.modal-head) {
+  margin-left: 27px;
+  margin-right: 27px;
+}
+.avaruchi-ui .drawer .modal-head {
+  padding: 25px 27px;
+}
+.avaruchi-ui .bag-note {
+  border-bottom: 1px solid var(--rule);
+  font-size: 11px;
+  padding: 20px 0;
+  color: var(--muted);
+}
+.avaruchi-ui .cart-items {
+  margin-top: 0;
+}
+.avaruchi-ui .cart-item {
+  display: grid;
+  grid-template-columns: 86px 1fr auto;
+  gap: 15px;
+  border-bottom: 1px solid var(--rule);
+  padding: 22px 0;
+}
+.avaruchi-ui .cart-item > .product-photo {
+  width: 86px;
+  height: 100px;
+  aspect-ratio: auto;
+}
+.avaruchi-ui .cart-item h3 {
+  font-size: 19px;
+}
+.avaruchi-ui .cart-item p {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 5px;
+}
+.avaruchi-ui .cart-item > strong {
+  font-size: 12px;
+  font-weight: 500;
+}
+.avaruchi-ui .quantity {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  border: 1px solid var(--rule);
+  height: 31px;
+  margin-top: 10px;
+}
+.avaruchi-ui .quantity button {
+  width: 31px;
+  height: 29px;
+  font-size: 15px;
+}
+.avaruchi-ui .quantity span {
+  min-width: 29px;
+  text-align: center;
+  font-size: 11px;
+}
+.avaruchi-ui .remove-link {
+  font-size: 9px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 0;
+  display: block;
+  margin-top: 6px;
+}
+.avaruchi-ui .coupon-form {
+  display: flex;
+  margin-top: 25px;
+  gap: 8px;
+}
+.avaruchi-ui .coupon-form input {
+  width: 100%;
+}
+.avaruchi-ui .drawer .muted {
+  margin-top: 8px;
+}
+.avaruchi-ui .totals {
+  margin-top: 23px;
+  border-top: 1px solid var(--rule);
+  padding-top: 15px;
+}
+.avaruchi-ui .totals > div {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  margin-bottom: 12px;
+}
+.avaruchi-ui .totals .grand-total {
+  font-size: 20px;
+  font-family: "Work Sans", Arial, sans-serif;
+  border-top: 1px solid var(--rule);
+  padding-top: 16px;
+  margin-top: 17px;
+}
+.avaruchi-ui .totals > p {
+  font-size: 9px;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+.avaruchi-ui .full-width {
+  width: 100%;
+  justify-content: space-between;
+}
+.avaruchi-ui .drawer .full-width {
+  width: calc(100% - 54px);
+}
+.avaruchi-ui .continue-shop {
+  display: block;
+  text-align: center;
+  margin: 20px auto 25px !important;
+  border-bottom: 0;
+  text-decoration: underline;
+  font-size: 11px;
+}
+.avaruchi-ui .form-error {
+  padding: 12px 0;
+  color: var(--red);
+  font-size: 12px;
+}
+.avaruchi-ui .checkout {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 35px;
+  padding: 28px;
+}
+.avaruchi-ui .checkout h3 {
+  font-size: 23px;
+  margin-bottom: 20px;
+}
+.avaruchi-ui .checkout .note {
+  margin-bottom: 24px;
+}
+.avaruchi-ui .address-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 17px;
+  margin-bottom: 30px;
+}
+.avaruchi-ui .address-grid .full {
+  grid-column: 1/-1;
+}
+.avaruchi-ui label {
+  font-size: 10px;
+  color: var(--muted);
+}
+.avaruchi-ui label > input:not([type="checkbox"]):not([type="radio"]),
+.avaruchi-ui label > textarea {
+  display: block;
+  margin-top: 6px;
+  width: 100%;
+}
+.avaruchi-ui input,
+.avaruchi-ui select,
+.avaruchi-ui textarea {
+  background: transparent;
+  border: 1px solid var(--rule);
+  padding: 10px 12px;
+  outline-offset: 2px;
+}
+.avaruchi-ui input::placeholder {
+  color: var(--muted);
+  font-size: 11px;
+}
+.avaruchi-ui input[type="checkbox"],
+.avaruchi-ui input[type="radio"] {
+  accent-color: var(--green);
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  margin: 0 8px 0 0;
+  padding: 0;
+}
+.avaruchi-ui .payment-options label {
+  display: block;
+  border: 1px solid var(--rule);
+  padding: 14px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  color: var(--ink);
+}
+.avaruchi-ui .payment-options span {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  padding-left: 25px;
+  margin-top: 4px;
+}
+.avaruchi-ui .checkbox {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--ink);
+}
+.avaruchi-ui .terms-consent {
+  flex-wrap: wrap;
+  font-size: 9px;
+  line-height: 2;
+  margin-top: 21px;
+}
+.avaruchi-ui .checkout > aside {
+  background: var(--sand);
+  padding: 24px;
+  height: max-content;
+}
+.avaruchi-ui .checkout-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  font-size: 12px;
+  border-bottom: 1px solid var(--rule);
+  padding: 12px 0;
+}
+.avaruchi-ui .checkout-line small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+.avaruchi-ui .checkout-line strong {
+  font-weight: 500;
+  white-space: nowrap;
+}
+.avaruchi-ui .checkout aside .muted {
+  margin-top: 17px;
+}
+.avaruchi-ui .product-detail {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  padding: 28px;
+}
+.avaruchi-ui .product-detail > .product-photo {
+  height: max-content;
+  aspect-ratio: 1/1.2;
+}
+.avaruchi-ui .product-detail h2 {
+  font-size: 34px;
+  letter-spacing: -0.5px;
+  margin: 12px 0 18px;
+}
+.avaruchi-ui .product-detail p {
+  font-size: 12px;
+  color: var(--muted);
+}
+.avaruchi-ui .heat {
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  padding: 15px 0;
+  margin: 23px 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 9px;
+  align-items: center;
+}
+.avaruchi-ui .heat > span:last-child {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.avaruchi-ui .heat i {
+  height: 13px;
+  width: 4px;
+  background: var(--rule);
+  display: block;
+}
+.avaruchi-ui .heat i.filled {
+  background: var(--red);
+}
+.avaruchi-ui .heat i:last-child {
+  margin-right: 8px;
+}
+.avaruchi-ui .weight-options {
+  display: flex;
+  gap: 8px;
+}
+.avaruchi-ui .weight-options button {
+  padding: 9px 17px;
+  border: 1px solid var(--rule);
+  font-size: 11px;
+}
+.avaruchi-ui .weight-options .active {
+  border-color: var(--green);
+  background: var(--green);
+  color: var(--paper);
+}
+.avaruchi-ui .detail-buy {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 17px 0;
+}
+.avaruchi-ui .detail-buy > strong {
+  font-size: 26px;
+  font-family: "Work Sans", Arial, sans-serif;
+  font-weight: 400;
+}
+.avaruchi-ui .detail-buy .quantity {
+  margin: 0;
+}
+.avaruchi-ui .product-detail details {
+  padding: 17px 0;
+}
+.avaruchi-ui .product-detail .muted {
+  margin-top: 16px;
+}
+.avaruchi-ui .success-content {
+  padding: 38px 40px 44px;
+  max-width: 650px;
+  margin: auto;
+}
+.avaruchi-ui .success-content h2 {
+  font-size: 53px;
+  letter-spacing: -1px;
+  margin: 18px 0 23px;
+}
+.avaruchi-ui .success-content > p {
+  font-size: 13px;
+  color: var(--muted);
+}
+.avaruchi-ui .success-summary {
+  margin-top: 30px;
+}
+.avaruchi-ui .success-summary p {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--rule);
+  padding: 12px 0;
+  font-size: 12px;
+  gap: 20px;
+}
+.avaruchi-ui .success-summary strong {
+  font-weight: 500;
+}
+.avaruchi-ui .toast {
+  position: fixed;
+  bottom: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  background: var(--green);
+  color: var(--paper);
+  border: 1px solid var(--paper);
+  padding: 13px 17px;
+  font-size: 12px;
+  min-width: 280px;
+  max-width: calc(100vw - 30px);
+  display: flex;
+  justify-content: space-between;
+  gap: 30px;
+}
+.avaruchi-ui .toast button {
+  font-size: 18px;
+  padding: 0;
+  color: var(--paper);
+}
+.avaruchi-ui .error-banner {
+  padding-top: 15px;
+  padding-bottom: 15px;
+  color: var(--red);
+  font-size: 12px;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  justify-content: space-between;
+}
+.avaruchi-ui .error-banner button {
+  font-size: 20px;
+}
+.avaruchi-ui .skeleton-picture {
+  background: var(--sand);
+  aspect-ratio: 1/1.15;
+}
+.avaruchi-ui .skeleton-line {
+  height: 13px;
+  background: var(--sand);
+  margin-top: 18px;
+  width: 85%;
+}
+.avaruchi-ui .skeleton-line.short {
+  width: 55%;
+  height: 9px;
+  margin-top: 12px;
+}
+@media (min-width: 1440px) {
+  .avaruchi-ui .hero-photo > img {
+    max-height: 600px;
+  }
+  .avaruchi-ui .hero h1 {
+    font-size: 86px;
+  }
+  .avaruchi-ui .hero {
+    padding-top: 45px;
+  }
+  .avaruchi-ui .hero-copy {
+    padding-top: 50px;
+  }
+}
+@media (max-width: 1100px) {
+  .avaruchi-ui .wrap {
+    padding-left: 36px;
+    padding-right: 36px;
+  }
+  .avaruchi-ui .announcement,
+  .avaruchi-ui .preview-notice {
+    padding-left: 36px;
+    padding-right: 36px;
+  }
+  .avaruchi-ui .site-header nav {
+    gap: 22px;
+    margin-left: 0;
+  }
+  .avaruchi-ui .header-actions {
+    gap: 12px;
+  }
+  .avaruchi-ui .hero h1 {
+    font-size: 65px;
+  }
+  .avaruchi-ui .hero-photo > img {
+    min-height: 480px;
+  }
+  .avaruchi-ui .hero-copy {
+    padding-top: 30px;
+  }
+  .avaruchi-ui .product-grid {
+    gap: 17px;
+  }
+  .avaruchi-ui .product-heading h3 {
+    font-size: 18px;
+  }
+  .avaruchi-ui .product-actions select {
+    width: 66px;
+    padding: 8px 5px;
+  }
+  .avaruchi-ui .add-button {
+    font-size: 9px;
+  }
+  .avaruchi-ui .story-copy {
+    padding-left: 35px;
+  }
+  .avaruchi-ui .story-copy h2 {
+    font-size: 38px;
+  }
+}
+@media (max-width: 800px) {
+  .avaruchi-ui .wrap {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  .avaruchi-ui .announcement,
+  .avaruchi-ui .preview-notice {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  .avaruchi-ui .announcement span:last-child {
+    display: none;
+  }
+  .avaruchi-ui .site-header {
+    height: 95px;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-content: center;
+  }
+  .avaruchi-ui .wordmark {
+    font-size: 37px;
+  }
+  .avaruchi-ui .wordmark span {
+    font-size: 6px;
+    letter-spacing: 1.5px;
+    margin-top: 7px;
+  }
+  .avaruchi-ui .site-header nav {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    gap: 29px;
+    margin-top: 12px;
+  }
+  .avaruchi-ui .site-header nav button {
+    font-size: 10px;
+    padding: 0;
+  }
+  .avaruchi-ui .header-actions {
+    gap: 11px;
+  }
+  .avaruchi-ui .bag-button {
+    font-size: 11px;
+    gap: 7px;
+  }
+  .avaruchi-ui .header-actions .icon-button {
+    padding: 4px;
+  }
+  .avaruchi-ui .hero {
+    grid-template-columns: 1fr 1fr;
+    padding-top: 30px;
+  }
+  .avaruchi-ui .hero-copy {
+    padding-top: 24px;
+  }
+  .avaruchi-ui .hero h1 {
+    font-size: 49px;
+    letter-spacing: -1.2px;
+  }
+  .avaruchi-ui .hero-copy > p {
+    font-size: 13px;
+  }
+  .avaruchi-ui .hero-photo > img {
+    min-height: 440px;
+  }
+  .avaruchi-ui .hero-button {
+    min-width: 165px;
+    margin-top: 25px;
+    gap: 20px;
+  }
+  .avaruchi-ui .hero-footnote {
+    font-size: 8px;
+    padding-top: 30px;
+    gap: 8px;
+  }
+  .avaruchi-ui .hero-photo figcaption {
+    font-size: 7px;
+  }
+  .avaruchi-ui .hero-photo figcaption span:last-child {
+    display: none;
+  }
+  .avaruchi-ui .eyebrow {
+    font-size: 8px;
+    letter-spacing: 1.4px;
+  }
+  .avaruchi-ui .flavour-strip {
+    font-size: 8px;
+    gap: 25px;
+    justify-content: space-between;
+    padding: 15px 24px;
+  }
+  .avaruchi-ui .flavour-strip span:nth-last-child(-n + 2) {
+    display: none;
+  }
+  .avaruchi-ui .section-heading h2 {
+    font-size: 35px;
+  }
+  .avaruchi-ui .section-heading h1 {
+    font-size: 40px;
+  }
+  .avaruchi-ui .section-intro p {
+    font-size: 10px;
+  }
+  .avaruchi-ui .product-grid,
+  .avaruchi-ui .skeleton-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 30px 20px;
+  }
+  .avaruchi-ui .product-heading h3 {
+    font-size: 22px;
+  }
+  .avaruchi-ui .product-actions select {
+    width: 90px;
+    padding: 10px;
+  }
+  .avaruchi-ui .add-button {
+    font-size: 11px;
+  }
+  .avaruchi-ui .product-tag {
+    font-size: 7px;
+  }
+  .avaruchi-ui .shop-section {
+    padding-top: 48px;
+    padding-bottom: 55px;
+  }
+  .avaruchi-ui .story-section {
+    padding-top: 45px;
+    padding-bottom: 45px;
+  }
+  .avaruchi-ui .story-copy {
+    padding: 8px 0 0 25px;
+  }
+  .avaruchi-ui .story-copy h2 {
+    font-size: 29px;
+  }
+  .avaruchi-ui .story-copy p {
+    font-size: 11px;
+  }
+  .avaruchi-ui .table-section {
+    padding-top: 55px;
+    padding-bottom: 55px;
+  }
+  .avaruchi-ui .table-section > h2 {
+    font-size: 38px;
+  }
+  .avaruchi-ui .ritual-rows > div {
+    grid-template-columns: 30px 1fr 1.2fr;
+    gap: 20px;
+  }
+  .avaruchi-ui .ritual-rows h3 {
+    font-size: 23px;
+  }
+  .avaruchi-ui .ritual-rows p {
+    font-size: 11px;
+  }
+  .avaruchi-ui .faq {
+    grid-template-columns: 35% 65%;
+    padding-top: 45px;
+    padding-bottom: 50px;
+    gap: 20px;
+  }
+  .avaruchi-ui .faq h2 {
+    font-size: 32px;
+  }
+  .avaruchi-ui .footer-main {
+    grid-template-columns: 1.2fr 1fr 1fr;
+    gap: 25px;
+  }
+  .avaruchi-ui .footer-main > div:last-child {
+    grid-column: 2/4;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .avaruchi-ui .footer-main > div:last-child h3 {
+    display: none;
+  }
+  .avaruchi-ui .footer-location {
+    display: none;
+  }
+  .avaruchi-ui .footer-main > div:last-child > button {
+    margin-bottom: 0;
+  }
+  .avaruchi-ui .footer-bottom {
+    font-size: 8px;
+  }
+  .avaruchi-ui .modal {
+    max-height: 95dvh;
+  }
+  .avaruchi-ui .modal-head {
+    padding: 17px 20px;
+  }
+  .avaruchi-ui .modal-head h2 {
+    font-size: 23px;
+  }
+  .avaruchi-ui .product-detail {
+    gap: 25px;
+    padding: 20px;
+  }
+  .avaruchi-ui .product-detail h2 {
+    font-size: 28px;
+  }
+  .avaruchi-ui .product-detail > .product-photo {
+    aspect-ratio: 1/1.35;
+  }
+  .avaruchi-ui .checkout {
+    gap: 20px;
+    padding: 20px;
+  }
+  .avaruchi-ui .checkout > aside {
+    padding: 18px;
+  }
+  .avaruchi-ui .address-grid {
+    gap: 12px;
+  }
+  .avaruchi-ui .order-top {
+    grid-template-columns: 1fr 90px 85px;
+    gap: 15px;
+  }
+  .avaruchi-ui .order-top .link-button {
+    grid-column: 1/-1;
+    width: max-content;
+  }
+  .avaruchi-ui .journal > h1 {
+    font-size: 50px;
+  }
+  .avaruchi-ui .journal-entry > div:last-child {
+    padding-left: 30px;
+  }
+  .avaruchi-ui .journal-entry h2 {
+    font-size: 30px;
+  }
+  .avaruchi-ui .journal-entry p {
+    font-size: 12px;
+  }
+  .avaruchi-ui .catalog-tools {
+    gap: 20px;
+  }
+  .avaruchi-ui .search-field {
+    min-width: 240px;
+  }
+  .avaruchi-ui .category-row {
+    gap: 22px;
+  }
+  .avaruchi-ui .category-row > span {
+    display: none;
+  }
+}
+@media (max-width: 560px) {
+  .avaruchi-ui .wrap {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  .avaruchi-ui .announcement {
+    padding: 7px 20px;
+    font-size: 9px;
+  }
+  .avaruchi-ui .preview-notice {
+    padding: 7px 20px;
+    font-size: 8px;
+    line-height: 1.6;
+    letter-spacing: 0.5px;
+  }
+  .avaruchi-ui .preview-notice span {
+    display: block;
+    margin-left: 0;
+    font-size: 8px;
+  }
+  .avaruchi-ui .site-header {
+    height: 105px;
+  }
+  .avaruchi-ui .header-actions {
+    gap: 9px;
+  }
+  .avaruchi-ui .header-actions svg {
+    width: 20px;
+    height: 20px;
+  }
+  .avaruchi-ui .search-toggle {
+    display: none;
+  }
+  .avaruchi-ui .hero {
+    display: flex;
+    flex-direction: column;
+    padding-top: 18px;
+    padding-bottom: 24px;
+  }
+  .avaruchi-ui .hero-copy {
+    padding: 13px 0 25px;
+    position: relative;
+  }
+  .avaruchi-ui .hero h1 {
+    font-size: 58px;
+    line-height: 1.03;
+    margin: 17px 0 17px;
+    letter-spacing: -1.6px;
+  }
+  .avaruchi-ui .hero-copy > p {
+    font-size: 13px;
+    line-height: 1.8;
+  }
+  .avaruchi-ui .desktop {
+    display: none;
+  }
+  .avaruchi-ui .hero-button {
+    margin-top: 21px;
+    min-width: 180px;
+    min-height: 45px;
+  }
+  .avaruchi-ui .hero-footnote {
+    position: absolute;
+    right: 0;
+    bottom: 28px;
+    font-size: 8px;
+    gap: 5px;
+    max-width: 130px;
+  }
+  .avaruchi-ui .hero-footnote svg {
+    width: 29px;
+    height: 29px;
+  }
+  .avaruchi-ui .hero-photo > img {
+    min-height: 0;
+    max-height: none;
+    height: 330px;
+    object-position: center;
+  }
+  .avaruchi-ui .hero-photo figcaption {
+    font-size: 8px;
+    padding-top: 10px;
+  }
+  .avaruchi-ui .hero-photo figcaption span:last-child {
+    display: block;
+    font-size: 8px;
+  }
+  .avaruchi-ui .flavour-strip {
+    padding: 14px 20px;
+    font-size: 7px;
+    letter-spacing: 1.2px;
+    gap: 15px;
+  }
+  .avaruchi-ui .flavour-strip span:nth-last-child(-n + 4) {
+    display: none;
+  }
+  .avaruchi-ui .shop-section {
+    padding-top: 38px;
+    padding-bottom: 45px;
+  }
+  .avaruchi-ui .section-heading {
+    display: block;
+    margin-bottom: 22px;
+  }
+  .avaruchi-ui .section-heading h2 {
+    font-size: 34px;
+    margin-top: 10px;
+  }
+  .avaruchi-ui .section-intro {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    margin-top: 18px;
+  }
+  .avaruchi-ui .section-intro > p {
+    font-size: 10px;
+    max-width: 200px;
+  }
+  .avaruchi-ui .section-intro .link-button {
+    font-size: 9px;
+    gap: 8px;
+    white-space: nowrap;
+  }
+  .avaruchi-ui .category-row {
+    gap: 20px;
+    overflow-x: auto;
+    margin-bottom: 20px;
+    white-space: nowrap;
+  }
+  .avaruchi-ui .category-row button {
+    font-size: 9px;
+    padding-bottom: 12px;
+    padding-top: 10px;
+  }
+  .avaruchi-ui .product-grid,
+  .avaruchi-ui .skeleton-grid {
+    gap: 25px 14px;
+  }
+  .avaruchi-ui .product-card .product-photo {
+    aspect-ratio: 1/1.22;
+  }
+  .avaruchi-ui .wish-button {
+    right: 7px;
+    top: 7px;
+    width: 28px;
+    height: 28px;
+  }
+  .avaruchi-ui .wish-button svg {
+    width: 18px;
+    height: 18px;
+  }
+  .avaruchi-ui .product-tag {
+    left: 7px;
+    bottom: 7px;
+    font-size: 5.5px;
+    padding: 3px 5px;
+  }
+  .avaruchi-ui .product-heading {
+    margin-top: 12px;
+    gap: 7px;
+    flex-wrap: wrap;
+  }
+  .avaruchi-ui .product-heading h3 {
+    font-size: 18px;
+  }
+  .avaruchi-ui .product-heading > span {
+    font-size: 10px;
+  }
+  .avaruchi-ui .product-subtitle {
+    font-size: 8px;
+    margin-top: 5px;
+  }
+  .avaruchi-ui .product-actions {
+    margin-top: 11px;
+    min-height: 35px;
+  }
+  .avaruchi-ui .product-actions select {
+    width: 59px;
+    padding: 6px;
+    font-size: 8px;
+  }
+  .avaruchi-ui .add-button {
+    font-size: 8px;
+    padding: 5px;
+    letter-spacing: 0;
+  }
+  .avaruchi-ui .story-section {
+    display: flex;
+    flex-direction: column;
+    padding-top: 30px;
+    padding-bottom: 38px;
+  }
+  .avaruchi-ui .story-art {
+    width: 100%;
+    max-width: none;
+  }
+  .avaruchi-ui .story-art .product-photo {
+    aspect-ratio: 1.45;
+  }
+  .avaruchi-ui .story-caption {
+    font-size: 7px;
+  }
+  .avaruchi-ui .story-copy {
+    padding: 30px 0 0;
+  }
+  .avaruchi-ui .story-copy h2 {
+    font-size: 35px;
+    margin: 13px 0 20px;
+  }
+  .avaruchi-ui .story-copy p {
+    font-size: 12px;
+    max-width: none;
+  }
+  .avaruchi-ui .table-section {
+    padding-top: 42px;
+    padding-bottom: 40px;
+  }
+  .avaruchi-ui .table-section > h2 {
+    font-size: 35px;
+    margin-bottom: 25px;
+  }
+  .avaruchi-ui .ritual-rows > div {
+    grid-template-columns: 25px 1fr;
+    gap: 12px;
+    padding: 22px 0;
+  }
+  .avaruchi-ui .ritual-rows h3 {
+    font-size: 24px;
+  }
+  .avaruchi-ui .ritual-rows p {
+    grid-column: 2;
+    font-size: 12px;
+  }
+  .avaruchi-ui .faq {
+    display: block;
+    padding-top: 37px;
+    padding-bottom: 42px;
+  }
+  .avaruchi-ui .faq h2 {
+    font-size: 35px;
+    margin-bottom: 25px;
+  }
+  .avaruchi-ui .faq h2 br {
+    display: none;
+  }
+  .avaruchi-ui .faq details {
+    padding: 16px 0;
+  }
+  .avaruchi-ui .faq summary {
+    font-size: 11px;
+  }
+  .avaruchi-ui .footer-main {
+    grid-template-columns: 1fr 1fr;
+    gap: 35px 20px;
+    padding-top: 35px;
+    padding-bottom: 30px;
+  }
+  .avaruchi-ui .footer-brand {
+    grid-column: 1/-1;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .avaruchi-ui .footer-brand .wordmark {
+    font-size: 40px;
+  }
+  .avaruchi-ui .footer-brand p {
+    font-size: 17px;
+    margin-top: 0;
+  }
+  .avaruchi-ui .footer-main > div:last-child {
+    grid-column: 1/-1;
+    gap: 25px;
+    margin-top: 0;
+  }
+  .avaruchi-ui .footer-main h3 {
+    font-size: 10px;
+    margin-bottom: 15px;
+  }
+  .avaruchi-ui .footer-bottom {
+    display: block;
+    padding-top: 15px;
+    padding-bottom: 15px;
+    line-height: 1.8;
+  }
+  .avaruchi-ui .footer-bottom > span {
+    display: block;
+  }
+  .avaruchi-ui .overlay {
+    padding: 12px;
+  }
+  .avaruchi-ui .modal-head {
+    padding: 15px;
+  }
+  .avaruchi-ui .modal-head h2 {
+    font-size: 22px;
+    max-width: 85%;
+  }
+  .avaruchi-ui .product-detail {
+    display: block;
+    padding: 15px;
+  }
+  .avaruchi-ui .product-detail > .product-photo {
+    aspect-ratio: 1.25;
+    margin-bottom: 25px;
+  }
+  .avaruchi-ui .product-detail h2 {
+    font-size: 31px;
+  }
+  .avaruchi-ui .weight-options button {
+    flex: 1;
+  }
+  .avaruchi-ui .checkout {
+    display: block;
+    padding: 17px;
+  }
+  .avaruchi-ui .checkout > aside {
+    margin-top: 28px;
+    padding: 20px;
+  }
+  .avaruchi-ui .address-grid {
+    gap: 14px;
+  }
+  .avaruchi-ui .checkout h3 {
+    font-size: 23px;
+  }
+  .avaruchi-ui .modal {
+    max-height: 96dvh;
+  }
+  .avaruchi-ui .success-content {
+    padding: 28px 22px;
+  }
+  .avaruchi-ui .success-content h2 {
+    font-size: 42px;
+  }
+  .avaruchi-ui .success-content .order-buttons {
+    gap: 14px;
+  }
+  .avaruchi-ui .success-content .button {
+    width: 100%;
+    justify-content: center;
+  }
+  .avaruchi-ui .account,
+  .avaruchi-ui .admin {
+    padding-top: 40px;
+    padding-bottom: 55px;
+  }
+  .avaruchi-ui .account h1,
+  .avaruchi-ui .admin h1 {
+    font-size: 37px;
+  }
+  .avaruchi-ui .account-bar {
+    display: block;
+    padding: 18px 0;
+  }
+  .avaruchi-ui .account-bar > * {
+    display: block !important;
+    margin-bottom: 10px;
+  }
+  .avaruchi-ui .account-bar .link-button {
+    width: max-content;
+  }
+  .avaruchi-ui .order-top {
+    padding: 17px;
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+  }
+  .avaruchi-ui .order-top strong {
+    grid-row: 2;
+    grid-column: 2;
+  }
+  .avaruchi-ui .order-top .link-button {
+    grid-column: 1;
+    grid-row: 2;
+    font-size: 10px;
+  }
+  .avaruchi-ui .order-top .eyebrow {
+    font-size: 9px;
+  }
+  .avaruchi-ui .order-details {
+    padding: 0 17px 20px;
+  }
+  .avaruchi-ui .tracking-steps li {
+    font-size: 8px;
+  }
+  .avaruchi-ui .tracking-steps li span {
+    display: block;
+    width: max-content;
+    margin-bottom: 8px;
+  }
+  .avaruchi-ui .order-buttons {
+    gap: 17px;
+  }
+  .avaruchi-ui .order-buttons .button {
+    min-height: 40px;
+    padding: 10px 14px;
+    font-size: 10px;
+  }
+  .avaruchi-ui .order-item {
+    font-size: 10px;
+  }
+  .avaruchi-ui .policy {
+    padding-top: 38px;
+    padding-bottom: 55px;
+  }
+  .avaruchi-ui .policy > h1 {
+    font-size: 42px;
+  }
+  .avaruchi-ui .policy section h2 {
+    font-size: 24px;
+  }
+  .avaruchi-ui .policy section p {
+    font-size: 12px;
+  }
+  .avaruchi-ui .journal {
+    padding-top: 40px;
+    padding-bottom: 60px;
+  }
+  .avaruchi-ui .journal > h1 {
+    font-size: 46px;
+  }
+  .avaruchi-ui .journal .lead {
+    font-size: 13px;
+  }
+  .avaruchi-ui .journal-entry {
+    display: block;
+    padding-top: 25px;
+    margin-top: 30px;
+  }
+  .avaruchi-ui .journal-entry .product-photo {
+    aspect-ratio: 1.35;
+  }
+  .avaruchi-ui .journal-entry > div:last-child {
+    padding: 25px 0 0;
+  }
+  .avaruchi-ui .journal-entry h2 {
+    font-size: 30px;
+  }
+  .avaruchi-ui .catalog-tools {
+    display: block;
+  }
+  .avaruchi-ui .search-field {
+    min-width: 0;
+    margin-bottom: 20px;
+  }
+  .avaruchi-ui .catalog-tools label {
+    justify-content: space-between;
+  }
+  .avaruchi-ui .catalog-tools select {
+    min-width: 190px;
+  }
+  .avaruchi-ui .admin-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+  .avaruchi-ui .admin-stats > div {
+    padding: 18px 0;
+  }
+  .avaruchi-ui .admin-stats strong {
+    font-size: 29px;
+  }
+  .avaruchi-ui .admin-tabs {
+    gap: 25px;
+    overflow: auto;
+  }
+  .avaruchi-ui .admin-tabs button {
+    font-size: 10px;
+  }
+  .avaruchi-ui .coupon-admin label {
+    width: 100%;
+    max-width: none;
+  }
+  .avaruchi-ui .coupon-admin .button {
+    width: 100%;
+  }
+  .avaruchi-ui .setup-row {
+    font-size: 10px;
+  }
+  .avaruchi-ui .setup-row strong {
+    font-size: 9px;
+  }
+  .avaruchi-ui .signin-panel {
+    padding: 23px;
+    margin-top: 25px;
+  }
+  .avaruchi-ui .signin-panel h2 {
+    font-size: 30px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .avaruchi-ui * {
+    scroll-behavior: auto !important;
+  }
+}
+/* Multipage navigation retains the original square, printed-paper identity. */
+.avaruchi-ui .site-header nav a {
+  text-decoration: none;
+  font-size: 13px;
+  padding: 8px 0;
+}
+.avaruchi-ui .site-header .wordmark,
+.avaruchi-ui .footer-brand .wordmark {
+  text-decoration: none;
+  display: block;
+}
+.avaruchi-ui .site-header nav a.current {
+  border-bottom: 1px solid var(--ink);
+}
+.avaruchi-ui .text-button {
+  text-decoration: none;
+  text-align: left;
+}
+.avaruchi-ui .photo-button {
+  display: block;
+  width: 100%;
+}
+.avaruchi-ui .footer-main > div > a:not(.wordmark) {
+  display: block;
+  text-decoration: none;
+  text-align: left;
+  padding: 3px 0;
+  font-size: 13px;
+}
+.avaruchi-ui .page-heading {
+  padding: 20px 0 48px;
+}
+.avaruchi-ui .page-heading h1 {
+  font-size: clamp(42px, 5vw, 68px);
+  margin-top: 18px;
+}
+.avaruchi-ui .page-heading h1 em,
+.avaruchi-ui .story-page-intro h1 em {
+  color: var(--red);
+}
+.avaruchi-ui .checkout-page {
+  padding-top: 52px;
+  padding-bottom: 96px;
+}
+.avaruchi-ui .checkout-page .checkout {
+  max-width: 1200px;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 64px;
+}
+.avaruchi-ui .checkout-page .checkout > aside {
+  background: var(--sand);
+  padding: 30px;
+  align-self: start;
+}
+.avaruchi-ui .checkout-page .empty-state {
+  padding: 48px 0 90px;
+}
+.avaruchi-ui .product-page {
+  padding-top: 30px;
+  padding-bottom: 80px;
+}
+.avaruchi-ui .breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 34px;
+}
+.avaruchi-ui .breadcrumbs a {
+  text-decoration: none;
+}
+.avaruchi-ui .product-page .product-detail {
+  grid-template-columns: 1.05fr 1fr;
+  gap: 64px;
+  align-items: start;
+}
+.avaruchi-ui .product-page .product-detail > .product-photo {
+  aspect-ratio: 1/1;
+  min-height: 420px;
+  width: 100%;
+  position: sticky;
+  top: 25px;
+}
+.avaruchi-ui .product-page h1 {
+  font-size: clamp(38px, 4vw, 64px);
+  margin: 16px 0 8px;
+}
+.avaruchi-ui .product-page-subtitle {
+  font-family: "Work Sans", Arial, sans-serif;
+  font-style: italic;
+  font-size: 23px;
+  color: var(--red);
+}
+.avaruchi-ui .product-page-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin-top: 60px;
+  padding-top: 30px;
+  border-top: 1px solid var(--rule);
+}
+.avaruchi-ui .story-page {
+  padding-top: 64px;
+  padding-bottom: 100px;
+}
+.avaruchi-ui .story-page-intro {
+  max-width: 880px;
+  padding-bottom: 48px;
+}
+.avaruchi-ui .story-page-intro h1 {
+  font-size: clamp(45px, 6vw, 80px);
+  margin: 22px 0;
+  line-height: 1.08;
+}
+.avaruchi-ui .story-page-intro .lead {
+  max-width: 640px;
+  font-size: 18px;
+  color: var(--muted);
+}
+.avaruchi-ui .story-wide-photo {
+  width: 100%;
+}
+.avaruchi-ui .story-wide-photo img {
+  display: block;
+  width: 100%;
+  max-height: 650px;
+  object-fit: cover;
+  object-position: center 55%;
+}
+.avaruchi-ui .story-wide-photo figcaption {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.avaruchi-ui .story-chapters article {
+  display: grid;
+  grid-template-columns: 0.5fr 1fr 1.3fr;
+  gap: 40px;
+  padding: 64px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.avaruchi-ui .story-chapters h2 {
+  font-size: 36px;
+}
+.avaruchi-ui .story-chapters p + p {
+  margin-top: 18px;
+}
+.avaruchi-ui .story-chapters .button {
+  margin-top: 24px;
+}
+@media (max-width: 800px) {
+  .avaruchi-ui .site-header nav a {
+    font-size: 12px;
+  }
+  .avaruchi-ui .checkout-page .checkout,
+  .avaruchi-ui .product-page .product-detail {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .avaruchi-ui .product-page .product-detail > .product-photo {
+    position: static;
+    min-height: 0;
+    max-width: 620px;
+  }
+  .avaruchi-ui .story-chapters article {
+    grid-template-columns: 1fr 1.5fr;
+    gap: 24px;
+  }
+  .avaruchi-ui .story-chapters article > .eyebrow {
+    grid-column: 1/-1;
+  }
+  .avaruchi-ui .product-page-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+@media (max-width: 560px) {
+  .avaruchi-ui .checkout-page,
+  .avaruchi-ui .story-page {
+    padding-top: 32px;
+    padding-bottom: 56px;
+  }
+  .avaruchi-ui .checkout-page .checkout > aside {
+    padding: 22px 18px;
+  }
+  .avaruchi-ui .story-chapters article {
+    grid-template-columns: 1fr;
+    padding: 40px 0;
+  }
+  .avaruchi-ui .story-chapters h2 {
+    font-size: 30px;
+  }
+  .avaruchi-ui .footer-main > div > a:not(.wordmark) {
+    font-size: 12px;
+    padding: 5px 0;
+  }
+  .avaruchi-ui .story-page-intro .lead {
+    font-size: 16px;
+  }
+  .avaruchi-ui .page-heading {
+    padding-bottom: 32px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .avaruchi-ui {
+    scroll-behavior: auto;
+  }
+  .avaruchi-ui *,
+  .avaruchi-ui *::before,
+  .avaruchi-ui *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+.avaruchi-ui .section-heading h1 {
+  font-size: 42px;
+  margin-top: 15px;
+}
+@media (max-width: 560px) {
+  .avaruchi-ui .section-heading h1 {
+    font-size: 34px;
+  }
+}
+/* Opaque sticky navigation keeps the printed-paper palette at every width. */
+.avaruchi-ui {
+  --header-height: 96px;
+  --gutter: clamp(16px, 4.45vw, 64px);
+}
+.avaruchi-ui {
+  scroll-padding-top: calc(var(--header-height) + 20px);
+  scrollbar-gutter: stable;
+}
+.avaruchi-ui .wrap {
+  padding-inline: var(--gutter);
+  width: 100%;
+}
+.avaruchi-ui .header-shell {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+  padding-top: env(safe-area-inset-top);
+}
+.avaruchi-ui .site-header {
+  height: var(--header-height);
+  border: 0;
+  gap: clamp(16px, 2vw, 32px);
+}
+.avaruchi-ui .site-header nav {
+  margin: 0;
+  gap: clamp(18px, 2.3vw, 36px);
+}
+.avaruchi-ui .site-header nav a,
+.avaruchi-ui .site-header nav button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.avaruchi-ui .header-actions {
+  gap: clamp(8px, 1vw, 18px);
+}
+.avaruchi-ui .header-actions .icon-button,
+.avaruchi-ui .bag-button {
+  min-width: 44px;
+  min-height: 44px;
+  text-decoration: none;
+}
+.avaruchi-ui .bag-button {
+  padding-inline: 4px;
+}
+.avaruchi-ui .hero-description p {
+  font-size: 16px;
+  line-height: 1.85;
+  color: var(--muted);
+}
+.avaruchi-ui .hero,
+.avaruchi-ui .product-detail,
+.avaruchi-ui .checkout,
+.avaruchi-ui .story-chapters article,
+.avaruchi-ui .journal-entry {
+  min-width: 0;
+}
+.avaruchi-ui .hero > *,
+.avaruchi-ui .product-detail > *,
+.avaruchi-ui .checkout > *,
+.avaruchi-ui .product-card,
+.avaruchi-ui .product-heading > *,
+.avaruchi-ui .cart-item > *,
+.avaruchi-ui .address-grid > *,
+.avaruchi-ui .footer-main > * {
+  min-width: 0;
+}
+.avaruchi-ui .product-heading h3,
+.avaruchi-ui .cart-item h3 {
+  overflow-wrap: anywhere;
+}
+.avaruchi-ui .product-grid,
+.avaruchi-ui .skeleton-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.avaruchi-ui .product-page .product-detail > .product-photo {
+  top: calc(var(--header-height) + 24px);
+}
+.avaruchi-ui input,
+.avaruchi-ui select,
+.avaruchi-ui textarea {
+  max-width: 100%;
+}
+.avaruchi-ui .category-row button,
+.avaruchi-ui .weight-options button,
+.avaruchi-ui .add-button,
+.avaruchi-ui .quantity button,
+.avaruchi-ui .remove-link {
+  min-height: 44px;
+}
+.avaruchi-ui .quantity {
+  height: 44px;
+}
+.avaruchi-ui .quantity button {
+  width: 40px;
+  height: 42px;
+}
+.avaruchi-ui .quantity span {
+  min-width: 30px;
+}
+.avaruchi-ui .category-row {
+  row-gap: 8px;
+}
+.avaruchi-ui .catalog-tools,
+.avaruchi-ui .catalog-tools > label {
+  gap: 16px;
+}
+.avaruchi-ui .search-field {
+  min-width: 0;
+  flex: 1;
+}
+.avaruchi-ui .search-field input {
+  width: 100%;
+  min-width: 0;
+}
+.avaruchi-ui .coupon-form > input {
+  min-width: 0;
+}
+.avaruchi-ui .modal {
+  max-height: calc(100dvh - 40px);
+  overscroll-behavior: contain;
+}
+.avaruchi-ui .drawer-overlay {
+  padding: 0;
+}
+.avaruchi-ui .drawer {
+  overscroll-behavior: contain;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+}
+.avaruchi-ui .drawer .modal-head {
+  padding-top: max(20px, env(safe-area-inset-top));
+}
+.avaruchi-ui .modal-head .icon-button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.avaruchi-ui .toast {
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+  transform: none;
+  width: max-content;
+  bottom: max(20px, env(safe-area-inset-bottom));
+  align-items: center;
+}
+.avaruchi-ui .order-buttons {
+  flex-wrap: wrap;
+}
+.avaruchi-ui .policy,
+.avaruchi-ui .order-details,
+.avaruchi-ui .setup-row {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 1100px) {
+  .avaruchi-ui .product-grid,
+  .avaruchi-ui .skeleton-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px 24px;
+  }
+  .avaruchi-ui .product-actions select {
+    width: 82px;
+  }
+  .avaruchi-ui .add-button {
+    font-size: 12px;
+  }
+  .avaruchi-ui .product-heading h3 {
+    font-size: 23px;
+  }
+}
+@media (max-width: 1000px) {
+  .avaruchi-ui {
+    --header-height: 120px;
+  }
+  .avaruchi-ui .site-header {
+    flex-wrap: wrap;
+    align-content: center;
+    gap: 6px 16px;
+  }
+  .avaruchi-ui .site-header .wordmark {
+    font-size: 38px;
+  }
+  .avaruchi-ui .site-header nav {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    gap: 32px;
+    margin-top: 0;
+  }
+  .avaruchi-ui .site-header nav a,
+  .avaruchi-ui .site-header nav button {
+    padding: 0 4px;
+    font-size: 12px;
+  }
+  .avaruchi-ui .header-actions .icon-button {
+    padding: 10px;
+  }
+  .avaruchi-ui .hero h1 {
+    font-size: clamp(44px, 6.4vw, 65px);
+  }
+}
+@media (max-width: 800px) {
+  .avaruchi-ui .hero-description p {
+    font-size: 13px;
+  }
+  .avaruchi-ui .product-page .product-detail {
+    display: grid;
+  }
+  .avaruchi-ui .checkout-page .checkout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .avaruchi-ui .checkout-page .checkout > aside {
+    margin-top: 0;
+  }
+  .avaruchi-ui .address-grid input,
+  .avaruchi-ui .coupon-form input,
+  .avaruchi-ui .search-field input {
+    font-size: 16px;
+  }
+}
+@media (max-width: 560px) {
+  .avaruchi-ui {
+    --header-height: 116px;
+  }
+  .avaruchi-ui .site-header {
+    gap: 4px 8px;
+  }
+  .avaruchi-ui .site-header .wordmark {
+    font-size: 34px;
+    letter-spacing: -1.7px;
+  }
+  .avaruchi-ui .site-header .wordmark span {
+    font-size: 6px;
+    letter-spacing: 1.35px;
+    margin-top: 7px;
+  }
+  .avaruchi-ui .site-header nav {
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .avaruchi-ui .site-header nav a,
+  .avaruchi-ui .site-header nav button {
+    font-size: 11px;
+    padding-inline: 2px;
+  }
+  .avaruchi-ui .header-actions {
+    gap: 4px;
+  }
+  .avaruchi-ui .header-actions .icon-button {
+    padding: 10px;
+  }
+  .avaruchi-ui .bag-button {
+    font-size: 11px;
+    gap: 6px;
+  }
+  .avaruchi-ui .hero h1 {
+    font-size: clamp(43px, 11.9vw, 58px);
+  }
+  .avaruchi-ui .hero-copy {
+    display: block;
+  }
+  .avaruchi-ui .hero-footnote {
+    bottom: 28px;
+  }
+  .avaruchi-ui .hero-photo > img {
+    height: auto;
+    aspect-ratio: 1.35;
+  }
+  .avaruchi-ui .hero-photo figcaption {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .avaruchi-ui .product-grid,
+  .avaruchi-ui .skeleton-grid {
+    gap: 28px 16px;
+  }
+  .avaruchi-ui .product-heading {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .avaruchi-ui .product-heading h3 {
+    font-size: 22px;
+  }
+  .avaruchi-ui .product-subtitle {
+    font-size: 11px;
+  }
+  .avaruchi-ui .product-actions {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+  .avaruchi-ui .product-actions select {
+    width: 100%;
+    font-size: 16px;
+    padding-inline: 10px;
+  }
+  .avaruchi-ui .add-button {
+    font-size: 11px;
+  }
+  .avaruchi-ui .catalog-tools select {
+    min-width: 0;
+    flex: 1;
+    font-size: 16px;
+  }
+  .avaruchi-ui .catalog-tools label {
+    white-space: nowrap;
+  }
+  .avaruchi-ui .category-row {
+    gap: 4px 20px;
+  }
+  .avaruchi-ui .category-row button {
+    font-size: 11px;
+  }
+  .avaruchi-ui .cart-item {
+    grid-template-columns: 68px minmax(0, 1fr) auto;
+    gap: 12px;
+  }
+  .avaruchi-ui .cart-item > .product-photo {
+    width: 68px;
+    height: 86px;
+  }
+  .avaruchi-ui .drawer > *:not(.modal-head) {
+    margin-inline: var(--gutter);
+  }
+  .avaruchi-ui .drawer .modal-head {
+    padding-inline: var(--gutter);
+  }
+  .avaruchi-ui .modal {
+    max-height: calc(100dvh - 24px);
+  }
+  .avaruchi-ui .address-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .avaruchi-ui .address-grid .full {
+    grid-column: auto;
+  }
+  .avaruchi-ui .checkout-page .page-heading h1,
+  .avaruchi-ui .section-heading h1 {
+    font-size: clamp(34px, 9vw, 42px);
+  }
+  .avaruchi-ui .checkout-page .checkout > aside {
+    padding: 20px 16px;
+  }
+  .avaruchi-ui .story-page-intro h1 {
+    font-size: clamp(36px, 10vw, 54px);
+  }
+  .avaruchi-ui .policy > h1,
+  .avaruchi-ui .journal > h1 {
+    font-size: clamp(34px, 10vw, 46px);
+  }
+  .avaruchi-ui .footer-brand {
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  .avaruchi-ui .signin-panel .button {
+    width: 100%;
+    justify-content: center;
+    gap: 12px;
+  }
+  .avaruchi-ui .flavour-strip {
+    flex-wrap: wrap;
+    gap: 10px 16px;
+  }
+  .avaruchi-ui .admin-tabs {
+    max-width: 100%;
+    white-space: nowrap;
+  }
+}
+@media (max-width: 400px) {
+  .avaruchi-ui .hero-footnote {
+    position: static;
+    max-width: none;
+    padding-top: 22px;
+    font-size: 10px;
+  }
+  .avaruchi-ui .hero-footnote svg {
+    width: 32px;
+    height: 32px;
+  }
+  .avaruchi-ui .hero-footnote br {
+    display: none;
+  }
+  .avaruchi-ui .section-heading {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .avaruchi-ui .product-grid,
+  .avaruchi-ui .skeleton-grid {
+    gap: 24px 12px;
+  }
+  .avaruchi-ui .product-heading h3 {
+    font-size: 20px;
+  }
+  .avaruchi-ui .product-tag {
+    font-size: 7px;
+    padding: 5px 7px;
+  }
+  .avaruchi-ui .cart-item {
+    grid-template-columns: 60px minmax(0, 1fr);
+  }
+  .avaruchi-ui .cart-item > .product-photo {
+    width: 60px;
+    height: 76px;
+  }
+  .avaruchi-ui .cart-item > strong {
+    grid-column: 2;
+  }
+  .avaruchi-ui .coupon-form {
+    flex-wrap: wrap;
+  }
+  .avaruchi-ui .coupon-form .button {
+    flex: 1;
+  }
+  .avaruchi-ui .checkout-page .checkout-summary-item {
+    gap: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .avaruchi-ui *,
+  .avaruchi-ui *::before,
+  .avaruchi-ui *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Customer account and order service */
+.avaruchi-ui .account-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--rule);
+  margin: 30px 0 36px;
+  gap: 4px 20px;
+}
+.avaruchi-ui .account-tabs button {
+  padding: 14px 0;
+  min-height: 44px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  font-size: 13px;
+  color: var(--muted);
+}
+.avaruchi-ui .account-tabs button.active {
+  border-bottom-color: var(--green);
+  color: var(--green);
+}
+.avaruchi-ui .account-content {
+  min-height: 360px;
+}
+.avaruchi-ui .account-section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+.avaruchi-ui .account-section-heading h2,
+.avaruchi-ui .account-help h2,
+.avaruchi-ui .admin-requests > h2 {
+  font-size: clamp(26px, 3vw, 36px);
+  margin-bottom: 9px;
+}
+.avaruchi-ui .account-section-heading p,
+.avaruchi-ui .saved-address > p,
+.avaruchi-ui .account-help p,
+.avaruchi-ui .request-form > p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.avaruchi-ui .account-content .saved-address {
+  margin-top: 0;
+  padding-top: 0;
+  border: 0;
+}
+.avaruchi-ui .saved-address > p {
+  margin-bottom: 24px;
+}
+.avaruchi-ui .saved-address .muted {
+  margin-top: 20px;
+}
+.avaruchi-ui .order-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 240px);
+  gap: 20px;
+  margin-bottom: 24px;
+}
+.avaruchi-ui .order-filters label,
+.avaruchi-ui .request-form label,
+.avaruchi-ui .shipment-admin label {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+}
+.avaruchi-ui .order-filters input,
+.avaruchi-ui .order-filters select,
+.avaruchi-ui .request-form input,
+.avaruchi-ui .request-form select,
+.avaruchi-ui .request-form textarea,
+.avaruchi-ui .shipment-admin input {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  padding: 12px;
+  color: var(--green);
+  border-radius: 0;
+  font: inherit;
+}
+.avaruchi-ui .request-form textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+.avaruchi-ui .request-form .button {
+  margin-top: 20px;
+}
+.avaruchi-ui .shipment-info {
+  padding: 20px 0;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+.avaruchi-ui .shipment-info h3,
+.avaruchi-ui .order-delivery h3,
+.avaruchi-ui .request-form h3 {
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+.avaruchi-ui .shipment-info dl {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 38px;
+  margin-bottom: 14px;
+}
+.avaruchi-ui .shipment-info dt {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.avaruchi-ui .shipment-info dd {
+  font-size: 13px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.avaruchi-ui .order-delivery {
+  padding-top: 20px;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.avaruchi-ui .order-delivery p + p {
+  margin-top: 10px;
+}
+.avaruchi-ui .request-form {
+  padding-top: 24px;
+  margin-top: 24px;
+  border-top: 1px solid var(--rule);
+}
+.avaruchi-ui .request-form > p {
+  margin-bottom: 18px;
+}
+.avaruchi-ui .request-list {
+  margin-top: 28px;
+}
+.avaruchi-ui .request-card {
+  padding: 24px;
+  border: 1px solid var(--rule);
+  margin-bottom: 22px;
+}
+.avaruchi-ui .request-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 15px;
+  margin-bottom: 14px;
+}
+.avaruchi-ui .request-heading h3 {
+  font-size: 28px;
+  margin-top: 6px;
+}
+.avaruchi-ui .request-card > p {
+  font-size: 12px;
+  color: var(--muted);
+}
+.avaruchi-ui .request-description {
+  margin: 14px 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.avaruchi-ui .refund-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 20px 0;
+  border-block: 1px solid var(--rule);
+  padding: 15px 0;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.avaruchi-ui .refund-summary strong {
+  font-size: 18px;
+}
+.avaruchi-ui .request-history {
+  list-style: none;
+  padding: 0;
+  margin: 24px 0 0;
+}
+.avaruchi-ui .request-history li {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 1fr);
+  gap: 18px;
+  padding: 15px 0;
+  border-top: 1px solid var(--rule);
+  font-size: 12px;
+}
+.avaruchi-ui .request-history time {
+  color: var(--muted);
+}
+.avaruchi-ui .request-history p {
+  color: var(--muted);
+  margin-top: 7px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.avaruchi-ui .account-help {
+  max-width: 850px;
+}
+.avaruchi-ui .account-help details {
+  border-bottom: 1px solid var(--rule);
+  padding: 20px 0;
+}
+.avaruchi-ui .account-help summary {
+  cursor: pointer;
+  font-size: 15px;
+}
+.avaruchi-ui .account-help details p {
+  margin-top: 13px;
+}
+.avaruchi-ui .account-help .muted {
+  margin-top: 36px;
+  overflow-wrap: anywhere;
+}
+.avaruchi-ui .shipment-admin form {
+  display: grid;
+  gap: 13px;
+  padding: 15px 0;
+}
+.avaruchi-ui .admin-requests {
+  max-width: 1000px;
+}
+.avaruchi-ui .admin-request {
+  margin-top: 30px;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 30px;
+}
+.avaruchi-ui .admin-request .request-card {
+  margin-bottom: 15px;
+}
+.avaruchi-ui .request-contact {
+  font-size: 12px;
+  color: var(--muted);
+}
+@media (max-width: 600px) {
+  .avaruchi-ui .account-tabs {
+    gap: 4px 16px;
+    margin-block: 22px;
+  }
+  .avaruchi-ui .account-tabs button {
+    font-size: 12px;
+  }
+  .avaruchi-ui .account-section-heading {
+    flex-direction: column;
+  }
+  .avaruchi-ui .order-filters {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+  .avaruchi-ui .request-card {
+    padding: 18px;
+  }
+  .avaruchi-ui .request-heading {
+    flex-direction: column;
+  }
+  .avaruchi-ui .request-history li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .avaruchi-ui .shipment-info dl {
+    flex-direction: column;
+  }
+}
+
+/* Familiar commerce workspaces, using Avaruchi's printed-paper palette. */
+.avaruchi-ui .portal-announcement {
+  display: none;
+}
+.avaruchi-ui .portal-header .site-header {
+  height: 82px;
+}
+.avaruchi-ui .portal-header .wordmark {
+  font-size: 36px;
+}
+.avaruchi-ui .portal-header .wordmark span {
+  font-size: 7px;
+  margin-top: 7px;
+}
+.avaruchi-ui .portal-header .site-header nav {
+  gap: 28px;
+}
+.avaruchi-ui .portal {
+  padding-top: 28px;
+  padding-bottom: 55px;
+  max-width: 1440px;
+}
+.avaruchi-ui .portal .section-heading {
+  margin-bottom: 24px;
+  align-items: center;
+}
+.avaruchi-ui .portal .section-heading h1 {
+  font-family: "Work Sans", Arial, sans-serif;
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.7px;
+  margin: 8px 0 0;
+  line-height: 1.25;
+}
+.avaruchi-ui .portal .eyebrow {
+  font-size: 9px;
+  letter-spacing: 1.1px;
+}
+.avaruchi-ui .portal-intro {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 9px;
+}
+.avaruchi-ui .portal-shell {
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  gap: 26px;
+  align-items: start;
+}
+.avaruchi-ui .portal-sidebar {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  min-width: 0;
+}
+.avaruchi-ui .customer-profile {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: var(--sand);
+  padding: 19px 16px;
+  border-bottom: 1px solid var(--rule);
+}
+.avaruchi-ui .profile-avatar {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--rule);
+  flex-shrink: 0;
+}
+.avaruchi-ui .customer-profile > div {
+  min-width: 0;
+}
+.avaruchi-ui .customer-profile strong,
+.avaruchi-ui .seller-profile strong {
+  display: block;
+  font-size: 14px;
+  margin: 4px 0;
+}
+.avaruchi-ui .customer-profile span,
+.avaruchi-ui .customer-profile small,
+.avaruchi-ui .seller-profile small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.avaruchi-ui .portal-sidebar .account-tabs,
+.avaruchi-ui .portal-sidebar .admin-tabs {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 10px;
+  gap: 3px;
+  border: 0;
+  overflow: visible;
+}
+.avaruchi-ui .portal-sidebar nav button,
+.avaruchi-ui .portal-sidebar nav a {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 46px;
+  padding: 12px 10px;
+  color: var(--green);
+  border: 0;
+  background: transparent;
+  font-size: 12px;
+  text-align: left;
+  line-height: 1.4;
+  text-transform: none;
+}
+.avaruchi-ui .portal-sidebar nav button.active {
+  background: var(--green);
+  color: var(--paper);
+  border: 0;
+}
+.avaruchi-ui .portal-sidebar nav svg {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+}
+.avaruchi-ui .portal-sidebar nav b {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 500;
+}
+.avaruchi-ui .sidebar-links {
+  display: grid;
+  gap: 14px;
+  border-top: 1px solid var(--rule);
+  padding: 20px;
+  font-size: 11px;
+}
+.avaruchi-ui .sidebar-links .link-button {
+  justify-self: start;
+}
+.avaruchi-ui .portal-main {
+  min-width: 0;
+}
+.avaruchi-ui .portal .account-content {
+  min-height: 430px;
+  border: 1px solid var(--rule);
+  background: #f6f1e7;
+  padding: 26px;
+}
+.avaruchi-ui .portal .account-section-heading {
+  margin-bottom: 22px;
+}
+.avaruchi-ui .portal .account-section-heading h2,
+.avaruchi-ui .portal .saved-address h2,
+.avaruchi-ui .portal .account-help h2,
+.avaruchi-ui .workspace-heading h2 {
+  font-family: "Work Sans", Arial, sans-serif;
+  font-size: 23px;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 8px;
+  letter-spacing: -0.35px;
+}
+.avaruchi-ui .portal .account-section-heading p,
+.avaruchi-ui .portal .saved-address > p,
+.avaruchi-ui .portal .account-help p {
+  font-size: 12px;
+}
+.avaruchi-ui .portal-mode {
+  font-size: 10px;
+  color: var(--muted);
+  border: 1px solid var(--rule);
+  padding: 6px 9px;
+  white-space: nowrap;
+}
+.avaruchi-ui .account-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.avaruchi-ui .account-shortcut {
+  display: flex;
+  align-items: start;
+  gap: 16px;
+  padding: 22px 18px;
+  min-height: 112px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--green);
+  text-align: left;
+}
+.avaruchi-ui .account-shortcut > svg {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+}
+.avaruchi-ui .account-shortcut > span {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.avaruchi-ui .account-shortcut strong {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.avaruchi-ui .account-shortcut small {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.7;
+}
+.avaruchi-ui .account-activity {
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid var(--rule);
+}
+.avaruchi-ui .portal h3 {
+  font-family: "Work Sans", Arial, sans-serif;
+  font-size: 17px;
+  font-weight: 500;
+}
+.avaruchi-ui .account-activity .account-section-heading {
+  margin-bottom: 15px;
+}
+.avaruchi-ui .activity-empty {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+.avaruchi-ui .activity-empty > svg {
+  flex-shrink: 0;
+  color: var(--muted);
+  width: 30px;
+}
+.avaruchi-ui .activity-empty > div {
+  flex: 1;
+}
+.avaruchi-ui .activity-empty strong {
+  font-size: 12px;
+  font-weight: 500;
+}
+.avaruchi-ui .activity-empty p,
+.avaruchi-ui .account-contact-strip p,
+.avaruchi-ui .recent-order p {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 8px;
+  line-height: 1.7;
+}
+.avaruchi-ui .portal .button,
+.avaruchi-ui .portal .small-button {
+  min-height: 40px;
+  font-size: 11px;
+  padding: 11px 16px;
+}
+.avaruchi-ui .portal .link-button {
+  font-size: 11px;
+}
+.avaruchi-ui .account-contact-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 24px;
+  padding-top: 22px;
+  border-top: 1px solid var(--rule);
+  font-size: 12px;
+}
+.avaruchi-ui .account-contact-strip > div {
+  min-width: 0;
+}
+.avaruchi-ui .account-contact-strip .link-button {
+  white-space: nowrap;
+}
+.avaruchi-ui .recent-order {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+.avaruchi-ui .recent-order > div {
+  flex: 1;
+  min-width: 0;
+}
+.avaruchi-ui .recent-order strong {
+  display: block;
+  font-size: 13px;
+  margin-top: 8px;
+}
+.avaruchi-ui .portal .empty-state {
+  padding: 40px 22px;
+}
+.avaruchi-ui .portal .empty-state > svg {
+  margin-bottom: 15px;
+}
+.avaruchi-ui .portal .empty-state h3 {
+  font-size: 20px;
+}
+.avaruchi-ui .portal .empty-state p {
+  font-size: 12px;
+  max-width: 420px;
+  margin-inline: auto;
+  line-height: 1.8;
+}
+.avaruchi-ui .order-meta {
+  display: grid;
+  grid-template-columns: 1fr 0.75fr 1fr 1.2fr;
+  gap: 18px;
+  padding: 15px 18px;
+  background: var(--sand);
+  border-bottom: 1px solid var(--rule);
+}
+.avaruchi-ui .order-meta span {
+  display: block;
+  font-size: 8px;
+  color: var(--muted);
+  letter-spacing: 0.4px;
+  margin-bottom: 5px;
+}
+.avaruchi-ui .order-meta strong {
+  font-size: 11px;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+.avaruchi-ui .order-number {
+  text-align: right;
+}
+.avaruchi-ui .order-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 145px;
+  gap: 22px;
+  padding: 20px;
+}
+.avaruchi-ui .order-summary-products > .status {
+  margin-bottom: 15px;
+}
+.avaruchi-ui .ordered-product {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-top: 14px;
+}
+.avaruchi-ui .ordered-product .product-photo {
+  width: 68px;
+  height: 78px;
+  flex-shrink: 0;
+}
+.avaruchi-ui .ordered-product > div {
+  min-width: 0;
+}
+.avaruchi-ui .ordered-product strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+.avaruchi-ui .ordered-product p {
+  font-size: 10px;
+  color: var(--muted);
+  margin: 8px 0;
+}
+.avaruchi-ui .ordered-product span {
+  font-size: 11px;
+}
+.avaruchi-ui .order-summary-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.avaruchi-ui .order-summary-actions .small-button {
+  display: block;
+  text-align: center;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--green);
+}
+.avaruchi-ui .order-summary-actions .primary {
+  background: var(--green);
+  color: var(--paper);
+  border-color: var(--green);
+}
+.avaruchi-ui .order-summary-actions .link-button {
+  margin-top: 4px;
+  align-self: center;
+}
+.avaruchi-ui .portal .order-details {
+  padding: 20px;
+}
+.avaruchi-ui .portal .tracking-steps {
+  margin: 15px 0 24px;
+}
+.avaruchi-ui .portal .shipment-info {
+  padding: 15px 0;
+}
+.avaruchi-ui .portal .order-details h3 {
+  font-size: 15px;
+}
+.avaruchi-ui .portal .request-card {
+  background: var(--paper);
+}
+.avaruchi-ui .portal .request-heading h3 {
+  font-size: 20px;
+}
+.avaruchi-ui .invoice-table small {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 8px;
+  text-transform: capitalize;
+}
+.avaruchi-ui .portal .table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--rule);
+}
+.avaruchi-ui .portal .table-scroll table {
+  width: 100%;
+  font-size: 11px;
+  border: 0;
+}
+.avaruchi-ui .portal .table-scroll th {
+  background: var(--sand);
+  font-size: 10px;
+  padding: 13px 16px;
+  white-space: nowrap;
+}
+.avaruchi-ui .portal .table-scroll td {
+  padding: 15px 16px;
+  vertical-align: top;
+}
+.avaruchi-ui .portal-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.avaruchi-ui .seller-profile {
+  background: var(--sand);
+  padding: 24px 20px;
+  border-bottom: 1px solid var(--rule);
+}
+.avaruchi-ui .seller-profile strong {
+  margin-top: 8px;
+}
+.avaruchi-ui .admin-workspace {
+  border: 1px solid var(--rule);
+  background: #f6f1e7;
+  padding: 25px;
+}
+.avaruchi-ui .workspace-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 18px;
+  margin-bottom: 22px;
+}
+.avaruchi-ui .workspace-heading p {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+.avaruchi-ui .workspace-heading > .small-button {
+  flex-shrink: 0;
+}
+.avaruchi-ui .console-notice {
+  border-block: 1px solid var(--rule);
+  padding: 10px 0;
+  margin-bottom: 24px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.avaruchi-ui .portal .admin-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  margin: 0 0 28px;
+  border: 1px solid var(--rule);
+}
+.avaruchi-ui .portal .admin-stats > div {
+  padding: 18px 16px;
+  border: 0;
+  border-right: 1px solid var(--rule);
+}
+.avaruchi-ui .portal .admin-stats > div:last-child {
+  border-right: 0;
+}
+.avaruchi-ui .portal .admin-stats span {
+  font-size: 10px;
+}
+.avaruchi-ui .portal .admin-stats strong {
+  font-family: "Work Sans", Arial, sans-serif;
+  font-size: 25px;
+  font-weight: 500;
+  margin-top: 10px;
+}
+.avaruchi-ui .seller-task-list {
+  border: 1px solid var(--rule);
+  margin-bottom: 28px;
+}
+.avaruchi-ui .seller-task-list h3 {
+  padding: 16px 18px;
+  background: var(--sand);
+  border-bottom: 1px solid var(--rule);
+}
+.avaruchi-ui .seller-task {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 50px 140px;
+  gap: 20px;
+  align-items: center;
+  padding: 17px 18px;
+  border-bottom: 1px solid var(--rule);
+  font-size: 11px;
+}
+.avaruchi-ui .seller-task:last-child {
+  border-bottom: 0;
+}
+.avaruchi-ui .seller-task strong {
+  font-size: 15px;
+  font-weight: 500;
+}
+.avaruchi-ui .seller-task .link-button {
+  justify-self: end;
+}
+.avaruchi-ui .seller-recent .account-section-heading {
+  margin-bottom: 18px;
+}
+.avaruchi-ui .admin-filter-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 18px;
+}
+.avaruchi-ui .admin-filter-tabs button {
+  display: flex;
+  gap: 8px;
+  padding: 12px 0;
+  min-height: 42px;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  font-size: 11px;
+  text-transform: capitalize;
+}
+.avaruchi-ui .admin-filter-tabs button.active {
+  color: var(--green);
+  border-color: var(--green);
+}
+.avaruchi-ui .admin-filter-tabs button span {
+  font-size: 10px;
+}
+.avaruchi-ui .admin-order-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 20px;
+  margin: 20px 0;
+}
+.avaruchi-ui .admin-order-toolbar p {
+  font-size: 11px;
+  color: var(--muted);
+}
+.avaruchi-ui .admin-order-toolbar label {
+  display: grid;
+  gap: 8px;
+  width: min(100%, 350px);
+  font-size: 10px;
+}
+.avaruchi-ui .admin-order-toolbar input {
+  border: 1px solid var(--rule);
+  padding: 11px 12px;
+  background: var(--paper);
+  font: inherit;
+  font-size: 12px;
+  min-width: 0;
+  width: 100%;
+  border-radius: 0;
+}
+.avaruchi-ui .managed-orders table {
+  min-width: 780px;
+}
+.avaruchi-ui .managed-orders td:first-child {
+  min-width: 210px;
+  max-width: 250px;
+  overflow-wrap: anywhere;
+}
+.avaruchi-ui .managed-orders td:nth-child(4) {
+  min-width: 165px;
+}
+.avaruchi-ui .managed-orders td:last-child {
+  min-width: 150px;
+}
+.avaruchi-ui .managed-orders td form {
+  display: grid;
+  gap: 10px;
+}
+.avaruchi-ui .managed-orders td input,
+.avaruchi-ui .managed-orders td select {
+  width: 100%;
+  min-width: 0;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: 10px;
+  font-size: 11px;
+  border-radius: 0;
+}
+.avaruchi-ui .managed-orders details {
+  margin-top: 12px;
+}
+.avaruchi-ui .managed-orders summary {
+  font-size: 10px;
+}
+.avaruchi-ui .managed-orders td > p,
+.avaruchi-ui .managed-orders details p {
+  margin-top: 10px;
+  line-height: 1.8;
+}
+.avaruchi-ui .managed-orders td > .small-button {
+  margin-bottom: 8px;
+}
+.avaruchi-ui .table-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  gap: 12px;
+  margin-top: 18px;
+  font-size: 11px;
+}
+.avaruchi-ui .table-pagination span {
+  margin-right: auto;
+  color: var(--muted);
+}
+.avaruchi-ui .portal .setup-panel {
+  max-width: none;
+}
+.avaruchi-ui .portal .setup-panel h2,
+.avaruchi-ui .portal .admin-requests > h2 {
+  font-size: 18px;
+  font-family: "Work Sans", Arial, sans-serif;
+  margin-bottom: 16px;
+}
+.avaruchi-ui .portal .admin-products details {
+  padding: 16px;
+  margin-bottom: 12px;
+  background: var(--paper);
+}
+.avaruchi-ui .portal-footer .footer-main {
+  padding-block: 35px;
+}
+.avaruchi-ui .portal-footer .footer-brand > p {
+  font-size: 25px;
+}
+.avaruchi-ui .portal-footer .wordmark {
+  font-size: 34px;
+}
+@media (max-width: 1000px) {
+  .avaruchi-ui .portal-shell {
+    grid-template-columns: 205px minmax(0, 1fr);
+    gap: 18px;
+  }
+  .avaruchi-ui .portal .account-content,
+  .avaruchi-ui .admin-workspace {
+    padding: 20px;
+  }
+  .avaruchi-ui .account-shortcut {
+    padding: 18px 15px;
+    gap: 12px;
+  }
+  .avaruchi-ui .account-shortcut > svg {
+    width: 28px;
+    height: 28px;
+  }
+  .avaruchi-ui .account-shortcut strong {
+    font-size: 13px;
+  }
+  .avaruchi-ui .order-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 15px;
+  }
+  .avaruchi-ui .order-number {
+    text-align: left;
+  }
+  .avaruchi-ui .portal-header .site-header {
+    height: auto;
+    min-height: 110px;
+  }
+  .avaruchi-ui .portal-header .site-header nav {
+    gap: 20px;
+  }
+}
+@media (max-width: 850px) {
+  .avaruchi-ui .portal-shell {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+  .avaruchi-ui .portal-sidebar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .avaruchi-ui .customer-profile {
+    padding: 15px;
+  }
+  .avaruchi-ui .portal-sidebar .account-tabs,
+  .avaruchi-ui .portal-sidebar .admin-tabs {
+    flex-direction: row;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding: 9px;
+    gap: 5px;
+  }
+  .avaruchi-ui .portal-sidebar nav button,
+  .avaruchi-ui .portal-sidebar nav a {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 10px 13px;
+    font-size: 11px;
+  }
+  .avaruchi-ui .sidebar-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 13px 18px;
+  }
+  .avaruchi-ui .seller-profile {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    padding: 16px;
+  }
+  .avaruchi-ui .seller-profile strong {
+    margin: 0;
+  }
+  .avaruchi-ui .portal .admin-stats strong {
+    font-size: 22px;
+  }
+}
+@media (max-width: 600px) {
+  .avaruchi-ui .portal .section-heading {
+    align-items: start;
+    gap: 16px;
+  }
+  .avaruchi-ui .portal .section-heading h1 {
+    font-size: 27px;
+  }
+  .avaruchi-ui .portal .section-heading > .link-button {
+    margin-top: 10px;
+  }
+  .avaruchi-ui .portal .account-content,
+  .avaruchi-ui .admin-workspace {
+    padding: 18px 15px;
+  }
+  .avaruchi-ui .portal .account-section-heading h2,
+  .avaruchi-ui .workspace-heading h2 {
+    font-size: 21px;
+  }
+  .avaruchi-ui .account-shortcuts {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 11px;
+  }
+  .avaruchi-ui .account-shortcut {
+    min-height: 88px;
+    align-items: center;
+  }
+  .avaruchi-ui .account-shortcut strong {
+    font-size: 14px;
+  }
+  .avaruchi-ui .account-shortcut small {
+    font-size: 11px;
+  }
+  .avaruchi-ui .activity-empty {
+    flex-wrap: wrap;
+    align-items: start;
+  }
+  .avaruchi-ui .activity-empty > div {
+    flex-basis: calc(100% - 60px);
+  }
+  .avaruchi-ui .activity-empty > .button {
+    margin-left: 48px;
+  }
+  .avaruchi-ui .account-contact-strip {
+    align-items: start;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .avaruchi-ui .recent-order {
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  .avaruchi-ui .recent-order > div {
+    flex-basis: 100%;
+  }
+  .avaruchi-ui .order-summary {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 16px;
+  }
+  .avaruchi-ui .order-summary-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .avaruchi-ui .order-summary-actions .link-button {
+    justify-self: start;
+  }
+  .avaruchi-ui .order-meta {
+    padding: 13px 16px;
+  }
+  .avaruchi-ui .portal .order-details {
+    padding: 16px;
+  }
+  .avaruchi-ui .ordered-product .product-photo {
+    width: 62px;
+    height: 74px;
+  }
+  .avaruchi-ui .portal-top-actions {
+    flex-direction: column;
+    align-items: end;
+    gap: 12px;
+  }
+  .avaruchi-ui .portal .admin-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .avaruchi-ui .portal .admin-stats > div {
+    padding: 16px 12px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .avaruchi-ui .portal .admin-stats > div:nth-child(2) {
+    border-right: 0;
+  }
+  .avaruchi-ui .portal .admin-stats > div:nth-child(n + 3) {
+    border-bottom: 0;
+  }
+  .avaruchi-ui .seller-task {
+    grid-template-columns: minmax(0, 1fr) 35px;
+    gap: 12px;
+    padding: 15px;
+  }
+  .avaruchi-ui .seller-task .link-button {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+  .avaruchi-ui .admin-order-toolbar {
+    align-items: start;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .avaruchi-ui .admin-order-toolbar label {
+    width: 100%;
+  }
+  .avaruchi-ui .table-pagination {
+    flex-wrap: wrap;
+  }
+  .avaruchi-ui .workspace-heading {
+    gap: 10px;
+  }
+  .avaruchi-ui .workspace-heading .small-button {
+    padding-inline: 10px;
+  }
+  .avaruchi-ui .portal .table-scroll table {
+    min-width: 500px;
+  }
+  .avaruchi-ui .portal .managed-orders table {
+    min-width: 780px;
+  }
+}
+
+/* Avaruchi storefront: an announcement, image-led carousel and shop rails. */
+.avaruchi-ui.reference-store {
+  --paper: #fcfbf6;
+  --green: #4e7134;
+  --ink: #42473e;
+  --muted: #62675d;
+  --rule: #d9ddcf;
+  --sand: #ececde;
+  --light: #f4f3eb;
+  --header-height: 120px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Work Sans", Arial, sans-serif;
+  font-size: 15px;
+  min-height: 100dvh;
+}
+.avaruchi-ui.reference-store h1,
+.avaruchi-ui.reference-store h2,
+.avaruchi-ui.reference-store h3 {
+  font-family: "Work Sans", Arial, sans-serif;
+  font-weight: 600;
+}
+.avaruchi-ui.reference-store .wrap {
+  max-width: 1400px;
+  padding-inline: clamp(18px, 4.6vw, 66px);
+}
+.avaruchi-ui.reference-store .header-shell {
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+  padding-top: env(safe-area-inset-top);
+}
+.avaruchi-ui.reference-store .announcement {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.4;
+  padding: 10px 18px;
+  background: #527736;
+  color: #fcfbf6;
+}
+.avaruchi-ui.reference-store .site-header {
+  height: 80px;
+  display: flex;
+  gap: 32px;
+}
+.avaruchi-ui.reference-store .reference-brand {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  gap: 5px;
+  color: var(--green);
+  flex-shrink: 0;
+}
+.avaruchi-ui.reference-store .brand-leaf {
+  width: 38px;
+  height: 42px;
+}
+.avaruchi-ui.reference-store .wordmark .brand-name {
+  display: block;
+  font-family: "Work Sans", Arial, sans-serif;
+  font-weight: 500;
+  font-size: 38px;
+  letter-spacing: -1.5px;
+  line-height: 1;
+  margin: 0;
+  padding: 0;
+}
+.avaruchi-ui.reference-store .brand-name small {
+  display: block;
+  font-family: "Noto Sans Telugu", sans-serif;
+  letter-spacing: 0;
+  font-size: 10px;
+  font-weight: 500;
+  margin-top: 8px;
+  text-align: center;
+}
+.avaruchi-ui.reference-store .site-header nav {
+  display: flex;
+  margin-left: auto;
+  gap: 28px;
+  align-items: center;
+  font-size: 15px;
+}
+.avaruchi-ui.reference-store .site-header nav a {
+  text-decoration: none;
+  font-size: 15px;
+  border: 0;
+  padding: 0;
+  min-height: 44px;
+}
+.avaruchi-ui.reference-store .site-header nav .current {
+  color: var(--green);
+  border-bottom: 2px solid var(--green);
+}
+.avaruchi-ui .products-menu {
+  position: relative;
+}
+.avaruchi-ui .products-menu summary {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  list-style: none;
+}
+.avaruchi-ui .products-menu summary::-webkit-details-marker {
+  display: none;
+}
+.avaruchi-ui .products-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: -16px;
+  width: 210px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: 10px 16px;
+  z-index: 50;
+}
+.avaruchi-ui.reference-store .products-dropdown a {
+  display: flex;
+  line-height: 1.4;
+}
+.avaruchi-ui.reference-store .header-actions {
+  gap: 6px;
+  padding-left: 20px;
+  border-left: 1px solid var(--rule);
+  color: var(--green);
+}
+.avaruchi-ui.reference-store .header-actions svg {
+  width: 22px;
+  height: 22px;
+}
+.avaruchi-ui.reference-store .bag-button {
+  position: relative;
+  gap: 0;
+  justify-content: center;
+}
+.avaruchi-ui.reference-store .bag-count {
+  font-size: 10px;
+  position: absolute;
+  top: 2px;
+  right: 0;
+  padding: 0 3px;
+  background: var(--paper);
+}
+.avaruchi-ui .header-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-block: 12px;
+  border-top: 1px solid var(--rule);
+}
+.avaruchi-ui .header-search input {
+  min-width: 0;
+  flex: 1;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  padding: 10px 12px;
+}
+.avaruchi-ui .header-search button {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--rule);
+}
+.avaruchi-ui.reference-store .preview-notice {
+  font-size: 10px;
+  padding: 5px 18px;
+  letter-spacing: 0.3px;
+  text-align: center;
+  background: #f2efdf;
+  color: #555b4c;
+}
+.avaruchi-ui .reference-hero {
+  position: relative;
+  height: clamp(360px, 34vw, 490px);
+  overflow: hidden;
+  background: #364b2e;
+}
+.avaruchi-ui .reference-slide {
+  height: 100%;
+  position: absolute;
+  inset: 0;
+}
+.avaruchi-ui .reference-slide > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 48%;
+}
+.avaruchi-ui .photo-slide::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(22, 31, 16, 0.28);
+}
+.avaruchi-ui .reference-hero-copy {
+  position: absolute;
+  z-index: 1;
+  left: 58%;
+  right: 6%;
+  top: 23%;
+  color: #fcfbf6;
+}
+.avaruchi-ui .reference-hero-copy h1 {
+  font-size: clamp(27px, 2.8vw, 40px);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.6px;
+}
+.avaruchi-ui .reference-hero-copy p {
+  font-size: clamp(16px, 1.6vw, 21px);
+  line-height: 1.5;
+  margin-top: 15px;
+}
+.avaruchi-ui .hero-shop-link {
+  display: inline-block;
+  border: 1px solid #f3f0de;
+  text-decoration: none;
+  padding: 9px 18px;
+  margin-top: 24px;
+  min-height: 44px;
+  font-weight: 500;
+}
+.avaruchi-ui.reference-store .hero-jar {
+  position: absolute;
+  width: auto;
+  height: 100%;
+  aspect-ratio: 1;
+  left: 8%;
+  top: 0;
+}
+.avaruchi-ui .slide-controls {
+  position: absolute;
+  bottom: 9px;
+  left: 4.6%;
+  display: flex;
+  gap: 2px;
+  z-index: 2;
+}
+.avaruchi-ui .slide-controls button {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+}
+.avaruchi-ui .slide-controls span {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border: 1px solid #e3bd59;
+  background: #fcfbf6;
+}
+.avaruchi-ui .slide-controls [aria-pressed="true"] span {
+  background: #d2aa47;
+}
+.avaruchi-ui .reference-intro {
+  padding-block: 40px 10px;
+}
+.avaruchi-ui .reference-intro > div {
+  background: #f1f0e6;
+  padding: 24px 26px;
+}
+.avaruchi-ui .reference-intro h2 {
+  font-size: 18px;
+  line-height: 1.4;
+  margin-bottom: 12px;
+}
+.avaruchi-ui .reference-intro p {
+  font-size: 15px;
+  line-height: 1.7;
+  margin-bottom: 10px;
+}
+.avaruchi-ui .reference-intro strong {
+  font-size: 15px;
+}
+.avaruchi-ui .reference-intro .intro-offer {
+  margin: 12px 0 0;
+  font-weight: 600;
+}
+.avaruchi-ui .reference-collection {
+  padding-block: 30px 15px;
+}
+.avaruchi-ui .reference-collection-heading {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+.avaruchi-ui .reference-collection-heading h2 {
+  color: var(--green);
+  font-size: 36px;
+  letter-spacing: -0.7px;
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  line-height: 1.2;
+}
+.avaruchi-ui .reference-collection-heading h2 svg {
+  width: 33px;
+  height: 33px;
+}
+.avaruchi-ui .collection-view {
+  text-decoration: none;
+  border: 1px solid #9ba6af;
+  padding: 5px 14px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  color: #465563;
+  font-size: 14px;
+}
+.avaruchi-ui .collection-rail {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 24px;
+  gap: 12px;
+  align-items: stretch;
+}
+.avaruchi-ui .collection-arrow {
+  background: #edeedb;
+  color: #475d36;
+  font-size: 32px;
+  padding: 0;
+  min-width: 24px;
+}
+.avaruchi-ui .collection-arrow:disabled {
+  opacity: 0.45;
+}
+.avaruchi-ui .collection-track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - 72px) / 4);
+  gap: 24px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: #b2b99f #f1f0e6;
+  padding-bottom: 14px;
+  align-items: start;
+}
+.avaruchi-ui .collection-track .product-card {
+  scroll-snap-align: start;
+}
+.avaruchi-ui.reference-store .product-card {
+  background: #f0f1eb;
+  padding-bottom: 14px;
+}
+.avaruchi-ui.reference-store .product-card .product-photo {
+  aspect-ratio: 6/5;
+}
+.avaruchi-ui.reference-store .product-heading {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  margin: 14px 14px 0;
+}
+.avaruchi-ui.reference-store .product-heading > a {
+  width: 100%;
+  text-decoration: none;
+}
+.avaruchi-ui.reference-store .product-heading h3 {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.avaruchi-ui.reference-store .product-heading > span {
+  font-size: 16px;
+}
+.avaruchi-ui.reference-store .product-subtitle {
+  margin: 5px 14px 0;
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.avaruchi-ui.reference-store .product-actions {
+  flex-direction: column;
+  border: 0;
+  gap: 13px;
+  margin: 10px 14px 0;
+}
+.avaruchi-ui.reference-store .product-actions select {
+  width: 100%;
+  font-size: 14px;
+  padding: 5px 0;
+  min-height: 40px;
+  color: #3b5a72;
+  border: 0;
+  border-bottom: 1px solid #7f91a0;
+  background: transparent;
+}
+.avaruchi-ui.reference-store .add-button {
+  font-size: 14px;
+  font-weight: 600;
+  background: #d1aa45;
+  color: #30352c;
+  padding: 11px 8px;
+  min-height: 44px;
+}
+.avaruchi-ui.reference-store .product-tag {
+  font-size: 8px;
+  padding: 4px 6px;
+  background: #f5f3e8;
+  bottom: 10px;
+  left: 10px;
+}
+.avaruchi-ui.reference-store .wish-button {
+  width: 44px;
+  height: 44px;
+  top: 8px;
+  right: 8px;
+  background: rgba(252, 251, 246, 0.94);
+}
+.avaruchi-ui .reference-story {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 60px;
+  align-items: center;
+  padding-block: 60px;
+}
+.avaruchi-ui .reference-story h2 {
+  font-size: 32px;
+  margin: 10px 0 18px;
+  color: var(--green);
+}
+.avaruchi-ui .reference-story p {
+  margin-bottom: 24px;
+  max-width: 600px;
+  font-size: 16px;
+}
+.avaruchi-ui.reference-store .shop-section {
+  padding-top: 45px;
+}
+.avaruchi-ui.reference-store .shop-section .section-heading h1 {
+  font-size: 38px;
+  color: var(--green);
+  letter-spacing: -0.8px;
+}
+.avaruchi-ui.reference-store .button {
+  background: #d1aa45;
+  color: #30352c;
+  font-family: inherit;
+}
+.avaruchi-ui.reference-store .button.outline {
+  background: transparent;
+  color: var(--green);
+  border-color: var(--green);
+}
+.avaruchi-ui.reference-store .faq-section {
+  padding-top: 30px;
+  padding-bottom: 60px;
+}
+.avaruchi-ui.reference-store footer {
+  background: #e9ecdf;
+  color: #41483b;
+  border-top: 1px solid #d0d5c4;
+}
+.avaruchi-ui.reference-store .footer-main {
+  gap: 35px;
+}
+.avaruchi-ui.reference-store .footer-main h3 {
+  font-size: 16px;
+  font-weight: 600;
+}
+.avaruchi-ui.reference-store .footer-main > div > a:not(.wordmark) {
+  font-size: 13px;
+  margin-top: 11px;
+}
+.avaruchi-ui.reference-store .footer-brand p {
+  font-size: 19px;
+  line-height: 1.5;
+}
+.avaruchi-ui.reference-store .footer-bottom {
+  border-top: 1px solid #cdd3be;
+  font-size: 11px;
+}
+.avaruchi-ui.reference-store .portal .section-heading h1 {
+  font-family: inherit;
+}
+.avaruchi-ui.reference-store .product-page .product-detail > .product-photo {
+  top: 140px;
+}
+@media (min-width: 1600px) {
+  .avaruchi-ui .reference-hero-copy {
+    left: 58%;
+    right: max(6%, calc((100% - 1400px) / 2));
+  }
+}
+@media (max-width: 1000px) {
+  .avaruchi-ui.reference-store .site-header {
+    gap: 18px;
+  }
+  .avaruchi-ui.reference-store .site-header nav {
+    gap: 18px;
+  }
+  .avaruchi-ui.reference-store .header-actions {
+    padding-left: 12px;
+  }
+  .avaruchi-ui.reference-store .wordmark .brand-name {
+    font-size: 33px;
+  }
+  .avaruchi-ui .collection-track {
+    grid-auto-columns: calc((100% - 24px) / 2);
+  }
+  .avaruchi-ui .reference-story {
+    grid-template-columns: minmax(0, 1fr) 260px;
+    gap: 30px;
+  }
+  .avaruchi-ui .reference-hero-copy {
+    left: 54%;
+    right: 5%;
+    top: 18%;
+  }
+  .avaruchi-ui.reference-store .hero-jar {
+    left: 3%;
+    max-width: 48%;
+  }
+}
+@media (max-width: 700px) {
+  .avaruchi-ui.reference-store {
+    --header-height: 153px;
+  }
+  .avaruchi-ui.reference-store .announcement {
+    font-size: 12px;
+    padding: 8px 16px;
+    min-height: 33px;
+  }
+  .avaruchi-ui.reference-store .site-header {
+    height: 112px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: 67px 45px;
+    column-gap: 8px;
+    row-gap: 0;
+  }
+  .avaruchi-ui.reference-store .reference-brand {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .avaruchi-ui.reference-store .site-header nav {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: flex;
+    margin: 0;
+    justify-content: center;
+    gap: 28px;
+    border-top: 1px solid var(--rule);
+    width: 100%;
+  }
+  .avaruchi-ui.reference-store .header-actions {
+    grid-column: 2;
+    grid-row: 1;
+    gap: 0;
+    padding: 0;
+    border: 0;
+  }
+  .avaruchi-ui.reference-store .wordmark .brand-name {
+    font-size: 29px;
+  }
+  .avaruchi-ui.reference-store .brand-leaf {
+    width: 28px;
+    height: 34px;
+  }
+  .avaruchi-ui.reference-store .brand-name small {
+    font-size: 8px;
+    margin-top: 7px;
+  }
+  .avaruchi-ui.reference-store .header-actions .icon-button,
+  .avaruchi-ui.reference-store .bag-button {
+    width: 40px;
+    min-width: 40px;
+  }
+  .avaruchi-ui.reference-store .site-header nav a,
+  .avaruchi-ui .products-menu summary {
+    font-size: 14px;
+  }
+  .avaruchi-ui .products-dropdown {
+    left: -54px;
+  }
+  .avaruchi-ui.reference-store .preview-notice {
+    font-size: 9px;
+    letter-spacing: 0;
+    line-height: 1.5;
+  }
+  .avaruchi-ui .reference-hero {
+    height: 450px;
+  }
+  .avaruchi-ui .reference-slide > img {
+    object-position: 30% 35%;
+  }
+  .avaruchi-ui .photo-slide::after {
+    background: rgba(16, 25, 12, 0.42);
+  }
+  .avaruchi-ui .reference-hero-copy {
+    left: 24px;
+    right: 24px;
+    top: auto;
+    bottom: 75px;
+  }
+  .avaruchi-ui .reference-hero-copy h1 {
+    font-size: 30px;
+    max-width: 360px;
+  }
+  .avaruchi-ui .reference-hero-copy p {
+    margin-top: 10px;
+    font-size: 16px;
+    max-width: 350px;
+  }
+  .avaruchi-ui .hero-shop-link {
+    margin-top: 18px;
+    font-size: 14px;
+  }
+  .avaruchi-ui.reference-store .hero-jar {
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    max-width: none;
+    filter: brightness(0.52);
+  }
+  .avaruchi-ui .slide-controls {
+    left: 12px;
+  }
+  .avaruchi-ui .reference-intro {
+    padding-top: 24px;
+  }
+  .avaruchi-ui .reference-intro > div {
+    padding: 20px;
+  }
+  .avaruchi-ui .reference-intro p {
+    font-size: 14px;
+  }
+  .avaruchi-ui .reference-collection {
+    padding-top: 24px;
+  }
+  .avaruchi-ui .reference-collection-heading {
+    gap: 14px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .avaruchi-ui .reference-collection-heading h2 {
+    font-size: 27px;
+  }
+  .avaruchi-ui .reference-collection-heading h2 svg {
+    width: 25px;
+    height: 25px;
+  }
+  .avaruchi-ui .collection-view {
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+  .avaruchi-ui .collection-rail {
+    grid-template-columns: 20px minmax(0, 1fr) 20px;
+    gap: 8px;
+  }
+  .avaruchi-ui .collection-arrow {
+    min-width: 20px;
+  }
+  .avaruchi-ui .collection-track {
+    grid-auto-columns: 85%;
+    gap: 16px;
+  }
+  .avaruchi-ui .reference-story {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+    padding-block: 35px;
+  }
+  .avaruchi-ui .reference-story h2 {
+    font-size: 28px;
+  }
+  .avaruchi-ui .reference-story .product-photo {
+    max-width: 360px;
+  }
+  .avaruchi-ui.reference-store .product-page .product-detail > .product-photo {
+    position: static;
+  }
+  .avaruchi-ui.reference-store .footer-main {
+    gap: 28px;
+  }
+  .avaruchi-ui.reference-store .footer-main .reference-brand {
+    display: flex;
+  }
+}
+@media (max-width: 360px) {
+  .avaruchi-ui.reference-store .site-header {
+    padding-inline: 12px;
+  }
+  .avaruchi-ui.reference-store .wordmark .brand-name {
+    font-size: 26px;
+  }
+  .avaruchi-ui.reference-store .brand-leaf {
+    width: 25px;
+  }
+  .avaruchi-ui.reference-store .product-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .avaruchi-ui .collection-track {
+    scroll-behavior: auto;
+  }
+}
+
+.avaruchi-ui.reference-store .announcement > span {
+  display: inline;
+}
+.avaruchi-ui.reference-store .search-toggle {
+  display: grid;
+}
+.avaruchi-ui.reference-store .products-menu summary::after {
+  content: none;
+}
+.avaruchi-ui.reference-store .product-card {
+  position: relative;
+}
+@media (max-width: 700px) {
+  .avaruchi-ui .collection-rail {
+    grid-template-columns: 24px minmax(0, 1fr) 24px;
+  }
+  .avaruchi-ui .collection-arrow {
+    min-width: 24px;
+  }
+}
+
+.avaruchi-ui.reference-store .site-header {
+  flex-wrap: nowrap;
+  align-content: normal;
+}
+.avaruchi-ui.reference-store .site-header nav {
+  width: auto;
+  order: 0;
+}
+
+.avaruchi-ui .history-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin: 22px 0;
+}
+.avaruchi-ui .history-pagination p {
+  flex: 1 1 240px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.avaruchi-ui .portal .request-card,
+.avaruchi-ui .portal .request-description,
+.avaruchi-ui .portal .request-contact,
+.avaruchi-ui .portal .request-history p,
+.avaruchi-ui .portal .refund-summary,
+.avaruchi-ui .portal .order-number strong,
+.avaruchi-ui .portal .shipment-info dd {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+@media (max-width: 600px) {
+  .avaruchi-ui .history-pagination .button {
+    width: 100%;
+  }
+}
+
+/* Supplied brand artwork and merchant identity. */
+.avaruchi-ui.reference-store .footer-location,
+.avaruchi-ui.reference-store .footer-bottom {
+  color: #41483b;
+}
+.avaruchi-ui.reference-store .footer-location a {
+  font-size: 13px;
+}
+.avaruchi-ui.reference-store .reference-brand {
+  gap: 12px;
+  min-width: 0;
+}
+.avaruchi-ui.reference-store .brand-logo {
+  width: 60px;
+  height: 60px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+.avaruchi-ui.reference-store .brand-name small {
+  max-width: 200px;
+  font-size: 10px;
+  line-height: 1.6;
+  text-align: left;
+  margin-top: 6px;
+}
+.avaruchi-ui.reference-store .footer-brand .brand-logo {
+  width: 72px;
+  height: 72px;
+}
+.avaruchi-ui.reference-store .footer-brand .brand-name {
+  font-size: 32px;
+}
+.avaruchi-ui.reference-store .footer-brand .business-footer {
+  font-size: 12px;
+  line-height: 1.8;
+  margin-top: 18px;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.avaruchi-ui .business-footer strong,
+.avaruchi-ui .business-footer span {
+  display: block;
+}
+.avaruchi-ui .business-footer a {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--green);
+}
+.avaruchi-ui .business-artwork {
+  margin: 0;
+}
+.avaruchi-ui .business-artwork img,
+.avaruchi-ui .brand-story-art {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+.avaruchi-ui .business-contact {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1fr);
+  gap: 42px;
+  align-items: center;
+  margin: 36px 0 48px;
+}
+.avaruchi-ui .business-details {
+  min-width: 0;
+}
+.avaruchi-ui .business-details h2 {
+  font-size: clamp(26px, 3vw, 36px);
+  line-height: 1.2;
+  margin: 12px 0;
+}
+.avaruchi-ui .business-tagline {
+  font-family: "Noto Sans Telugu", sans-serif;
+  color: var(--green);
+  line-height: 1.8;
+  margin: 18px 0 26px;
+}
+.avaruchi-ui .business-details dl {
+  margin: 0;
+}
+.avaruchi-ui .business-details dl > div {
+  padding: 13px 0;
+  border-top: 1px solid var(--rule);
+}
+.avaruchi-ui .business-details dt {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+.avaruchi-ui .business-details dd {
+  margin: 0;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+.avaruchi-ui .business-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.avaruchi-ui .merchant-identity {
+  border-block: 1px solid var(--rule);
+  margin: 28px 0;
+  padding: 20px 0;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.avaruchi-ui .merchant-identity p {
+  margin: 8px 0;
+}
+.avaruchi-ui .merchant-identity a {
+  display: inline-block;
+  margin-right: 18px;
+}
+.avaruchi-ui .story-business-line {
+  font-size: 13px;
+  color: var(--green);
+  margin-top: 24px;
+}
+@media (max-width: 1000px) {
+  .avaruchi-ui.reference-store .brand-logo {
+    width: 50px;
+    height: 50px;
+  }
+  .avaruchi-ui.reference-store .wordmark .brand-name {
+    font-size: 32px;
+  }
+  .avaruchi-ui.reference-store .brand-name small {
+    font-size: 9px;
+    max-width: 174px;
+  }
+}
+@media (max-width: 600px) {
+  .avaruchi-ui.reference-store .reference-brand {
+    gap: 8px;
+  }
+  .avaruchi-ui.reference-store .brand-logo {
+    width: 46px;
+    height: 46px;
+  }
+  .avaruchi-ui.reference-store .wordmark .brand-name {
+    font-size: 27px;
+    letter-spacing: -1px;
+  }
+  .avaruchi-ui.reference-store .brand-name small {
+    max-width: 146px;
+    font-size: 8px;
+    line-height: 1.6;
+    margin-top: 4px;
+  }
+  .avaruchi-ui .business-contact {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+  .avaruchi-ui .business-artwork {
+    max-width: 350px;
+    margin-inline: auto;
+  }
+  .avaruchi-ui .business-actions .button {
+    width: 100%;
+    text-align: center;
+  }
+  .avaruchi-ui.reference-store .footer-brand .reference-brand {
+    align-items: center;
+  }
+  .avaruchi-ui.reference-store .footer-brand .brand-logo {
+    width: 54px;
+    height: 54px;
+  }
+  .avaruchi-ui.reference-store .footer-brand .brand-name {
+    font-size: 27px;
+  }
+}
+@media (max-width: 360px) {
+  .avaruchi-ui.reference-store .brand-logo {
+    width: 38px;
+    height: 38px;
+  }
+  .avaruchi-ui.reference-store .wordmark .brand-name {
+    font-size: 24px;
+  }
+  .avaruchi-ui.reference-store .brand-name small {
+    max-width: 124px;
+    font-size: 7.5px;
+  }
+  .avaruchi-ui.reference-store .header-actions .icon-button,
+  .avaruchi-ui.reference-store .bag-button {
+    width: 36px;
+    min-width: 36px;
+  }
+}
+
+/* Single-line header labels and compact mobile product grids. */
+.avaruchi-ui.reference-store .announcement {
+  white-space: nowrap;
+  font-size: clamp(9px, 2.65vw, 14px);
+  padding-inline: 10px;
+}
+.avaruchi-ui.reference-store .announcement > span,
+.avaruchi-ui.reference-store .site-header nav a,
+.avaruchi-ui.reference-store .site-header nav summary,
+.avaruchi-ui.reference-store .site-header .brand-name small {
+  white-space: nowrap;
+}
+@media (max-width: 1000px) {
+  .avaruchi-ui.reference-store .collection-rail {
+    display: block;
+  }
+  .avaruchi-ui.reference-store .collection-arrow {
+    display: none;
+  }
+  .avaruchi-ui.reference-store .collection-track,
+  .avaruchi-ui.reference-store .product-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+    gap: 12px;
+    overflow: visible;
+    scroll-snap-type: none;
+    padding-bottom: 0;
+  }
+  .avaruchi-ui.reference-store .collection-track .product-card {
+    scroll-snap-align: none;
+  }
+  .avaruchi-ui.reference-store .product-card {
+    min-width: 0;
+  }
+}
+@media (max-width: 600px) {
+  .avaruchi-ui.reference-store .product-heading {
+    margin: 10px 9px 0;
+  }
+  .avaruchi-ui.reference-store .product-heading > a {
+    font-size: 15px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+  .avaruchi-ui.reference-store .product-heading h3 {
+    font-size: 15px;
+    line-height: 1.35;
+  }
+  .avaruchi-ui.reference-store .product-heading > span {
+    font-size: 14px;
+  }
+  .avaruchi-ui.reference-store .product-subtitle {
+    margin-inline: 9px;
+    font-size: 10px;
+  }
+  .avaruchi-ui.reference-store .product-actions {
+    margin-inline: 9px;
+    gap: 10px;
+  }
+  .avaruchi-ui.reference-store .product-actions select {
+    font-size: 12px;
+  }
+  .avaruchi-ui.reference-store .add-button {
+    font-size: 12px;
+  }
+  .avaruchi-ui.reference-store .wish-button {
+    top: 0;
+    right: 0;
+  }
+  .avaruchi-ui.reference-store .product-tag {
+    font-size: 7px;
+    padding: 4px;
+    left: 5px;
+    max-width: calc(100% - 10px);
+  }
+}
+
+/* Compact footer navigation across storefront and account pages. */
+.avaruchi-ui.reference-store footer .footer-main {
+  grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  padding-block: 32px;
+  align-items: start;
+}
+.avaruchi-ui.reference-store footer .footer-main .footer-links {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  grid-column: auto;
+  gap: 0;
+  margin: 0;
+}
+.avaruchi-ui.reference-store footer .footer-links h3 {
+  display: block;
+  margin: 0 0 6px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.avaruchi-ui.reference-store footer .footer-main .footer-links > a,
+.avaruchi-ui.reference-store footer .footer-location a {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.avaruchi-ui.reference-store footer .footer-location {
+  display: block;
+  margin: 0;
+}
+.avaruchi-ui.reference-store footer .footer-brand {
+  display: block;
+  grid-column: auto;
+}
+.avaruchi-ui.reference-store footer .footer-brand .business-footer {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.avaruchi-ui.reference-store footer .footer-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 20px;
+  padding-block: 14px;
+  line-height: 1.6;
+}
+.avaruchi-ui.reference-store footer .developer-credit a {
+  color: var(--green);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (max-width: 1000px) {
+  .avaruchi-ui.reference-store footer .footer-main {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+    padding-block: 24px;
+  }
+  .avaruchi-ui.reference-store footer .footer-brand {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  .avaruchi-ui.reference-store footer .footer-brand .business-footer {
+    margin: 0;
+  }
+}
+@media (max-width: 600px) {
+  .avaruchi-ui.reference-store footer .footer-main {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 12px;
+    padding-block: 20px;
+  }
+  .avaruchi-ui.reference-store footer .footer-brand {
+    display: block;
+    grid-column: 1 / -1;
+  }
+  .avaruchi-ui.reference-store footer .footer-brand .business-footer {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 12px;
+    margin-top: 10px;
+  }
+  .avaruchi-ui.reference-store footer .business-footer strong {
+    grid-column: 1 / -1;
+  }
+  .avaruchi-ui.reference-store footer .business-footer a {
+    margin: 0;
+  }
+  .avaruchi-ui.reference-store footer .footer-links h3 {
+    font-size: 13px;
+  }
+  .avaruchi-ui.reference-store footer .footer-main .footer-links > a,
+  .avaruchi-ui.reference-store footer .footer-location a {
+    min-height: 36px;
+    font-size: 12px;
+  }
+  .avaruchi-ui.reference-store footer .footer-main .footer-policy-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-column: 1 / -1;
+    gap: 0 12px;
+  }
+  .avaruchi-ui.reference-store footer .footer-policy-links h3 {
+    grid-column: 1 / -1;
+  }
+  .avaruchi-ui.reference-store footer .footer-bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding-block: 12px;
+    font-size: 10px;
+  }
+}

@@ -40,7 +40,7 @@ import {
   type PortalSession,
 } from "@/lib/portal-auth";
 import { toast, Toaster } from "sonner";
-import { Navigate, useLocation, useNavigate } from "@tanstack/react-router";
+import { Navigate, useLocation, useNavigate } from "@/lib/navigation";
 import { defaultStorefrontConfig, publishStorefrontConfig, type StorefrontConfig } from "@/lib/storefront-config";
 import { BrandingSettingsForm, brandingFields, type BrandingKind } from "./BrandingSettingsForm";
 import { AdminPromotionsWorkspace } from "./AdminPromotionsWorkspace";

@@ -36,7 +36,7 @@ import { money } from "@/data/commerce";
 import { checkoutMobileInput } from "@/lib/checkout-autofill";
 import { usePostalLookup } from "@/lib/postal-lookup";
 import { toast, Toaster } from "sonner";
-import { Navigate, useLocation } from "@tanstack/react-router";
+import { Navigate, useLocation } from "@/lib/navigation";
 import { CustomerReturnsWorkspace } from "./customer-service/CustomerReturnsWorkspace";
 import { CustomerSupportWorkspace } from "./customer-service/CustomerSupportWorkspace";
 import type { CustomerOrder } from "./customer-service/types";

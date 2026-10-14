@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link } from "@/lib/navigation";
 import { AlertCircle, CheckCircle2, Clock3, Download, Package, RefreshCw, RotateCcw } from "lucide-react";
 import { commerceApi, commerceDownload, CommerceApiError } from "@/lib/commerce-api";
 import { customerTransactionPath, confirmedOrLatestPayment, settledRefundAmount, transactionState, type CustomerPayment } from "@/lib/transactions";

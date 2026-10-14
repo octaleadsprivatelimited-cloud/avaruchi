@@ -1,6 +1,6 @@
 import { productRouteKey } from "@/lib/product-url";
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@/lib/navigation";
 import { productAnalyticsItem } from "@/lib/commerce-analytics";
 import { useCommerceImpression } from "@/lib/commerce-analytics-hooks";
 import { priceIncludingTax } from "@/lib/catalog-price";
@@ -22,7 +22,8 @@ import { useStorefrontConfig } from "@/lib/storefront-config";
 import { deliveryAnnouncement, deliveryEstimate } from "@/lib/delivery-policy";
 import { StorePage } from "./StoreHeader";
 import { toast, Toaster } from "sonner";
-import { Route } from "@/routes/product.$productId";
+import { useParams, useSearchParams } from "react-router";
+import { useInitialCatalog } from "@/lib/store-data";
 function initialProductOptions(product: Product | undefined, requestedVariantId?: string) {
   const variants = product?.variants || [];
   const requested = variants.find((variant) => variant.id === requestedVariantId);
@@ -31,16 +32,19 @@ function initialProductOptions(product: Product | undefined, requestedVariantId?
 }
 
 export function ProductDetailPage() {
-  const { productId } = Route.useParams();
-  const requestedVariantId = Route.useSearch().variant;
+  const { productId = "", slug } = useParams();
+  const routeProductId = slug || productId;
+  const [searchParams] = useSearchParams();
+  const requestedVariantId = searchParams.get("variant") || undefined;
   const navigate = useNavigate();
-  const loadedProduct = Route.useLoaderData();
+  const catalog = useInitialCatalog();
+  const loadedProduct = catalog.find(item => item.id === routeProductId || item.slug === routeProductId);
   const initialProducts = useMemo(() => loadedProduct ? [loadedProduct] : undefined, [loadedProduct]);
-  const products = useStoreProducts(initialProducts);
+  const products = useStoreProducts(catalog.length ? catalog : initialProducts);
   const storefront = useStorefrontConfig();
-  const legacyProduct = fallbackProducts.find((item) => item.id === productId);
+  const legacyProduct = fallbackProducts.find((item) => item.id === routeProductId);
   const product =
-    products.find((item) => item.id === productId || item.slug === productId || item.id === loadedProduct?.id) || loadedProduct ||
+    products.find((item) => item.id === routeProductId || item.slug === routeProductId || item.id === loadedProduct?.id) || loadedProduct ||
     (legacyProduct
       ? products.find(
           (item) =>
@@ -59,6 +63,7 @@ export function ProductDetailPage() {
   const [gallerySelection, setGallerySelection] = useState({ key: "", url: "" });
   const [wishlistBusy, setWishlistBusy] = useState(false);
   useEffect(() => { setQty(1); }, [product?.id, requestedVariantId]);
+  useEffect(() => { if (product) document.title = product.seoTitle || `${product.name} | Buy Online | ${storefront.storeName}`; }, [product, storefront.storeName]);
   const selectedVariant = product?.variants?.find(
     (variant) =>
       Object.keys(variant.options).length === Object.keys(selected).length &&
@@ -73,7 +78,9 @@ export function ProductDetailPage() {
       <StorePage>
         <main className="product-page module-empty">
           <ShoppingBag />
-          <h2>Loading product details…</h2>
+          <h1>We couldn’t find this page.</h1>
+          <p>This product may no longer be available.</p>
+          <a href="/shop" className="button">Explore the shop</a>
         </main>
       </StorePage>
     );
@@ -188,7 +195,7 @@ export function ProductDetailPage() {
               <span aria-hidden="true" />{hasAvailableVariant ? "In stock" : "Currently sold out"}
             </p>
             <p className="detail-copy">
-              {product.description || "Explore cold-pressed oils for everyday Indian cooking."}
+              {product.description || "A familiar flavour for your everyday table."}
             </p>
             {selectableOptions.map((opt) => (
               <div className="option-picker" key={opt.name}>

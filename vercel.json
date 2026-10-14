@@ -1,5 +1,18 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm build",
-  "installCommand": "pnpm install --frozen-lockfile"
+  "framework": "vite",
+  "buildCommand": "VITE_COMMERCE_API_URL= pnpm build:hostinger",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "outputDirectory": ".output/public",
+  "functions": {
+    "api/index.mjs": {
+      "includeFiles": "{.output/**,commerce-api/prisma/**}",
+      "maxDuration": 60
+    }
+  },
+  "routes": [
+    { "src": "/", "dest": "/api/index.mjs" },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/api/index.mjs" }
+  ]
 }
