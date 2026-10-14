@@ -39,7 +39,7 @@ pnpm verify:db
 
 ## Vercel
 
-`vercel.json` selects Vite, builds the browser/server bundles and existing API, and routes requests through `api/index.mjs`. Use Node.js 24 and the production environment template. A push to the connected GitHub `main` branch starts a new Vercel deployment. The obsolete frontend framework and its deployment bypass flags are not required.
+`vercel.json` selects Vite, builds the browser/server bundles and existing API, and routes requests through `api/index.mjs`. A separate API bundle converts Firebase's CommonJS/ESM boundary for the Vercel runtime while keeping the backend source unchanged. Use Node.js 24 and the production environment template. A push to the connected GitHub `main` branch starts a new Vercel deployment. The obsolete frontend framework and its deployment bypass flags are not required.
 
 Configure the production MySQL, session/encryption secrets and provider settings in Vercel before using commerce services. The public UI can render before those services are configured; API requests return an explicit unavailable response. The complete backend's persistent uploads and background notification worker require a durable Node host. [HOSTINGER.md](HOSTINGER.md) documents that deployment.
 

@@ -1,4 +1,3 @@
-import { createApp } from '../commerce-api/dist/src/app.js';
 import { storefrontProductDto } from '../commerce-api/dist/src/admin-products.js';
 import { buildMerchantFeed, buildRobots, buildSitemap } from '../commerce-api/dist/src/catalog-discovery.js';
 import { defaultStorefrontConfig } from '../commerce-api/dist/src/storefront-config.js';
@@ -15,7 +14,9 @@ async function backend() {
     process.env.CORS_ORIGINS ||= origin;
     process.env.PUBLIC_UPLOAD_BASE_URL ||= `${origin}/uploads`;
     process.env.USE_DATABASE ||= 'true';
-    backendPromise = createApp().catch(error => { backendPromise = undefined; throw error; });
+    backendPromise = import('../commerce-api/dist/bundle/commerce-entry.js')
+      .then(({ createApp }) => createApp())
+      .catch(error => { backendPromise = undefined; throw error; });
   }
   return backendPromise;
 }

@@ -18,13 +18,14 @@
     "format": "prettier --write .",
     "build:api": "pnpm --dir commerce-api build",
     "test:api": "pnpm --dir commerce-api test",
-    "build:hostinger": "pnpm --dir commerce-api install --frozen-lockfile && pnpm --dir commerce-api build && VITE_COMMERCE_API_URL= pnpm build:frontend",
+    "build:hostinger": "pnpm --dir commerce-api install --frozen-lockfile && pnpm --dir commerce-api build && VITE_COMMERCE_API_URL= pnpm build:frontend && pnpm build:api-runtime",
     "start": "node hostinger.mjs",
     "setup:local": "node scripts/setup-local.mjs",
     "dev:local": "node scripts/dev-local.mjs",
-    "verify": "pnpm lint && pnpm exec tsc --noEmit && pnpm test:api && pnpm build:hostinger && node scripts/check-public-secrets.mjs && node scripts/smoke-built-storefront.mjs && node scripts/smoke-hostinger-startup.mjs && node scripts/smoke-vercel.mjs",
+    "verify": "pnpm lint && pnpm exec tsc --noEmit && pnpm test:api && pnpm build:hostinger && node scripts/check-public-secrets.mjs && node scripts/smoke-built-storefront.mjs && node scripts/smoke-hostinger-startup.mjs && node --no-experimental-require-module scripts/smoke-vercel.mjs",
     "verify:db": "node scripts/verify-database.mjs",
-    "build:frontend": "NODE_ENV=production vite build && NODE_ENV=production vite build --ssr src/entry-server.tsx --outDir .output/server"
+    "build:frontend": "NODE_ENV=production vite build && NODE_ENV=production vite build --ssr src/entry-server.tsx --outDir .output/server",
+    "build:api-runtime": "NODE_ENV=production vite build --config vite.api.config.ts"
   },
   "overrides": {
     "rolldown": "1.2.1"

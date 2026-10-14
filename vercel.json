@@ -6,13 +6,21 @@
   "outputDirectory": ".output/public",
   "functions": {
     "api/index.mjs": {
-      "includeFiles": "{.output/**,commerce-api/prisma/**}",
+      "includeFiles": "{.output/**,commerce-api/dist/bundle/**,commerce-api/prisma/**}",
       "maxDuration": 60
     }
   },
   "routes": [
-    { "src": "/", "dest": "/api/index.mjs" },
-    { "handle": "filesystem" },
-    { "src": "/(.*)", "dest": "/api/index.mjs" }
+    {
+      "src": "/",
+      "dest": "/api/index.mjs"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.mjs"
+    }
   ]
 }
