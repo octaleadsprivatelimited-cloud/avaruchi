@@ -12,7 +12,7 @@ Create a new Node.js 24 app for Avaruchi with this project root as its app direc
 
 The process serves React and Express on the hosting platform's `PORT`. It needs both `.output/` and `commerce-api/`. Browser API requests use the same domain; leave `VITE_COMMERCE_API_URL` empty. MySQL is required. Redis is optional and is not used for authentication or inventory correctness.
 
-When Vercel remains the public storefront, use `APP_URL=https://avaruchi.vercel.app` here, set `AVARUCHI_PROXY_SECRET` to a fresh random secret shared only with Vercel, and set `COMMERCE_BACKEND_URL` to this backend's HTTPS origin on Vercel. Dynamic storefront and API responses pass through Vercel; public build assets remain on its CDN. The backend rejects direct access without the proxy secret, except for `/health` and `/ready`. Set `TRUST_PROXY=1` in this mode: the wrapper replaces forwarded identity headers only after verifying the shared secret, allowing the existing API rate limiter to use the verified client IP. MySQL remains local to the hosting account; no remote database access rule is needed.
+Hostinger serves the frontend, API, uploads and background worker together. Set `APP_URL`, `CORS_ORIGINS`, `VITE_PUBLIC_SITE_URL` and `PUBLIC_UPLOAD_BASE_URL` to the Hostinger site's HTTPS hostname. Leave `COMMERCE_BACKEND_URL` and `AVARUCHI_PROXY_SECRET` unset. MySQL remains local to the hosting account; no remote database access rule is needed. Automatic Vercel deployments are disabled in the repository.
 
 ## Hosting environment
 
@@ -41,6 +41,6 @@ The production notification worker sends persisted order confirmations after an 
 
 ## Release checks
 
-Run `pnpm verify` and `pnpm verify:db` before uploading a release. These commands check lint, types, API tests, production builds, public assets and compiled startup/rendering behavior. Vercel deploys from the connected GitHub branch; configure Hostinger builds separately for the persistent service.
+Run `pnpm verify` and `pnpm verify:db` before uploading a release. These commands check lint, types, API tests, production builds, public assets and compiled startup/rendering behavior. GitHub Actions validates `main` and pull requests using an isolated MySQL service. Hostinger's GitHub connection deploys the full application from `main`.
 
 After deployment, verify `/ready`, the home/shop/product pages, Google sign-in, cart/checkout, uploads, `/sitemap.xml`, `/robots.txt` and `/merchant-feed.xml`. Confirm the hosting deployment uses the intended release files. Keep database/uploads backups and preserve compatible schema migrations when rolling back application code.

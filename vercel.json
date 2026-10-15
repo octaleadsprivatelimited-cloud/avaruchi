@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "git": { "deploymentEnabled": false },
   "framework": "vite",
   "buildCommand": "VITE_COMMERCE_API_URL= pnpm build:hostinger",
   "installCommand": "pnpm install --frozen-lockfile",

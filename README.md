@@ -37,17 +37,13 @@ pnpm verify:db
 
 `verify` runs lint, TypeScript, API tests, the combined production build, a public asset secret scan and compiled storefront/startup smoke checks. `verify:db` creates and seeds `avaruchi_test` in the local Avaruchi container, then runs the entire API suite with database coverage. It temporarily changes test inventory while preserving the storefront database.
 
-## Vercel
+## Hostinger deployment
 
-`vercel.json` selects Vite, builds the browser/server bundles and existing API, and routes requests through `api/index.mjs`. A separate API bundle converts Firebase's CommonJS/ESM boundary for the Vercel runtime while keeping the backend source unchanged. Use Node.js 24 and the production environment template. A push to the connected GitHub `main` branch starts a new Vercel deployment. The obsolete frontend framework and its deployment bypass flags are not required.
-
-Configure the production MySQL, session/encryption secrets and provider settings in Vercel before using commerce services. The public UI can render before those services are configured; API requests return an explicit unavailable response. The complete backend's persistent uploads and background notification worker require a durable Node host. [HOSTINGER.md](HOSTINGER.md) documents that deployment.
-
-For a persistent Hostinger backend behind Vercel, set `COMMERCE_BACKEND_URL` and a unique `AVARUCHI_PROXY_SECRET` on Vercel. The same proxy secret goes on the backend. The adapter then streams all dynamic requests to the persistent service, retaining the storefront's same-origin session cookies, cart tokens, binary uploads and raw signed webhooks. Keep database, session and provider secrets on the backend only. Run `node scripts/smoke-commerce-proxy.mjs` to verify the bridge.
+Hostinger runs the complete React storefront, Express API, persistent uploads and notification worker in one Node.js 24 application. MySQL runs locally in the hosting account. Use `pnpm build:hostinger`, entry file `hostinger.mjs`, and output directory `.`. All browser API requests use the same Hostinger domain; leave `VITE_COMMERCE_API_URL`, `COMMERCE_BACKEND_URL` and `AVARUCHI_PROXY_SECRET` unset. [HOSTINGER.md](HOSTINGER.md) documents the production environment and release checks. Vercel automatic deployments are disabled in `vercel.json`.
 
 ## CI/CD
 
-GitHub Actions runs `.github/workflows/ci.yml` for pushes and pull requests to `main`. It starts an isolated MySQL 8.4 service, applies migrations, runs database persistence tests, checks lint/types, builds the production release, and exercises the rendering and proxy adapters. The workflow uses disposable test credentials and never connects to production storage. Hostinger and Vercel use their native GitHub connections for continuous deployment from `main`; hosting credentials stay in their respective platform settings.
+GitHub Actions runs `.github/workflows/ci.yml` for pushes and pull requests to `main`. It starts an isolated MySQL 8.4 service, applies migrations, runs database persistence tests, checks lint/types, builds the production release, and exercises the rendering and deployment adapters. The workflow uses disposable test credentials and never connects to production storage. Hostinger uses its native GitHub connection for continuous deployment from `main`; hosting credentials stay in its platform settings.
 
 The backend catalog is the source of products and prices. The reference site's demo products, coupons and checkout state are not imported into the new database.
 
