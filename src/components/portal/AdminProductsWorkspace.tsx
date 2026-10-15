@@ -29,6 +29,7 @@ import {
 } from "@/data/commerce";
 import { commerceApi } from "@/lib/commerce-api";
 import { notifyStoreCatalogChanged } from "@/lib/store-products";
+import { CatalogCsvImport } from "./CatalogCsvImport";
 
 type ProductStatus = "DRAFT" | "ACTIVE" | "ARCHIVED";
 type Pagination = {
@@ -264,6 +265,7 @@ export function AdminProductsWorkspace() {
         <div><p className="portal-eyebrow">Catalog</p><h2>Products</h2><span>Manage products, options, variants, pricing, media and availability.</span></div>
         <button className="primary" type="button" onClick={() => setEditingId("new")}><Plus /> Add product</button>
       </div>
+      <CatalogCsvImport onComplete={() => { notifyStoreCatalogChanged(); void load(); }} />
       <div className="catalog-summary">
         <article className="panel"><Package /><span><small>All products</small><b>{response.pagination.total}</b></span></article>
         <article className="panel"><CheckCircle2 /><span><small>Active</small><b>{activeCount}</b></span></article>

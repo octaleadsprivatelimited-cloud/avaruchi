@@ -1,7 +1,7 @@
 // Merchant details supplied by the business owner. Public identity only.
 export const BRAND = {
   name: "Avaruchi",
-  legalName: "Lakshmis Tapasi Treats",
+  legalName: "LAKSHMI'S TAPASI TREATS",
   tagline: "ప్రతి ముద్దలో తెలుగు సంప్రదాయం",
   established: 2026,
   address: "Ramanthapur, Hyderabad",

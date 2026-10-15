@@ -5211,3 +5211,21 @@
     font-size: 10px;
   }
 }
+
+/* Merchant identity and catalog import. */
+.avaruchi-ui.reference-store footer .business-footer .merchant-brand-button {
+  display: inline-flex; align-items: center; justify-content: center; grid-column: 1 / -1;
+  width: fit-content; max-width: 100%; min-height: 42px; padding: 10px 14px;
+  border: 1px solid var(--green); border-radius: 6px; background: var(--green);
+  color: #fff; font-size: 11px; font-weight: 700; letter-spacing: .06em;
+  line-height: 1.4; text-decoration: none; text-align: center; white-space: normal;
+}
+.avaruchi-ui.reference-store footer .business-footer .merchant-brand-button:hover { background: #3f562c; }
+.avaruchi-ui.reference-store footer .business-footer .merchant-brand-button:focus-visible { outline: 3px solid #d5b779; outline-offset: 3px; }
+.catalog-csv-import { margin: 0 0 20px; }
+.catalog-import-panel { margin-top: 14px; padding: 22px; }
+.catalog-import-panel > header { display: flex; justify-content: space-between; gap: 20px; }
+.catalog-import-panel p { margin: 10px 0 16px; line-height: 1.6; }
+.catalog-import-controls { display: flex; align-items: end; flex-wrap: wrap; gap: 16px; margin: 18px 0; }
+.catalog-import-controls label { display: grid; gap: 8px; }
+.catalog-import-panel .catalog-table-wrap { max-height: 400px; overflow: auto; margin-bottom: 18px; }

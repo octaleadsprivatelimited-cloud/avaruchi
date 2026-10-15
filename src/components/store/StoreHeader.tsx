@@ -295,7 +295,7 @@ export function StoreFooter() {
             <BrandMark />
           </Link>
           <p className="business-footer">
-            <strong>{store.legalName || BRAND.legalName}</strong>
+            <Link className="merchant-brand-button" to="/our-story">{store.legalName || BRAND.legalName}</Link>
             <span>{store.businessAddress || BRAND.address}</span>
             <span>Established {BRAND.established}</span>
             <a href={`tel:${phone.replace(/[^+\d]/g, "")}`}>{phone}</a>

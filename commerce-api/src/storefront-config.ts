@@ -44,10 +44,10 @@ export const storefrontConfigSchema = z.object({
 export type StorefrontConfig = z.infer<typeof storefrontConfigSchema>;
 
 export const defaultStorefrontConfig: StorefrontConfig = {
-  storeName: "Avaruchi", legalName: "", businessGstin:"", businessAddress:"", logoUrl: "/favicon.svg", footerLogoUrl: "", faviconUrl: "/favicon.svg", fssaiLicense: "", analyticsPromptEnabled: false,
+  storeName: "Avaruchi", legalName: "LAKSHMI'S TAPASI TREATS", businessGstin:"", businessAddress:"", logoUrl: "/favicon.svg", footerLogoUrl: "", faviconUrl: "/favicon.svg", fssaiLicense: "", analyticsPromptEnabled: false,
   primaryColor: "#173f2b", accentColor: "#dc6b32", backgroundColor: "#fbf7ec",
   currency: "INR", locale: "en-IN", supportEmail: "",
-  supportPhone: "", freeShippingThreshold: 999, manualDeliveryEnabled: false, deliveryCharge: 59, deliveryMinDays: 3, deliveryMaxDays: 6, announcement: "",
+  supportPhone: "9932433243", freeShippingThreshold: 999, manualDeliveryEnabled: false, deliveryCharge: 59, deliveryMinDays: 3, deliveryMaxDays: 6, announcement: "",
   codEnabled: true, onlinePaymentDiscountEnabled: false, onlinePaymentDiscountType: "PERCENTAGE", onlinePaymentDiscountValue: 0,
   footerTagline: "Traditional Andhra pickles, made with love.", seoTitle: "Avaruchi | Authentic Andhra Pickles",
   seoDescription: "Discover traditional Andhra pickles from Avaruchi. Choose your favourite flavours and jar sizes.", primaryDomain: "",

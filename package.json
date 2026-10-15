@@ -23,10 +23,11 @@
     "start": "node hostinger.mjs",
     "setup:local": "node scripts/setup-local.mjs",
     "dev:local": "node scripts/dev-local.mjs",
-    "verify": "pnpm lint && pnpm exec tsc --noEmit && pnpm test:api && pnpm build:hostinger && node scripts/check-public-secrets.mjs && node scripts/smoke-built-storefront.mjs && node scripts/smoke-hostinger-startup.mjs && node --no-experimental-require-module scripts/smoke-vercel.mjs && node scripts/smoke-commerce-proxy.mjs",
+    "verify": "pnpm lint && pnpm exec tsc --noEmit && pnpm test:catalog && pnpm test:api && pnpm build:hostinger && node scripts/check-public-secrets.mjs && node scripts/smoke-built-storefront.mjs && node scripts/smoke-hostinger-startup.mjs && node --no-experimental-require-module scripts/smoke-vercel.mjs && node scripts/smoke-commerce-proxy.mjs",
     "verify:db": "node scripts/verify-database.mjs",
     "build:frontend": "NODE_ENV=production vite build && NODE_ENV=production vite build --ssr src/entry-server.tsx --outDir .output/server",
-    "build:api-runtime": "NODE_ENV=production vite build --config vite.api.config.ts"
+    "build:api-runtime": "NODE_ENV=production vite build --config vite.api.config.ts",
+    "test:catalog": "node scripts/test-catalog-csv.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1"

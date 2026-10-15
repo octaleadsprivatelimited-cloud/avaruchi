@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { Link } from "@/lib/navigation";
 import { commerceApi } from "./commerce-api";
+import { BRAND } from "./brand";
 
 export type StorefrontConfig = {
   storeName: string; legalName: string; businessGstin: string; businessAddress: string;
@@ -14,10 +15,10 @@ export type StorefrontConfig = {
   seoTitle: string; seoDescription: string; primaryDomain: string;
 };
 export const defaultStorefrontConfig: StorefrontConfig = {
-  storeName: "Avaruchi", legalName: "", businessGstin: "", businessAddress: "",
+  storeName: "Avaruchi", legalName: BRAND.legalName, businessGstin: "", businessAddress: "",
   logoUrl: "/favicon.svg", footerLogoUrl: "", faviconUrl: "/favicon.svg", fssaiLicense: "",
   analyticsPromptEnabled: false, primaryColor: "#173f2b", accentColor: "#dc6b32", backgroundColor: "#fbf7ec",
-  currency: "INR", locale: "en-IN", supportEmail: "", supportPhone: "",
+  currency: "INR", locale: "en-IN", supportEmail: "", supportPhone: BRAND.phone,
   freeShippingThreshold: 999, manualDeliveryEnabled: false, deliveryCharge: 59, deliveryMinDays: 3, deliveryMaxDays: 6, announcement: "",
   codEnabled: true, onlinePaymentDiscountEnabled: false, onlinePaymentDiscountType: "PERCENTAGE", onlinePaymentDiscountValue: 0,
   footerTagline: "A little taste of home, in every jar.",

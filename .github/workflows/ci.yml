@@ -62,6 +62,7 @@ jobs:
         run: |
           pnpm lint
           pnpm exec tsc --noEmit
+          node scripts/test-catalog-csv.mjs
       - name: Migrate and seed isolated test database
         run: |
           pnpm --dir commerce-api db:deploy
