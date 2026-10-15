@@ -105,15 +105,15 @@ export function ShopPage() {
               <button
                 type="button"
                 key={item}
-                className={category === item ? "active" : ""}
-                aria-pressed={category === item}
+                className={category === item || item !== ALL_PRODUCTS && matchesCategory({ category }, item) ? "active" : ""}
+                aria-pressed={category === item || item !== ALL_PRODUCTS && matchesCategory({ category }, item)}
                 onClick={() => chooseCategory(item)}
               >
                 {item}
               </button>
             ))}
             <span>
-              {shown.length} {shown.length === 1 ? "flavour" : "flavours"}
+              {shown.length} {shown.length === 1 ? "product" : "products"}
             </span>
           </div>
           {shown.length ? (

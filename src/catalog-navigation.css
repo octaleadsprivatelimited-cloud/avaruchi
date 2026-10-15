@@ -4,9 +4,9 @@
 .avaruchi-ui.reference-store .category-menu-intro a { font-size: 12px; gap: 14px; color: var(--green); }
 .avaruchi-ui .category-menu-columns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
 .avaruchi-ui .category-menu-heading { display: flex; align-items: center; justify-content: space-between; }
-.avaruchi-ui.reference-store .category-menu-heading > a { width: 100%; justify-content: space-between; gap: 12px; font: 23px Georgia, serif; color: var(--green); padding: 0 0 12px; }
+.avaruchi-ui.reference-store .site-header nav .category-menu-heading > a { width: 100%; justify-content: space-between; gap: 12px; font: 23px Georgia, serif; color: var(--green); padding: 0 0 12px; }
 .avaruchi-ui .category-menu-heading small { font: 11px Arial, sans-serif; background: #e6eddd; min-width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; }
-.avaruchi-ui .category-menu-heading > button { display: none; }
+.avaruchi-ui .site-header nav .category-menu-heading > button { display: none; }
 .avaruchi-ui .category-submenu { list-style: none; padding: 0; margin: 0 0 12px; }
 .avaruchi-ui.reference-store .category-submenu a { display: flex; justify-content: space-between; gap: 14px; padding: 10px 0; font-size: 13px; }
 .avaruchi-ui .category-submenu a > span { font-size: 11px; color: #68775e; }
@@ -23,9 +23,11 @@
   .avaruchi-ui .category-menu-intro { margin-bottom: 4px; gap: 12px; }
   .avaruchi-ui .category-menu-group { padding: 15px 0; border-bottom: 1px solid var(--rule); }
   .avaruchi-ui .category-menu-group:last-child { border-bottom: 0; padding-bottom: 0; }
-  .avaruchi-ui.reference-store .category-menu-heading > a { font-size: 21px; padding: 0; }
-  .avaruchi-ui .category-menu-heading > button { display: grid; place-items: center; flex: 0 0 44px; height: 44px; margin: -10px -8px -10px 10px; color: var(--green); font-size: 23px; }
+  .avaruchi-ui.reference-store .site-header nav .category-menu-heading > a { font-size: 21px; padding: 0; }
+  .avaruchi-ui .site-header nav .category-menu-heading > button { display: grid; place-items: center; flex: 0 0 44px; height: 44px; margin: -10px -8px -10px 10px; color: var(--green); font-size: 23px; }
   .avaruchi-ui .category-submenu { display: none; padding: 14px 0 0 12px; }
   .avaruchi-ui .category-submenu.expanded { display: block; }
   .avaruchi-ui.reference-store .category-menu-group .category-browse { border: 0; padding-top: 12px; }
 }
+.avaruchi-ui.reference-store .site-header { position: relative; }
+.avaruchi-ui .products-menu { position: static; }

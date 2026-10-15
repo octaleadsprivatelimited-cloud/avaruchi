@@ -144,7 +144,7 @@ export function ReferenceProductCard({
       </p>
       <div className="product-actions">
         <label className="sr-only" htmlFor={selectId}>
-          Jar size for {product.name}
+          Pack size for {product.name}
         </label>
         <select
           id={selectId}
@@ -154,10 +154,10 @@ export function ReferenceProductCard({
         >
           {!variants.length && <option value="">Unavailable</option>}
           {variants.map((item) => (
-            <option key={item.id} value={item.id} disabled={item.stock < 1}>
+            <option key={item.id} value={item.id}>
               {item.title ||
                 Object.values(item.options).join(" / ") ||
-                "Standard jar"}
+                "Standard pack"}
               {item.stock < 1 ? " · Sold out" : ""}
             </option>
           ))}

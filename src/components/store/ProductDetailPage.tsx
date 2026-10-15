@@ -94,6 +94,7 @@ export function ProductDetailPage() {
   const price = priceIncludingTax(basePrice, product.taxRate);
   const mrp = priceIncludingTax(baseMrp, product.taxRate);
   const hasAvailableVariant = Boolean(product.variants?.some((variant) => variant.stock > 0));
+  const selectedAvailable = selectedVariant ? selectedVariant.stock > 0 : hasAvailableVariant;
   const missingOptions = selectableOptions
     .map((option) => option.name)
     .filter((name) => !selected[name]);
@@ -111,7 +112,6 @@ export function ProductDetailPage() {
   const optionAvailable = (name: string, value: string) =>
     product.variants?.some(
       (variant) =>
-        variant.stock > 0 &&
         variant.options[name] === value &&
         Object.entries(selected).every(
           ([selectedName, selectedValue]) =>
@@ -191,8 +191,8 @@ export function ProductDetailPage() {
               )}
             </div>
             <p className="tax-note">Inclusive of all taxes</p>
-            <p className={`product-availability${hasAvailableVariant ? " available" : ""}`}>
-              <span aria-hidden="true" />{hasAvailableVariant ? "In stock" : "Currently sold out"}
+            <p className={`product-availability${selectedAvailable ? " available" : ""}`}>
+              <span aria-hidden="true" />{selectedAvailable ? "In stock" : "Currently sold out"}
             </p>
             <p className="detail-copy">
               {product.description || "A familiar flavour for your everyday table."}
@@ -246,7 +246,7 @@ export function ProductDetailPage() {
                 disabled={!selectedVariant || selectedVariant.stock < 1}
               >
                 <ShoppingBag />
-                {!hasAvailableVariant ? "Sold out" : selectionPending ? selectionPrompt : "Add to bag"}
+                {!selectedAvailable ? "Sold out" : selectionPending ? selectionPrompt : "Add to bag"}
               </button>
               <button className="save" aria-label={wishlist.saved.includes(product.id) ? "Remove from wishlist" : "Save to wishlist"} aria-pressed={wishlist.saved.includes(product.id)} disabled={wishlistBusy} onClick={() => void toggleWishlist()}>
                 <Heart fill={wishlist.saved.includes(product.id) ? "currentColor" : "none"} />
@@ -260,7 +260,7 @@ export function ProductDetailPage() {
                 if (!add()) event.preventDefault();
               }}
             >
-              {!hasAvailableVariant ? "Sold out" : selectionPending ? `${selectionPrompt} to buy` : "Buy it now"}
+              {!selectedAvailable ? "Sold out" : selectionPending ? `${selectionPrompt} to buy` : "Buy it now"}
             </a>
             <div className="delivery-box">
               <div>
