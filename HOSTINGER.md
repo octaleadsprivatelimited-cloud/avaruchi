@@ -2,6 +2,8 @@
 
 Create a new Node.js 24 app for Avaruchi with this project root as its app directory. Use [Avaruchi's source repository](https://github.com/octaleadsprivatelimited-cloud/avaruchi) and Avaruchi's own hosting resources. Vite builds the React UI and server-rendering entry; the existing Express backend runs alongside it.
 
+The deployed storefront is [wheat-albatross-205641.hostingersite.com](https://wheat-albatross-205641.hostingersite.com). Its frontend and API share this origin, and `/ready` verifies MySQL persistence. Hostinger's GitHub connection deploys `main`; GitHub Actions runs the checks in `.github/workflows/ci.yml` independently of deployment.
+
 | Setting | Value |
 | --- | --- |
 | Install | `pnpm install --frozen-lockfile` |

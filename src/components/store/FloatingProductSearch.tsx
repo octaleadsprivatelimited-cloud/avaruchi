@@ -72,7 +72,7 @@ export function FloatingProductSearch({ open, onClose }: { open: boolean; onClos
         }}
       >
         <Search aria-hidden="true" />
-        <input ref={input} aria-label="Search products" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search groundnut, sesame, coconut oils…" />
+        <input ref={input} aria-label="Search products" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search mango, gongura, tomato pickles…" />
         <button type="submit" aria-label="Submit search" disabled={!query.trim()}><ArrowRight /></button>
         <button type="button" aria-label="Close search" onClick={onClose}><X /></button>
       </form>

@@ -158,9 +158,9 @@ export function CartPage() {
           <div className="empty-cart">
             <ShoppingBag />
             <h2>Your bag is waiting.</h2>
-            <p>Explore cold-pressed oils for everyday cooking.</p>
+            <p>Find a favourite pickle for your everyday table.</p>
             <Link to="/shop">
-              Discover the oil collection <ArrowRight />
+              Discover the pickle collection <ArrowRight />
             </Link>
           </div>
         ) : (
@@ -1226,8 +1226,7 @@ export function LoginPage() {
         <aside>
           <span>“</span>
           <blockquote>
-            Great flavour should earn its place in your kitchen—through pure
-            oils, everyday essentials and thoughtful choices.
+            Familiar tang, bold spice and a little taste of home in every jar.
           </blockquote>
           <p>Avaruchi promise</p>
         </aside>

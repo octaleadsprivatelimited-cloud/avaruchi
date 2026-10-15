@@ -281,7 +281,7 @@ export function ProductDetailPage() {
                 <Check />
                 <span>
                   <b>Freshness promise</b>
-                  <small>Cold-pressed oils, carefully packed for your pantry</small>
+                  <small>Pickles, carefully packed for your pantry</small>
                 </span>
               </div>
             </div>
