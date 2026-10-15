@@ -1,0 +1,175 @@
+/* Final storefront rules follow the reference styles so touch controls retain their size. */
+.avaruchi-ui.reference-store footer .footer-main .reference-cookie-link {
+  color: #173f2b;
+  background: transparent;
+  min-height: 44px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: left;
+}
+.avaruchi-ui.reference-store footer .reference-cookie-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.avaruchi-ui .product-details-accordion details > summary::after {
+  content: none;
+}
+.avaruchi-ui .product-details-accordion summary > svg {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+}
+@media (max-width: 900px) {
+  .avaruchi-ui .product-page .buy-actions {
+    grid-template-columns: minmax(0, 1fr) 48px;
+    gap: 12px;
+  }
+  .avaruchi-ui .product-page .buy-actions .quantity {
+    grid-column: 1;
+    grid-row: 1;
+    width: 142px;
+    max-width: 100%;
+    height: 50px;
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    padding: 0;
+  }
+  .avaruchi-ui .product-page .quantity button {
+    width: 44px;
+    min-height: 48px;
+    padding: 0;
+  }
+  .avaruchi-ui .product-page .quantity span {
+    min-width: 0;
+    text-align: center;
+  }
+  .avaruchi-ui .product-page .buy-actions .add-bag {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+    min-height: 50px;
+    font-size: 15px;
+  }
+  .avaruchi-ui .product-page .buy-actions .save {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 48px;
+    min-height: 50px;
+  }
+}
+@media (max-width: 760px) {
+  .avaruchi-ui.reference-store .site-header nav .category-menu-heading > a {
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
+    white-space: normal;
+  }
+  .avaruchi-ui .category-menu-heading {
+    gap: 10px;
+  }
+  .avaruchi-ui .site-header nav .category-menu-heading > button {
+    margin: 0;
+  }
+  .avaruchi-ui.reference-store .category-submenu a {
+    min-height: 44px;
+    white-space: normal;
+  }
+}
+@media (max-width: 700px) {
+  .avaruchi-ui.reference-store .header-actions .icon-button,
+  .avaruchi-ui.reference-store .header-actions .bag-button,
+  .avaruchi-ui.reference-store .header-actions > a {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+  }
+  .avaruchi-ui.reference-store .header-actions {
+    gap: 0;
+  }
+  .avaruchi-ui .product-page .breadcrumbs {
+    display: flex;
+    flex-wrap: wrap;
+    height: auto;
+    gap: 8px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  .avaruchi-ui .product-page .buy-panel h1 {
+    font-size: clamp(28px, 7vw, 38px);
+  }
+  .avaruchi-ui .cart-page-lines .line-qty {
+    width: 134px;
+    max-width: 100%;
+    min-height: 46px;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+  }
+  .avaruchi-ui .cart-page-lines .line-qty button {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    display: grid;
+    place-items: center;
+  }
+  .avaruchi-ui .cart-page-lines .line-qty span {
+    text-align: center;
+  }
+}
+@media (max-width: 600px) {
+  .avaruchi-ui.reference-store .category-row {
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    overflow: visible;
+    white-space: normal;
+  }
+  .avaruchi-ui.reference-store .category-row button {
+    flex-shrink: 0;
+    font-size: 13px;
+    min-height: 44px;
+    padding-block: 10px;
+  }
+  .avaruchi-ui.reference-store .product-actions select {
+    font-size: 16px;
+    min-height: 44px;
+  }
+  .avaruchi-ui.reference-store footer .footer-brand .business-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 7px;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  .avaruchi-ui.reference-store footer .business-footer .merchant-brand-button {
+    max-width: 100%;
+    white-space: normal;
+  }
+  .avaruchi-ui.reference-store footer .footer-main .footer-links > a,
+  .avaruchi-ui.reference-store footer .footer-location a {
+    min-height: 44px;
+    font-size: 13px;
+  }
+}
+@media (max-width: 360px) {
+  .avaruchi-ui.reference-store .site-header {
+    column-gap: 4px;
+  }
+  .avaruchi-ui.reference-store .reference-brand {
+    gap: 6px;
+  }
+  .avaruchi-ui.reference-store .wordmark .brand-name {
+    font-size: 22px;
+  }
+  .avaruchi-ui.reference-store .brand-name small {
+    max-width: 112px;
+    font-size: 7px;
+  }
+  .avaruchi-ui.reference-store .collection-track,
+  .avaruchi-ui.reference-store .product-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+}

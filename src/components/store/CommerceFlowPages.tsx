@@ -208,6 +208,7 @@ export function CartPage() {
                   <div className="line-qty">
                     <button
                       onClick={() => cart.update(index, entry.quantity - 1)}
+                      aria-label={`Decrease ${product.name} quantity`}
                     >
                       <Minus />
                     </button>
