@@ -24,4 +24,6 @@ Public FSSAI details and product prices can be edited in Admin. A deploy does no
 
 ## Delivery and checkout launch
 
-The merchant approved India-only manual dispatch on 15 October: ₹59 per order, free delivery from ₹999 item subtotal, and an estimated 3–6 business days after dispatch. The policy is enabled in live Admin settings. The merchant arranges dispatch and records the actual courier/tracking details in Orders. International delivery is not configured. Live Razorpay and its separately signed webhook are enabled; COD remains enabled as saved. Resend sends accepted order confirmations and merchant alerts from the durable outbox.
+The merchant approved India-only manual dispatch on 15 October: ₹59 per order, free delivery from ₹999 item subtotal, and an estimated 3–6 business days after dispatch. The policy is enabled in live Admin settings. The merchant arranges dispatch and records the actual courier/tracking details in Orders. International delivery is not configured. Live Razorpay and its separately signed webhook are enabled; COD availability is controlled independently in Admin settings. Resend sends accepted order confirmations and merchant alerts from the durable outbox.
+
+Release validation passed 357 tests against the isolated local MySQL database, including order confirmation/outbox and Razorpay failed-attempt recovery. Live browser verification covered add-to-bag, cart, address, delivery quote and the Razorpay payment selection. No live order or charge was submitted by the agent.
