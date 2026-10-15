@@ -169,6 +169,18 @@ describe.skipIf(process.env.RUN_DB_TESTS !== "1")(
           currency: "INR",
           gatewayPaymentId: `cf_${order.id}`,
         };
+        const cancelledAttempt = { orderNumber: order.number, providerOrderId: payment.externalId!, type: "CANCELLED" as const };
+        await Promise.all([p.recordPaymentClientEvent(cancelledAttempt), p.recordPaymentClientEvent(cancelledAttempt)]);
+        expect(await p.db.inventory.findUniqueOrThrow({ where: { variantId } })).toMatchObject({ onHand: original.onHand, reserved: original.reserved });
+        await p.refreshOrder(store, order.id);
+        expect(store.orders.get(order.id)).toMatchObject({ status: "FAILED", inventoryState: "RELEASED" });
+        expect(variant).toMatchObject({ stock: original.onHand, reserved: original.reserved });
+        expect(await p.db.notification.count({ where: { id: orderConfirmationId(order.id) } })).toBe(0);
+        await p.transitionOrder(order.id, "FAILED", "PAYMENT_PENDING", undefined, "PAYMENT_RETRY");
+        expect(await p.db.inventory.findUniqueOrThrow({ where: { variantId } })).toMatchObject({ reserved: original.reserved + 1 });
+        await p.recordPaymentClientEvent(cancelledAttempt);
+        expect(await p.db.inventory.findUniqueOrThrow({ where: { variantId } })).toMatchObject({ reserved: original.reserved });
+        // A signed/verified capture after dismissal reacquires its own units.
         await p.reconcilePayment(payment.id, status);
         await p.reconcilePayment(payment.id, status);
         for (const type of ["FAILED", "CANCELLED"] as const) {
@@ -186,7 +198,7 @@ describe.skipIf(process.env.RUN_DB_TESTS !== "1")(
               gatewayTransactionId: status.gatewayPaymentId,
             });
           expect(await p.db.paymentTransaction.count({
-            where: { paymentId: payment.id, kind: type },
+            where: { paymentId: payment.id, providerEventId: `client:${payment.id}:${type}:${lateClientEvent.gatewayPaymentId}` },
           })).toBe(1);
         }
         expect(await p.db.payment.findUniqueOrThrow({ where: { id: payment.id } }))

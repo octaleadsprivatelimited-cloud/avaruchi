@@ -143,6 +143,64 @@ describe("checkout failure recovery", () => {
 });
 
 describe("Razorpay payment attempt webhooks", () => {
+  it("releases dismissed checkout once, reacquires on retry and refuses sold-out retries", async () => {
+    let gatewaySequence = 0;
+    const { store, post } = await start(null, vi.fn(async () => new Response(JSON.stringify({ id: `order_cancel_fixture_${++gatewaySequence}` }))) as typeof fetch);
+    store.integrations.set("razorpay-cancel", {
+      id: "razorpay-cancel", kind: "PAYMENT", provider: "razorpay", enabled: true, priority: 1, environment: "TEST",
+      encryptedCredentials: new SecretVault(config.INTEGRATION_ENCRYPTION_KEY).encrypt({ keyId: "rzp_test_fixture", keySecret: "fixture-only-secret" }), publicConfig: {}, updatedAt: new Date().toISOString(),
+    });
+    const variant = store.listProducts()[0]!.variants[0]!;
+    const before = { stock: variant.stock, reserved: variant.reserved };
+    const created = await post("/api/v1/checkout", checkout(variant.id, "razorpay"), { "idempotency-key": crypto.randomUUID() });
+    const { order, payment, paymentAttemptToken } = created.body.data;
+    const cancel = { orderNumber: order.number, providerOrderId: payment.externalId, attemptToken: paymentAttemptToken, type: "CANCELLED" };
+    expect(variant.reserved).toBe(before.reserved + 2);
+    expect((await post("/api/v1/payments/client-events", { ...cancel, attemptToken: "x".repeat(100) })).status).toBe(401);
+    for (let i = 0; i < 2; i++) {
+      const cancelled = await post("/api/v1/payments/client-events", cancel);
+      expect(cancelled.status).toBe(200);
+      expect(cancelled.body.data.inventoryReleased).toBe(true);
+      expect(variant).toMatchObject(before);
+      expect(store.orders.get(order.id)).toMatchObject({ status: "FAILED", inventoryState: "RELEASED" });
+    }
+    const retry = { orderNumber: order.number, provider: "razorpay", attemptToken: paymentAttemptToken };
+    const resumed = await post("/api/v1/payments/retry", retry);
+    expect(resumed.status).toBe(201);
+    expect(resumed.body.data.order.number).toBe(order.number);
+    expect(variant.reserved).toBe(before.reserved + 2);
+    expect((await post("/api/v1/payments/client-events", cancel)).status).toBe(404);
+    expect(variant.reserved).toBe(before.reserved + 2);
+    await post("/api/v1/payments/client-events", { ...cancel, providerOrderId: resumed.body.data.payment.externalId, attemptToken: resumed.body.data.paymentAttemptToken, type: "FAILED" });
+    expect(variant).toMatchObject(before);
+    variant.stock = variant.reserved + 1;
+    expect((await post("/api/v1/payments/retry", retry)).status).toBe(409);
+    expect(variant.reserved).toBe(before.reserved);
+    expect(store.orders.get(order.id)?.status).toBe("FAILED");
+  });
+
+  it("accepts a signed capture after dismissal without consuming another order's reservation", async () => {
+    const webhookSecret = "fixture-webhook-secret";
+    const { store, post } = await start(null, vi.fn(async () => new Response(JSON.stringify({ id: "order_late_capture_fixture" }))) as typeof fetch);
+    store.integrations.set("razorpay-late", {
+      id: "razorpay-late", kind: "PAYMENT", provider: "razorpay", enabled: true, priority: 1, environment: "TEST",
+      encryptedCredentials: new SecretVault(config.INTEGRATION_ENCRYPTION_KEY).encrypt({ keyId: "rzp_test_fixture", keySecret: "fixture-only-secret", webhookSecret }), publicConfig: {}, updatedAt: new Date().toISOString(),
+    });
+    const variant = store.listProducts()[0]!.variants[0]!;
+    const originalStock = variant.stock;
+    const created = await post("/api/v1/checkout", checkout(variant.id, "razorpay"), { "idempotency-key": crypto.randomUUID() });
+    const { order, payment, paymentAttemptToken } = created.body.data;
+    const cancel = { orderNumber: order.number, providerOrderId: payment.externalId, attemptToken: paymentAttemptToken, type: "CANCELLED" };
+    await post("/api/v1/payments/client-events", cancel);
+    store.reserveMany([{ variantId: variant.id, quantity: 3 }]);
+    const payload = { event: "payment.captured", payload: { payment: { entity: { id: "pay_late_fixture", order_id: payment.externalId, amount: Math.round(order.total * 100), currency: "INR" } } } };
+    const signed = { "x-razorpay-signature": crypto.createHmac("sha256", webhookSecret).update(JSON.stringify(payload)).digest("hex") };
+    expect((await post("/webhooks/razorpay", payload, signed)).status).toBe(202);
+    expect(variant).toMatchObject({ stock: originalStock - 2, reserved: 3 });
+    expect((await post("/api/v1/payments/client-events", cancel)).body.data.status).toBe("CAPTURED");
+    expect(variant).toMatchObject({ stock: originalStock - 2, reserved: 3 });
+  });
+
   it("keeps a failed attempt retryable and accepts capture without releasing or double-committing stock", async () => {
     const webhookSecret = "fixture-only-razorpay-webhook-secret";
     const { store, post } = await start(null, vi.fn(async () => new Response(JSON.stringify({ id: "order_fixture_razorpay" }))) as typeof fetch);
@@ -193,6 +251,9 @@ describe("persisted Cashfree verification", () => {
         persistedOrder.payment!.status = "CAPTURED";
       }),
       refreshOrder: vi.fn(async (store: CommerceStore) => {
+        // The persistence adapter refreshes catalog inventory with the order.
+        const previous = store.orders.get(persistedOrder.id)!;
+        if (persistedOrder.status === "PAID" && previous.inventoryState === "RESERVED") store.commitOrderInventory(previous);
         store.orders.set(persistedOrder.id, structuredClone(persistedOrder));
       }),
     };
@@ -239,6 +300,7 @@ describe("persisted payment client events", () => {
       return { count: 1 };
     });
     const tx = {
+      $queryRaw: vi.fn(async () => []),
       payment: {
         findFirst: vi.fn(async () => ({ ...current, status: "CREATED" })),
         updateMany,

@@ -80,6 +80,9 @@ function toStoredOrder(order: PersistedOrder): StoredOrder {
     number: order.number,
     userId: order.userId || undefined,
     status: order.status,
+    inventoryState: ["FAILED", "CANCELLED"].includes(order.status)
+      ? "RELEASED"
+      : ["PENDING", "PAYMENT_PENDING"].includes(order.status) ? "RESERVED" : "COMMITTED",
     payment: payment
       ? {
           externalId: payment.externalId || undefined,
@@ -1292,6 +1295,15 @@ export class PrismaPersistence {
       return null;
     }
     const stored = toStoredOrder(order);
+    const inventory = await this.db.inventory.findMany({
+      where: { variantId: { in: order.items.map(item => item.variantId) } },
+    });
+    for (const item of inventory) {
+      for (const product of store.products.values()) {
+        const variant = product.variants.find(candidate => candidate.id === item.variantId);
+        if (variant) { variant.stock = item.onHand; variant.reserved = item.reserved; }
+      }
+    }
     store.orders.set(order.id, stored);
     return stored;
   }
@@ -2265,6 +2277,10 @@ export class PrismaPersistence {
     source = "ADMIN",
   ) {
     await this.db.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT \`id\` FROM \`Order\` WHERE \`id\` = ${orderId} FOR UPDATE`;
+      const current = await tx.order.findUniqueOrThrow({ where: { id: orderId }, select: { status: true } });
+      if (current.status !== from) throw new AppError(409, "STALE_ORDER_STATE", "Order state changed; reload and try again");
+      if (from === to) return;
       const inventoryAction =
         to === "PAID"
           ? "COMMIT"
@@ -2294,6 +2310,10 @@ export class PrismaPersistence {
           let reason = "";
           let quantity = 0;
           if (inventoryAction === "COMMIT" && !wasCommitted) {
+            if (from === "FAILED") {
+              const reserved = await tx.$executeRaw`UPDATE \`Inventory\` SET \`reserved\` = \`reserved\` + ${item.quantity}, \`version\` = \`version\` + 1 WHERE \`variantId\` = ${item.variantId} AND \`onHand\` - \`reserved\` >= ${item.quantity}`;
+              if (reserved !== 1) throw new AppError(409, "INVENTORY_STATE_CONFLICT", `Stock is no longer available for ${item.sku}`);
+            }
             changed = await tx.$executeRaw`UPDATE \`Inventory\` SET \`onHand\` = \`onHand\` - ${item.quantity}, \`reserved\` = \`reserved\` - ${item.quantity}, \`version\` = \`version\` + 1 WHERE \`variantId\` = ${item.variantId} AND \`onHand\` >= ${item.quantity} AND \`reserved\` >= ${item.quantity}`;
             reason = "ORDER_COMMITTED";
             quantity = -item.quantity;
@@ -2491,6 +2511,12 @@ export class PrismaPersistence {
           },
         });
         if (input.orderId && input.from && input.to) {
+          await tx.$queryRaw`SELECT \`id\` FROM \`Order\` WHERE \`id\` = ${input.orderId} FOR UPDATE`;
+          const current = await tx.order.findUniqueOrThrow({ where: { id: input.orderId }, select: { status: true } });
+          const from = current.status;
+          if (from === input.to) return;
+          if (from !== input.from && !(from === "FAILED" && input.to === "PAID"))
+            throw new AppError(409, "STALE_ORDER_STATE", "Order state changed before webhook processing");
           if (["PAID", "FAILED"].includes(input.to)) {
             const items = await tx.orderItem.findMany({
               where: { orderId: input.orderId },
@@ -2500,6 +2526,10 @@ export class PrismaPersistence {
               const inventory = await tx.inventory.findUnique({ where: { variantId: item.variantId } });
               if (!inventory)
                 throw new AppError(409, "INVENTORY_NOT_FOUND", `Inventory is missing for ${item.sku}`);
+              if (input.to === "PAID" && from === "FAILED") {
+                const reserved = await tx.$executeRaw`UPDATE \`Inventory\` SET \`reserved\` = \`reserved\` + ${item.quantity}, \`version\` = \`version\` + 1 WHERE \`variantId\` = ${item.variantId} AND \`onHand\` - \`reserved\` >= ${item.quantity}`;
+                if (reserved !== 1) throw new AppError(409, "INVENTORY_CONFLICT", "Payment was received after stock was released. Contact the store for fulfilment or a refund.");
+              }
               const changed = input.to === "PAID"
                 ? await tx.$executeRaw`UPDATE \`Inventory\` SET \`onHand\` = \`onHand\` - ${item.quantity}, \`reserved\` = \`reserved\` - ${item.quantity}, \`version\` = \`version\` + 1 WHERE \`variantId\` = ${item.variantId} AND \`onHand\` >= ${item.quantity} AND \`reserved\` >= ${item.quantity}`
                 : await tx.$executeRaw`UPDATE \`Inventory\` SET \`reserved\` = \`reserved\` - ${item.quantity}, \`version\` = \`version\` + 1 WHERE \`variantId\` = ${item.variantId} AND \`reserved\` >= ${item.quantity}`;
@@ -2516,7 +2546,7 @@ export class PrismaPersistence {
             }
           }
           const changed = await tx.order.updateMany({
-            where: { id: input.orderId, status: input.from as OrderStatus },
+            where: { id: input.orderId, status: from },
             data: { status: input.to as OrderStatus },
           });
           if (changed.count !== 1)
@@ -2528,7 +2558,7 @@ export class PrismaPersistence {
           await tx.orderHistory.create({
             data: {
               orderId: input.orderId,
-              fromStatus: input.from as OrderStatus,
+              fromStatus: from,
               toStatus: input.to as OrderStatus,
               source: input.provider,
             },
@@ -2979,7 +3009,9 @@ export class PrismaPersistence {
           "PAYMENT_NOT_FOUND",
           "Payment attempt was not found",
         );
-      const providerEventId = `client:${payment.id}:${input.type}:${input.gatewayPaymentId || crypto.randomUUID()}`;
+      // Serialize cancellation, retry and signed capture against the order.
+      await tx.$queryRaw`SELECT \`id\` FROM \`Order\` WHERE \`id\` = ${payment.orderId} FOR UPDATE`;
+      const providerEventId = `client:${payment.id}:${input.type}:${input.gatewayPaymentId || "checkout"}`;
       await tx.paymentTransaction.upsert({
         where: { providerEventId },
         update: {},
@@ -2998,15 +3030,31 @@ export class PrismaPersistence {
       });
       // Check status in the UPDATE itself: a webhook may capture this payment
       // between the initial read and this late browser failure/cancel event.
-      await tx.payment.updateMany({
+      const updated = await tx.payment.updateMany({
         where: { id: payment.id, status: { notIn: ["CAPTURED", "REFUNDED", "PARTIALLY_REFUNDED"] } },
         data: {
           status: input.type as never,
           gatewayTransactionId: input.gatewayPaymentId,
         },
       });
+      if (updated.count === 1) {
+        const latest = await tx.payment.findFirst({ where: { orderId: payment.orderId }, orderBy: { createdAt: "desc" }, select: { id: true } });
+        const changed = latest?.id === payment.id
+          ? await tx.order.updateMany({ where: { id: payment.orderId, status: "PAYMENT_PENDING" }, data: { status: "FAILED" } })
+          : { count: 0 };
+        if (changed.count === 1) {
+          const items = await tx.orderItem.findMany({ where: { orderId: payment.orderId } });
+          for (const item of items) {
+            const inventory = await tx.inventory.findUniqueOrThrow({ where: { variantId: item.variantId } });
+            const released = await tx.$executeRaw`UPDATE \`Inventory\` SET \`reserved\` = \`reserved\` - ${item.quantity}, \`version\` = \`version\` + 1 WHERE \`variantId\` = ${item.variantId} AND \`reserved\` >= ${item.quantity}`;
+            if (released !== 1) throw new AppError(409, "INVENTORY_STATE_CONFLICT", "The unpaid stock reservation could not be released");
+            await tx.inventoryMovement.create({ data: { inventoryId: inventory.id, quantity: 0, reason: "ORDER_RESERVATION_RELEASED", referenceId: payment.orderId } });
+          }
+          await tx.orderHistory.create({ data: { orderId: payment.orderId, fromStatus: "PAYMENT_PENDING", toStatus: "FAILED", source: "PAYMENT_CLIENT_EVENT", metadata: { type: input.type } } });
+        }
+      }
       return tx.payment.findUniqueOrThrow({ where: { id: payment.id } });
-    });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted });
   }
 
   async createPaymentAttempt(
@@ -3041,6 +3089,8 @@ export class PrismaPersistence {
     },
   ) {
     return this.db.$transaction(async (tx) => {
+      const bound = await tx.payment.findUniqueOrThrow({ where: { id: paymentId }, select: { orderId: true } });
+      await tx.$queryRaw`SELECT \`id\` FROM \`Order\` WHERE \`id\` = ${bound.orderId} FOR UPDATE`;
       await tx.$queryRaw`SELECT \`id\` FROM \`Payment\` WHERE \`id\` = ${paymentId} FOR UPDATE`;
       const payment = await tx.payment.findUnique({
         where: { id: paymentId },
@@ -3083,12 +3133,16 @@ export class PrismaPersistence {
       });
       if (
         status.status === "CAPTURED" &&
-        payment.order.status === "PAYMENT_PENDING"
+        ["PAYMENT_PENDING", "FAILED"].includes(payment.order.status)
       ) {
         const items = await tx.orderItem.findMany({ where: { orderId: payment.orderId } });
-        const changed = await tx.order.updateMany({ where: { id: payment.orderId, status: "PAYMENT_PENDING" }, data: { status: "PAID" } });
+        const changed = await tx.order.updateMany({ where: { id: payment.orderId, status: payment.order.status }, data: { status: "PAID" } });
         if (changed.count !== 1) throw new AppError(409, "STALE_ORDER_STATE", "Order changed during payment verification");
         for (const item of items) {
+          if (payment.order.status === "FAILED") {
+            const reserved = await tx.$executeRaw`UPDATE \`Inventory\` SET \`reserved\` = \`reserved\` + ${item.quantity}, \`version\` = \`version\` + 1 WHERE \`variantId\` = ${item.variantId} AND \`onHand\` - \`reserved\` >= ${item.quantity}`;
+            if (reserved !== 1) throw new AppError(409, "INVENTORY_CONFLICT", "Payment was received after stock was released. Contact the store for fulfilment or a refund.");
+          }
           const count = await tx.$executeRaw`UPDATE \`Inventory\` SET \`onHand\` = \`onHand\` - ${item.quantity}, \`reserved\` = \`reserved\` - ${item.quantity}, \`version\` = \`version\` + 1 WHERE \`variantId\` = ${item.variantId} AND \`onHand\` >= ${item.quantity} AND \`reserved\` >= ${item.quantity}`;
           if (count !== 1) throw new AppError(409, "INVENTORY_CONFLICT", "Reserved inventory could not be committed");
         }
@@ -3099,7 +3153,7 @@ export class PrismaPersistence {
         await tx.orderHistory.create({
           data: {
             orderId: payment.orderId,
-            fromStatus: "PAYMENT_PENDING",
+            fromStatus: payment.order.status,
             toStatus: "PAID",
             source: `${payment.provider}:reconciliation`,
             metadata: { gatewayPaymentId: status.gatewayPaymentId },
@@ -3112,7 +3166,7 @@ export class PrismaPersistence {
         orderNumber: payment.order.number,
         ...status,
       };
-    });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted });
   }
 
   async beginRefund(

@@ -14,7 +14,7 @@ const transitions: Record<string, ReadonlySet<string>> = {
   RETURN_APPROVED: new Set(["RETURNED"]),
   RETURNED: new Set(["REFUND_PENDING"]),
   REFUND_PENDING: new Set(["REFUNDED", "RETURNED", "FAILED"]),
-  FAILED: new Set(["PAYMENT_PENDING"]),
+  FAILED: new Set(["PAYMENT_PENDING", "PAID"]),
   CANCELLED: new Set(),
   REFUNDED: new Set(),
 };

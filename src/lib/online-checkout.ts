@@ -1,8 +1,14 @@
 export type GatewayPayment = { externalId: string; clientToken?: string; environment?: "TEST" | "LIVE" };
 export type PaymentProof = { paymentId?: string; signature?: string };
+export class OnlineCheckoutError extends Error {
+  constructor(message: string, readonly type: "CANCELLED" | "FAILED") {
+    super(message);
+    this.name = "OnlineCheckoutError";
+  }
+}
 type CheckoutInput = { provider: string; payment: GatewayPayment; orderNumber: string; total: number; storeName: string; contact: { name: string; email: string; phone: string } };
 type RazorpayResult = { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string };
-type RazorpayInstance = { open(): void; on(event: "payment.failed", handler: (event: { error?: { description?: string } }) => void): void };
+type RazorpayInstance = { open(): void; close(): void; on(event: "payment.failed", handler: (event: { error?: { description?: string } }) => void): void };
 type PaymentWindow = Window & {
   Cashfree?: (options: { mode: "production" | "sandbox" }) => { checkout(options: { paymentSessionId: string; redirectTarget: string }): Promise<{ error?: { message?: string } }> };
   Razorpay?: new (options: Record<string, unknown>) => RazorpayInstance;
@@ -38,6 +44,7 @@ export async function openOnlineCheckout(input: CheckoutInput): Promise<PaymentP
       key: input.payment.clientToken, order_id: input.payment.externalId,
       amount: Math.round(input.total * 100), currency: "INR", name: input.storeName,
       description: `Order ${input.orderNumber}`,
+      retry: { enabled: false },
       prefill: { name: input.contact.name, email: input.contact.email, contact: input.contact.phone },
       handler: (result: RazorpayResult) => {
         if (result.razorpay_order_id !== input.payment.externalId || !result.razorpay_payment_id || !result.razorpay_signature) {
@@ -45,10 +52,13 @@ export async function openOnlineCheckout(input: CheckoutInput): Promise<PaymentP
         }
         resolve({ paymentId: result.razorpay_payment_id, signature: result.razorpay_signature });
       },
-      modal: { ondismiss: () => reject(new Error("Payment was cancelled. Your saved order can be retried safely.")) },
+      modal: { ondismiss: () => reject(new OnlineCheckoutError("Payment was cancelled. Your saved order can be retried safely.", "CANCELLED")) },
       theme: { color: "#173f2b" },
     });
-    gateway.on("payment.failed", event => reject(new Error(event.error?.description || "Payment was not completed. Your saved order can be retried safely.")));
+    gateway.on("payment.failed", event => {
+      reject(new OnlineCheckoutError(event.error?.description || "Payment was not completed. Your saved order can be retried safely.", "FAILED"));
+      gateway.close();
+    });
     gateway.open();
   });
 }

@@ -373,7 +373,12 @@ export class CommerceStore {
     if (!order) throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
     assertOrderTransition(order.status, to);
     const from = order.status;
-    if (to === "PAID") this.commitOrderInventory(order);
+    if (to === "PAID") {
+      // A verified capture can arrive after the customer dismissed checkout.
+      // Reacquire available units before committing; never use another order's hold.
+      if (from === "FAILED") this.reserveOrderInventory(order);
+      this.commitOrderInventory(order);
+    }
     else if (to === "CANCELLED") this.cancelOrderInventory(order);
     else if (to === "FAILED") this.releaseOrderInventory(order);
     else if (from === "FAILED" && to === "PAYMENT_PENDING")

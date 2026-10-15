@@ -739,7 +739,9 @@ export async function createApp(overrides?: {
         });
         if (persisted?.duplicate)
           return ok(res, { duplicate: true }, "Already processed");
-        if (target && order) {
+        if (persistence && order) {
+          await persistence.refreshOrder(store, order.id);
+        } else if (target && order) {
           if (paymentEvent && order.payment) {
             order.payment.status =
               target === "PAID"
@@ -2787,6 +2789,7 @@ export async function createApp(overrides?: {
           res,
           {
             ...paymentAttemptDto(refreshed?.payment),
+            inventoryReleased: refreshed?.status === "FAILED",
             failureAdvice,
           },
           "Payment attempt recorded",
@@ -2802,6 +2805,8 @@ export async function createApp(overrides?: {
         code: failureAdvice.category,
         description: failureAdvice.customerMessage,
       };
+      if (order.status === "PAYMENT_PENDING")
+        store.transitionOrder(order.id, "FAILED", undefined, "PAYMENT_CLIENT_EVENT");
       store.auditLogs.unshift({
         id: crypto.randomUUID(),
         action: `payment.${req.body.type.toLowerCase()}`,
@@ -2817,7 +2822,7 @@ export async function createApp(overrides?: {
       });
       return ok(
         res,
-        { ...paymentAttemptDto(order.payment), failureAdvice },
+        { ...paymentAttemptDto(order.payment), failureAdvice, inventoryReleased: order.inventoryState === "RELEASED" },
         "Payment attempt recorded",
       );
     },
@@ -2840,10 +2845,7 @@ export async function createApp(overrides?: {
       if (persistence) {
         const bound = await persistence.resolvePaymentWebhook(payment.provider || "cashfree", payment.externalId!);
         await persistence.reconcilePayment(bound.paymentId, status);
-        // Commit the running catalog's reservation before replacing the order
-        // with its persisted PAID snapshot, which is already marked committed.
-        if (store.orders.get(order.id)?.status === "PAYMENT_PENDING")
-          store.transitionOrder(order.id, "PAID", undefined, "GATEWAY_VERIFICATION");
+        // Refresh order and inventory together from the committed transaction.
         await persistence.refreshOrder(store, order.id);
       } else {
         payment.status = "CAPTURED";

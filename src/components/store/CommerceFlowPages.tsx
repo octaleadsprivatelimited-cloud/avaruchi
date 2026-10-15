@@ -28,7 +28,20 @@ import { customerTransactionPath, loginReturnPath } from "@/lib/transactions";
 import { toast, Toaster } from "sonner";
 import { usePostalLookup } from "@/lib/postal-lookup";
 import { freeDeliveryQualifies } from "@/lib/delivery-policy";
-import { openOnlineCheckout, type PaymentProof } from "@/lib/online-checkout";
+import { OnlineCheckoutError, openOnlineCheckout, type PaymentProof } from "@/lib/online-checkout";
+
+async function reportCheckoutFailure(error: unknown, attempt: { orderNumber: string; providerOrderId: string; attemptToken: string }) {
+  const message = error instanceof Error ? error.message : "The payment attempt could not be completed.";
+  try {
+    const result = await commerceApi<{ inventoryReleased?: boolean }>("/api/v1/payments/client-events", {
+      method: "POST", keepalive: true,
+      body: JSON.stringify({ ...attempt, type: error instanceof OnlineCheckoutError ? error.type : "FAILED" }),
+    });
+    return result.inventoryReleased ? `${message} Items are available to other shoppers again. Retrying checks current stock.` : message;
+  } catch {
+    return `${message} We could not confirm the stock release. Check payment status or contact the store before retrying.`;
+  }
+}
 
 type AppliedCoupon = { code: string; discount: number; freeShipping: boolean; appliesTo: "ALL_PRODUCTS" | "SELECTED_PRODUCTS" };
 type DeliveryRate = {
@@ -617,10 +630,10 @@ export function CheckoutPage() {
         try {
           proof = await openOnlineCheckout({ provider: paymentProvider, payment: result.payment, orderNumber: result.order.number, total: result.order.total, storeName: storefront.storeName, contact });
         } catch (error) {
-          const message =
-            error instanceof Error
-              ? error.message
-              : "The payment attempt could not be completed.";
+          const message = await reportCheckoutFailure(error, {
+            orderNumber: result.order.number, providerOrderId: result.payment.externalId,
+            attemptToken: result.paymentAttemptToken!,
+          });
           setPendingPayment({
             provider: paymentProvider,
             analytics: orderAnalytics,
@@ -685,7 +698,18 @@ export function CheckoutPage() {
           attemptToken: pendingPayment.attemptToken,
         }),
       });
-      const proof = await openOnlineCheckout({ provider: pendingPayment.provider, payment: result.payment, orderNumber: result.order.number, total: pendingPayment.total, storeName: storefront.storeName, contact });
+      let proof: PaymentProof;
+      try {
+        proof = await openOnlineCheckout({ provider: pendingPayment.provider, payment: result.payment, orderNumber: result.order.number, total: pendingPayment.total, storeName: storefront.storeName, contact });
+      } catch (error) {
+        const message = await reportCheckoutFailure(error, {
+          orderNumber: result.order.number, providerOrderId: result.payment.externalId,
+          attemptToken: result.paymentAttemptToken,
+        });
+        setPendingPayment({ ...pendingPayment, message, attemptToken: result.paymentAttemptToken });
+        toast.error(message);
+        return;
+      }
       setPendingPayment(null);
       const submitted = {
         ...pendingPayment, proof,
