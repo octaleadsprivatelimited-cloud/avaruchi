@@ -45,6 +45,10 @@ Configure the production MySQL, session/encryption secrets and provider settings
 
 For a persistent Hostinger backend behind Vercel, set `COMMERCE_BACKEND_URL` and a unique `AVARUCHI_PROXY_SECRET` on Vercel. The same proxy secret goes on the backend. The adapter then streams all dynamic requests to the persistent service, retaining the storefront's same-origin session cookies, cart tokens, binary uploads and raw signed webhooks. Keep database, session and provider secrets on the backend only. Run `node scripts/smoke-commerce-proxy.mjs` to verify the bridge.
 
+## CI/CD
+
+GitHub Actions runs `.github/workflows/ci.yml` for pushes and pull requests to `main`. It starts an isolated MySQL 8.4 service, applies migrations, runs database persistence tests, checks lint/types, builds the production release, and exercises the rendering and proxy adapters. The workflow uses disposable test credentials and never connects to production storage. Hostinger and Vercel use their native GitHub connections for continuous deployment from `main`; hosting credentials stay in their respective platform settings.
+
 The backend catalog is the source of products and prices. The reference site's demo products, coupons and checkout state are not imported into the new database.
 
 ## Production setup

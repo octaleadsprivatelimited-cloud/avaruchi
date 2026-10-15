@@ -1,0 +1,79 @@
+name: Avaruchi CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: avaruchi-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify storefront and MySQL commerce
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: avaruchi-ci-only-root
+          MYSQL_DATABASE: avaruchi_test
+          MYSQL_USER: avaruchi
+          MYSQL_PASSWORD: avaruchi-ci-only-password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+    env:
+      NODE_ENV: test
+      USE_DATABASE: 'true'
+      RUN_DB_TESTS: '1'
+      SEED_CATALOG: 'true'
+      DATABASE_URL: mysql://avaruchi:avaruchi-ci-only-password@127.0.0.1:3306/avaruchi_test?connection_limit=5
+      JWT_SECRET: isolated-ci-access-token-secret-never-used-in-production
+      JWT_REFRESH_SECRET: isolated-ci-refresh-token-secret-never-used-in-production
+      INTEGRATION_ENCRYPTION_KEY: isolated-ci-encryption-secret-never-used-in-production
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - uses: pnpm/action-setup@f520eceda224fe1a4aed5a2a27a194379a409996 # v6
+        with:
+          version: 11.19.0
+      - name: Install locked dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm --dir commerce-api install --frozen-lockfile
+      - name: Lint and type check
+        run: |
+          pnpm lint
+          pnpm exec tsc --noEmit
+      - name: Migrate and seed isolated test database
+        run: |
+          pnpm --dir commerce-api db:deploy
+          pnpm --dir commerce-api seed
+      - name: Test commerce with MySQL persistence
+        run: pnpm --dir commerce-api exec vitest run --maxWorkers=2
+      - name: Build production release
+        run: pnpm build:hostinger
+      - name: Verify rendered pages, secrets, startup and deployment adapters
+        run: |
+          node scripts/check-public-secrets.mjs
+          node scripts/smoke-built-storefront.mjs
+          node scripts/smoke-hostinger-startup.mjs
+          node --no-experimental-require-module scripts/smoke-vercel.mjs
+          node scripts/smoke-commerce-proxy.mjs
