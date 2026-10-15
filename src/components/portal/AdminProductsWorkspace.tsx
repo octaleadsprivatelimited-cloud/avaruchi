@@ -136,9 +136,18 @@ function inferType(product?: ProductDetail): ProductType {
   if (!product || !product.options.length) return "standard";
   const names = product.options.map((option) => option.name.toLowerCase());
   const values = product.options.flatMap((option) => option.values).map((value) => value.toLowerCase());
+  if (names.some(name => /jar|weight/.test(name)) || values.some(value => /^\d+(?:\.\d+)?\s*(?:kg|g)$/.test(value))) return "jar";
   if (names.some((name) => name.includes("pack") || name.includes("quantity"))) return "pack";
   if (names.some((name) => name.includes("volume")) || values.some((value) => /\b(?:ml|l)\b/.test(value))) return "oil";
   return "custom";
+}
+
+function jarWeightGrams(attributes: Record<string, string>, fallback: number) {
+  for (const value of Object.values(attributes)) {
+    const match = value.trim().match(/^(\d+(?:\.\d+)?)\s*(kg|g)$/i);
+    if (match) { const grams = Math.round(Number(match[1]) * (match[2]!.toLowerCase() === "kg" ? 1000 : 1)); if (grams > 0 && grams <= 100000) return grams; }
+  }
+  return fallback;
 }
 
 function makeSku(type: ProductType, index: number) {
@@ -146,7 +155,7 @@ function makeSku(type: ProductType, index: number) {
 }
 
 function freshDraft(): ProductDraft {
-  const attributes: Record<string, string> = {};
+  const options = productTypeTemplates.jar.options.map(option => ({ ...option, values: [...option.values] }));
   return {
     name: "",
     slug: "",
@@ -159,20 +168,20 @@ function freshDraft(): ProductDraft {
     specifications: {},
     seoTitle: "",
     seoDescription: "",
-    options: [],
+    options,
     media: [],
-    variants: [{
+    variants: options[0].values.map((size, index) => ({
       localKey: crypto.randomUUID(),
-      sku: makeSku("standard", 0),
-      title: "Default",
+      sku: makeSku("jar", index),
+      title: size,
       price: 0,
       mrp: 0,
       active: true,
-      attributes,
-      weightGrams: 500,
+      attributes: { "Jar size": size },
+      weightGrams: jarWeightGrams({ "Jar size": size }, 500),
       inventory: { ...defaultInventory },
       originalOnHand: 0,
-    }],
+    })),
   };
 }
 
@@ -308,7 +317,7 @@ function PaginationBar({ pagination, loading, onPage, noun }: { pagination: Pagi
 function ProductEditor({ productId, categories, onClose }: { productId: string | "new"; categories: string[]; onClose: () => void }) {
   const isNew = productId === "new";
   const [draft, setDraft] = useState<ProductDraft>(() => freshDraft());
-  const [type, setType] = useState<ProductType>("standard");
+  const [type, setType] = useState<ProductType>("jar");
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -355,7 +364,8 @@ function ProductEditor({ productId, categories, onClose }: { productId: string |
         if (existing) return { ...existing, active: true, attributes, title: Object.values(attributes).join(" / ") || "Default" };
         return {
           localKey: crypto.randomUUID(), sku: makeSku(selectedType, index), title: Object.values(attributes).join(" / ") || "Default",
-          price: base?.price || 0, mrp: base?.mrp || 0, active: true, attributes, weightGrams: base?.weightGrams || (selectedType === "oil" ? 1000 : 500),
+          price: base?.price || 0, mrp: base?.mrp || 0, active: true, attributes,
+          weightGrams: selectedType === "jar" ? jarWeightGrams(attributes, base?.weightGrams || 500) : base?.weightGrams || (selectedType === "oil" ? 1000 : 500),
           inventory: { ...defaultInventory }, originalOnHand: 0,
         };
       });
@@ -386,6 +396,7 @@ function ProductEditor({ productId, categories, onClose }: { productId: string |
     if (active.some((variant) => variant.sku.trim().length < 3)) return "Every active variant needs a SKU of at least 3 characters.";
     if (active.some((variant) => variant.price <= 0 || variant.mrp < variant.price)) return "Variant prices must be positive and MRP cannot be below selling price.";
     if (active.some((variant) => !Number.isInteger(variant.inventory.onHand) || variant.inventory.onHand < variant.inventory.reserved)) return "On-hand stock must be a whole number and cannot be below reserved stock.";
+    if (active.some((variant) => !Number.isInteger(variant.weightGrams) || variant.weightGrams < 1 || variant.weightGrams > 100000)) return "Shipping weight must be a whole number of grams between 1 and 100,000.";
     return "";
   }, [draft]);
 
@@ -501,15 +512,15 @@ function ProductEditor({ productId, categories, onClose }: { productId: string |
       <div className="product-admin-layout">
         <div className="product-admin-main">
           <section className="panel product-admin-card"><header><div><h3>Product information</h3><p>The customer-facing title, description and item classification.</p></div></header>
-            <label>Title<input value={draft.name} onChange={(event) => { const name = event.target.value; setDraft((current) => ({ ...current, name, slug: slugTouched ? current.slug : slugify(name) })); }} placeholder="e.g. Cold Pressed Groundnut Oil" /></label>
+            <label>Title<input value={draft.name} onChange={(event) => { const name = event.target.value; setDraft((current) => ({ ...current, name, slug: slugTouched ? current.slug : slugify(name) })); }} placeholder="e.g. Classic Mango Pickle" /></label>
             <label>Description<textarea value={draft.description} onChange={(event) => updateDraft("description", event.target.value)} placeholder="Oil ingredients, cooking uses and storage details" /></label>
-            <div className="product-form-grid"><label>Item type / category<input list="admin-product-categories" value={draft.category} onChange={(event) => updateDraft("category", event.target.value)} placeholder="e.g. Cooking Oils or Sesame Oils" /><datalist id="admin-product-categories">{categories.map((item) => <option value={item} key={item} />)}</datalist></label><label>Brand / vendor<input value={draft.brand || ""} onChange={(event) => updateDraft("brand", event.target.value)} placeholder="Store brand" /></label></div>
+            <div className="product-form-grid"><label>Item type / category<input list="admin-product-categories" value={draft.category} onChange={(event) => updateDraft("category", event.target.value)} placeholder="e.g. Andhra favourites" /><datalist id="admin-product-categories">{categories.map((item) => <option value={item} key={item} />)}</datalist></label><label>Brand / vendor<input value={draft.brand || ""} onChange={(event) => updateDraft("brand", event.target.value)} placeholder="Store brand" /></label></div>
           </section>
           <ProductMediaEditor draft={draft} files={files} linkedImages={linkedImages} onLinkedImages={setLinkedImages} saving={saving} uploadMessage={uploadMessage} fileInput={fileInput} onFiles={setFiles} onDraft={setDraft} onReorder={reorderMedia} onUpdate={updateMedia} onRemove={removeMedia} />
           <section className="panel product-admin-card"><header><div><h3>Selling model</h3><p>Start with a template, then customize the option names and values.</p></div></header><div className="product-type-grid">{(Object.keys(productTypeTemplates) as ProductType[]).map((item) => <button type="button" key={item} className={type === item ? "active" : ""} onClick={() => chooseType(item)}><b>{item === "oil" ? "1 L" : item === "pack" ? "× 6" : item === "custom" ? "+" : "1"}</b><span>{productTypeTemplates[item].label}</span><small>{productTypeTemplates[item].description}</small></button>)}</div></section>
           <section className="panel product-admin-card"><header><div><h3>Options</h3><p>Every combination becomes a controlled sellable variant.</p></div><button type="button" className="secondary" onClick={addOption} disabled={draft.options.length >= 3}><Plus /> Add option</button></header>{draft.options.length ? <div className="product-options">{draft.options.map((option, index) => <div key={`${option.name}-${index}`}><label>Option name<input value={option.name} onChange={(event) => changeOption(index, { name: event.target.value })} /></label><label>Values<input value={option.values.join(", ")} onChange={(event) => changeOption(index, { values: event.target.value.split(",") })} aria-label={`${option.name} values`} /></label><button type="button" aria-label={`Remove ${option.name}`} onClick={() => applyOptions(draft.options.filter((_, itemIndex) => itemIndex !== index), type)}><X /></button></div>)}</div> : <p className="product-empty-inline">One standard variant; no customer selection required.</p>}</section>
           <VariantTable variants={draft.variants} onUpdate={updateVariant} />
-          <section className="panel product-admin-card"><header><div><h3>Specifications & search</h3><p>Structured details and optional search preview content.</p></div></header><label>Specifications, one “Label: Value” per line<textarea value={specifications} onChange={(event) => setSpecifications(event.target.value)} placeholder="Oil type: Groundnut&#10;Net volume: 1 L" /></label><div className="product-form-grid"><label>SEO title<input maxLength={70} value={draft.seoTitle || ""} onChange={(event) => updateDraft("seoTitle", event.target.value)} placeholder={draft.name || "Product title"} /></label><label>URL handle<input value={draft.slug} onChange={(event) => { setSlugTouched(true); updateDraft("slug", slugify(event.target.value)); }} placeholder="product-url-handle" /><small>Public URL: /product/{draft.slug || "your-product-name"}</small><small>Generated from the title for new products. Edit this handle to customize the URL.</small></label></div><label>SEO description<textarea maxLength={170} value={draft.seoDescription || ""} onChange={(event) => updateDraft("seoDescription", event.target.value)} /></label></section>
+          <section className="panel product-admin-card"><header><div><h3>Specifications & search</h3><p>Structured details and optional search preview content.</p></div></header><label>Specifications, one “Label: Value” per line<textarea value={specifications} onChange={(event) => setSpecifications(event.target.value)} placeholder="Pickle: Mango&#10;Net weight: 500 g" /></label><div className="product-form-grid"><label>SEO title<input maxLength={70} value={draft.seoTitle || ""} onChange={(event) => updateDraft("seoTitle", event.target.value)} placeholder={draft.name || "Product title"} /></label><label>URL handle<input value={draft.slug} onChange={(event) => { setSlugTouched(true); updateDraft("slug", slugify(event.target.value)); }} placeholder="product-url-handle" /><small>Public URL: /product/{draft.slug || "your-product-name"}</small><small>Generated from the title for new products. Edit this handle to customize the URL.</small></label></div><label>SEO description<textarea maxLength={170} value={draft.seoDescription || ""} onChange={(event) => updateDraft("seoDescription", event.target.value)} /></label></section>
         </div>
         <aside><section className="panel product-admin-card product-publish"><header><div><h3>Publishing</h3><p>Storefront visibility and tax treatment.</p></div></header><label>Status<select value={draft.status} onChange={(event) => updateDraft("status", event.target.value as ProductStatus)}><option value="DRAFT">Draft</option><option value="ACTIVE">Active</option><option value="ARCHIVED">Archived</option></select></label><label>GST rate (%)<input type="number" min="0" max="100" step="0.01" value={draft.taxRate} onChange={(event) => updateDraft("taxRate", Number(event.target.value))} /></label><label>HSN code<input inputMode="numeric" value={draft.hsnCode || ""} onChange={(event) => updateDraft("hsnCode", event.target.value.replace(/\D/g, "").slice(0, 8))} placeholder="4–8 digits" /></label><dl><div><dt>Selling model</dt><dd>{productTypeTemplates[type].label}</dd></div><div><dt>Options</dt><dd>{draft.options.length}</dd></div><div><dt>Active variants</dt><dd>{activeVariants.length}</dd></div><div><dt>Images</dt><dd>{draft.media.length + files.length + linkedImages.length}</dd></div></dl></section></aside>
       </div>

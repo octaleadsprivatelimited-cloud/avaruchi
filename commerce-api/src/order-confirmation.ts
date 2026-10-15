@@ -6,6 +6,10 @@ export function orderConfirmationId(orderId: string) {
   const hash = crypto.createHash("sha256").update(`order-confirmation:${orderId}`).digest("hex");
   return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-${hash.slice(12, 16)}-${hash.slice(16, 20)}-${hash.slice(20, 32)}`;
 }
+export function orderAlertId(orderId: string) {
+  const hash = crypto.createHash("sha256").update(`merchant-order-alert:${orderId}`).digest("hex");
+  return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-${hash.slice(12, 16)}-${hash.slice(16, 20)}-${hash.slice(20, 32)}`;
+}
 /** Transactional outbox: one confirmation per accepted order, including payment retries. */
 export async function queueOrderConfirmation(tx: Prisma.TransactionClient, orderId: string) {
   const order = await tx.order.findUnique({ where: { id: orderId }, include: { items: true } });
@@ -29,4 +33,12 @@ export async function queueOrderConfirmation(tx: Prisma.TransactionClient, order
       },
     },
   });
+  const merchantEmail = (process.env.STORE_ORDER_ALERT_EMAIL || process.env.STORE_ADMIN_EMAIL || "").trim().toLowerCase();
+  if (/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(merchantEmail)) {
+    const confirmation = await tx.notification.findUnique({ where: { id: orderConfirmationId(orderId) } });
+    if (confirmation) await tx.notification.upsert({
+      where: { id: orderAlertId(orderId) }, update: {},
+      create: { id: orderAlertId(orderId), channel: "EMAIL", template: "order.received", destination: merchantEmail, status: "QUEUED", payload: confirmation.payload as Prisma.InputJsonValue },
+    });
+  }
 }

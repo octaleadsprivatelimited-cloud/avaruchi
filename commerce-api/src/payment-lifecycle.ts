@@ -2,6 +2,10 @@ import {z} from "zod";
 const attemptToken=z.string().min(80).max(2000);
 export const paymentClientEventSchema=z.object({orderNumber:z.string().trim().min(3).max(40),providerOrderId:z.string().trim().min(3).max(200),attemptToken,type:z.enum(["CANCELLED","FAILED"]),gatewayPaymentId:z.string().trim().max(200).optional(),errorCode:z.string().trim().max(100).optional(),errorDescription:z.string().trim().max(300).optional()}).strict();
 export const paymentRetrySchema=z.object({orderNumber:z.string().trim().min(3).max(40),provider:z.string().trim().min(2).max(40),attemptToken}).strict();
+export const paymentVerificationSchema=paymentRetrySchema.extend({
+  paymentId:z.string().regex(/^pay_[A-Za-z0-9]+$/).max(200).optional(),
+  signature:z.string().regex(/^[a-f0-9]{64}$/i).optional(),
+}).refine(value=>Boolean(value.paymentId)===Boolean(value.signature),{message:"Payment ID and signature must be supplied together"});
 export const paymentReconcileSchema=z.object({paymentId:z.string().uuid()});
 export type GatewayStatus={status:"CREATED"|"PENDING"|"AUTHORIZED"|"CAPTURED"|"FAILED"|"CANCELLED"|"REFUNDED"|"PARTIALLY_REFUNDED";gatewayPaymentId?:string;amount?:number;currency?:string;errorCode?:string;errorDescription?:string};
 export type GatewayFailure={category:string;retryable:boolean;recommendedAction:"RETRY"|"CHANGE_METHOD"|"CONTACT_BANK"|"CONTACT_STORE"|"WAIT";customerMessage:string;retryAfterSeconds?:number};

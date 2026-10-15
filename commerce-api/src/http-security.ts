@@ -20,19 +20,20 @@ export function documentSecurityHeaders(nonce: string, production: boolean): Rec
   const authOrigin = /^[a-z0-9.-]+\.[a-z]+$/i.test(domain || "") ? `https://${domain}` : "";
   const scripts = ["'self'", `'nonce-${nonce}'`, "https://apis.google.com", "https://www.gstatic.com",
     "https://www.googletagmanager.com", "https://www.google-analytics.com", "https://www.clarity.ms",
-    "https://scripts.clarity.ms", "https://connect.facebook.net", "https://sdk.cashfree.com"];
+    "https://scripts.clarity.ms", "https://connect.facebook.net", "https://sdk.cashfree.com", "https://checkout.razorpay.com"];
   const connect = ["'self'", authOrigin, "https://identitytoolkit.googleapis.com", "https://securetoken.googleapis.com",
     "https://firebaseinstallations.googleapis.com", "https://www.googleapis.com", "https://accounts.google.com",
     "https://www.google-analytics.com", "https://*.google-analytics.com", "https://www.googletagmanager.com",
     "https://*.clarity.ms", "https://www.facebook.com", "https://graph.facebook.com", "https://api.cashfree.com",
-    "https://sandbox.cashfree.com", "https://sdk.cashfree.com", "https://payments.cashfree.com", "https://payments-test.cashfree.com"];
+    "https://sandbox.cashfree.com", "https://sdk.cashfree.com", "https://payments.cashfree.com", "https://payments-test.cashfree.com",
+    "https://api.razorpay.com", "https://checkout.razorpay.com", "https://lumberjack.razorpay.com"];
   if (!production) { scripts.push("'unsafe-inline'", "'unsafe-eval'"); connect.push("http:", "ws:", "wss:"); }
   const policy = [
     "default-src 'self'", "base-uri 'self'", "object-src 'none'", "frame-ancestors 'none'", "form-action 'self'",
     `script-src ${scripts.join(" ")}`, "script-src-attr 'none'", "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' data: https://fonts.gstatic.com", "img-src 'self' https: data: blob:",
     `connect-src ${connect.filter(Boolean).join(" ")}`,
-    `frame-src 'self' ${authOrigin} https://accounts.google.com https://sdk.cashfree.com https://api.cashfree.com https://sandbox.cashfree.com https://payments.cashfree.com https://payments-test.cashfree.com`,
+    `frame-src 'self' ${authOrigin} https://accounts.google.com https://sdk.cashfree.com https://api.cashfree.com https://sandbox.cashfree.com https://payments.cashfree.com https://payments-test.cashfree.com https://api.razorpay.com https://checkout.razorpay.com`,
     "worker-src 'self' blob:", ...(production ? ["upgrade-insecure-requests"] : []),
   ].join("; ");
   return { ...baseSecurityHeaders(production), "Content-Security-Policy": policy };

@@ -102,7 +102,7 @@ async function sendEmail(notification: {
       where: {
         status: "PROCESSING",
         channel: "EMAIL",
-        template: "order.confirmed",
+        template: { in: ["order.confirmed", "order.received"] },
         lockedAt: { lt: new Date(Date.now() - 15 * 60_000) },
       },
       data: { status: "QUEUED", lockedAt: null },
@@ -111,7 +111,7 @@ async function sendEmail(notification: {
       SELECT \`id\` FROM \`Notification\`
       WHERE \`status\` = 'QUEUED'
         AND \`channel\` = 'EMAIL'
-        AND \`template\` = 'order.confirmed'
+        AND \`template\` IN ('order.confirmed', 'order.received')
         AND \`nextAttemptAt\` <= NOW()
       ORDER BY \`createdAt\` ASC
       LIMIT 50

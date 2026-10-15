@@ -283,4 +283,4 @@ export const accountDeletionSchema = z.object({
 }).strict();
 export { storefrontConfigSchema } from "./storefront-config.js";
 export { promotionConfigSchema, recommendationRequestSchema } from "./promotions.js";
-export { paymentClientEventSchema, paymentRetrySchema, paymentReconcileSchema } from "./payment-lifecycle.js";
+export { paymentClientEventSchema, paymentRetrySchema, paymentVerificationSchema, paymentReconcileSchema } from "./payment-lifecycle.js";

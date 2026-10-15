@@ -49,8 +49,8 @@ export const defaultStorefrontConfig: StorefrontConfig = {
   currency: "INR", locale: "en-IN", supportEmail: "",
   supportPhone: "", freeShippingThreshold: 999, manualDeliveryEnabled: false, deliveryCharge: 59, deliveryMinDays: 3, deliveryMaxDays: 6, announcement: "",
   codEnabled: true, onlinePaymentDiscountEnabled: false, onlinePaymentDiscountType: "PERCENTAGE", onlinePaymentDiscountValue: 0,
-  footerTagline: "Cold-pressed oils for everyday Indian kitchens.", seoTitle: "Avaruchi | Cold Pressed Oils",
-  seoDescription: "Explore cold-pressed groundnut, sesame, coconut and cooking oils from Avaruchi.", primaryDomain: "",
+  footerTagline: "Traditional Andhra pickles, made with love.", seoTitle: "Avaruchi | Authentic Andhra Pickles",
+  seoDescription: "Discover traditional Andhra pickles from Avaruchi. Choose your favourite flavours and jar sizes.", primaryDomain: "",
 };
 
 export function normalizeHostname(value: string | undefined) {

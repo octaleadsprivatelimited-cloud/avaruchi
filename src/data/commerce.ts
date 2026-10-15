@@ -1,6 +1,6 @@
 export type VariantOption={name:string;values:string[]};
 export type Variant={id:string;sku:string;title?:string;options:Record<string,string>;price:number;mrp:number;stock:number;image?:string;imageAlt?:string};
-export type ProductType="standard"|"oil"|"pack"|"custom";
+export type ProductType="standard"|"jar"|"oil"|"pack"|"custom";
 export type Product = { id:string; slug?:string; name:string; category:string; taxRate?:number; price:number; mrp:number; badge?:string; tone:string; glyph:string;image?:string;imageAlt?:string;images?:Array<{url:string;alt:string}>;description?:string;brand?:string;specifications?:Record<string,string>;seoTitle?:string;seoDescription?:string;productType?:ProductType;options?:VariantOption[];variants?:Variant[] };
 const oilVariants=(productId:string,optionName:string,entries:Array<[string,number,number,number]>):Variant[]=>entries.map(([title,price,mrp,stock],index)=>({id:`${productId}-v${index+1}`,sku:`AVA-${productId.toUpperCase()}-${String(index+1).padStart(2,"0")}`,title,options:{[optionName]:title},price,mrp,stock}));
 export const products: Product[] = [
@@ -16,6 +16,7 @@ export const products: Product[] = [
 export const categories = [["Cooking Oils","Groundnut, sunflower and everyday cooking essentials","◉","#c9b58b"],["Sesame Oils","A familiar favourite for traditional recipes","✦","#ddbb69"],["Coconut Oils","Coconut oil for everyday kitchen rituals","◒","#dddcc8"],["Oil Combos","A thoughtful mix for your pantry","⬡","#b9c4a0"]] as const;
 export const money=(value:number)=>new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:2}).format(value);
 export const productTypeTemplates:Record<ProductType,{label:string;description:string;options:VariantOption[]}>= {
+ jar:{label:"Pickle jars",description:"Edit jar sizes, prices and shipping weights",options:[{name:"Jar size",values:["250 g","500 g","1 kg"]}]},
  standard:{label:"Standard item",description:"One SKU without selectable variants",options:[]},
  oil:{label:"Oils / Bottles",description:"Oil bottles sold by volume",options:[{name:"Volume",values:["250 ml","500 ml","1 L","2 L","5 L"]}]},
  pack:{label:"Oil combo",description:"Sell oil bottles together",options:[{name:"Pack",values:["2 × 500 ml","2 × 1 L","3 × 1 L","4 × 1 L"]}]},

@@ -51,6 +51,7 @@ import {
   googleLoginSchema,
   paymentClientEventSchema,
   paymentRetrySchema,
+  paymentVerificationSchema,
   paymentReconcileSchema,
   accountDeletionSchema,
   adminCustomerQuerySchema,
@@ -264,6 +265,8 @@ export async function createApp(overrides?: {
       const secrets = vault.decrypt<Record<string, string>>(
         integration.encryptedCredentials,
       );
+      if (config.NODE_ENV === "production" && !/^rzp_live_/.test(secrets.keyId || secrets.key_id || ""))
+        throw new AppError(503, "PAYMENT_NOT_CONFIGURED", "A live Razorpay key is required for production checkout");
       return new RazorpayPaymentProvider({
         keyId: secrets.keyId || secrets.key_id || "",
         keySecret: secrets.keySecret || secrets.key_secret || "",
@@ -2412,7 +2415,7 @@ export async function createApp(overrides?: {
             100,
         };
       });
-    if (paymentProvider instanceof CashfreePaymentProvider && total < 1)
+    if (!isCod && total < 1)
       throw new AppError(422, "ORDER_TOTAL_TOO_LOW", "Online payment requires at least ₹1 payable. Remove the coupon or contact the store.");
     return {
       lines,
@@ -2444,12 +2447,15 @@ export async function createApp(overrides?: {
     const settings = await readStorefront(requestHostname(req));
     let enabled = false;
     try { resolvePaymentProvider("cashfree"); enabled = true; } catch { /* Configuration is optional until enabled by the merchant. */ }
+    let razorpayEnabled = false;
+    try { resolvePaymentProvider("razorpay"); razorpayEnabled = true; } catch { /* Only configured live gateways are offered. */ }
     let shippingEnabled = false;
     try { resolveShippingProvider(undefined, settings); shippingEnabled = true; } catch { /* Checkout stays closed until delivery is configured. */ }
     return ok(res, {
       cashfree: { enabled: enabled && shippingEnabled },
+      razorpay: { enabled: razorpayEnabled && shippingEnabled },
       cod: { enabled: shippingEnabled && settings.codEnabled },
-      checkout: { enabled: shippingEnabled && (settings.codEnabled || enabled) },
+      checkout: { enabled: shippingEnabled && (settings.codEnabled || enabled || razorpayEnabled) },
     });
   });
   app.post(
@@ -2802,14 +2808,20 @@ export async function createApp(overrides?: {
       );
     },
   );
-  app.post("/api/v1/payments/verify", limiter(20, 60000), validate(paymentRetrySchema), async (req, res) => {
+  app.post("/api/v1/payments/verify", limiter(20, 60000), validate(paymentVerificationSchema), async (req, res) => {
     const order = [...store.orders.values()].find(item => item.number === req.body.orderNumber);
     if (!order?.payment?.externalId) throw new AppError(404, "PAYMENT_NOT_FOUND", "Payment was not found");
     verifyPaymentAttemptToken(req.body.attemptToken, { orderId: order.id, orderNumber: order.number });
     const payment = order.payment;
+    const provider = resolvePaymentProvider(payment.provider || "cashfree");
+    if (req.body.paymentId || req.body.signature) {
+      if (!(provider instanceof RazorpayPaymentProvider)) throw new AppError(400, "INVALID_PAYMENT_PROVIDER", "Checkout signatures are only accepted for Razorpay");
+      provider.verifyCheckoutSignature(payment.externalId!, req.body.paymentId, req.body.signature);
+    }
     if (!["PAYMENT_PENDING", "FAILED"].includes(order.status)) return ok(res, { status: payment.status, orderStatus: order.status });
-    const status = await resolvePaymentProvider(payment.provider || "cashfree").lookup(payment.externalId!);
+    const status = await provider.lookup(payment.externalId!);
     if (status.status === "CAPTURED") {
+      if (req.body.paymentId && status.gatewayPaymentId !== req.body.paymentId) throw new AppError(422, "PAYMENT_REFERENCE_MISMATCH", "The verified payment does not match this checkout attempt");
       if (!status.gatewayPaymentId || !Number.isFinite(status.amount) || Math.round(status.amount! * 100) !== Math.round(order.total * 100) || status.currency !== (payment.currency || "INR")) throw new AppError(422, "PAYMENT_VALUE_MISMATCH", "Payment amount or currency does not match");
       if (persistence) {
         const bound = await persistence.resolvePaymentWebhook(payment.provider || "cashfree", payment.externalId!);

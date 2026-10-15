@@ -105,3 +105,39 @@ it("includes the confirmed online discount in customer email charges", () => {
   const email = renderEmailNotification("order.confirmed", { storeName: "Avaruchi", orderNumber: "RU-OFFER", paymentLabel: "Paid online", charges: { subtotal: 500, couponDiscount: 50, onlinePaymentDiscount: 45, discount: 95, tax: 25, shipping: 59, total: 489 } });
   expect(email.text).toContain("Online-payment discount: -INR 45.00"); expect(email.text).toContain("Coupon discount: -INR 50.00"); expect(email.text).toContain("Grand total: INR 489.00");
 });
+
+function configureRazorpay(keyId = "rzp_live_fixture") {
+  store.integrations.clear();
+  store.integrations.set("fixture-razorpay", { id: "fixture-razorpay", kind: "PAYMENT", provider: "razorpay", enabled: true, priority: 1, environment: "LIVE", encryptedCredentials: new SecretVault(config.INTEGRATION_ENCRYPTION_KEY).encrypt({ keyId, keySecret: "razorpay-fixture-secret" }), publicConfig: {}, updatedAt: new Date().toISOString() });
+}
+it("offers Razorpay independently of Cashfree and refuses test credentials on production", async () => {
+  await setPolicy({ codEnabled: false });
+  configureRazorpay("rzp_test_fixture");
+  expect((await call("/api/v1/payments/providers")).body.data).toMatchObject({ razorpay: { enabled: false }, checkout: { enabled: false } });
+  configureRazorpay();
+  const readiness = await call("/api/v1/payments/providers");
+  expect(readiness.body.data).toEqual({ razorpay: { enabled: true }, cashfree: { enabled: false }, cod: { enabled: false }, checkout: { enabled: true } });
+  expect(JSON.stringify(readiness.body)).not.toMatch(/razorpay-fixture-secret|encryptedCredentials/);
+});
+it("keeps Razorpay inventory reserved until a matching captured payment is verified, then commits once", async () => {
+  await setPolicy({ codEnabled: false }); configureRazorpay();
+  let status = "authorized", amount = 58400;
+  gatewayRequest.mockImplementation(async (_url, init) => new Response(JSON.stringify(init?.method === "POST" ? { id: "order_fixture" } : { items: [{ id: "pay_fixture", status, amount, currency: "INR" }] })));
+  const placed = await call("/api/v1/checkout", "POST", { ...checkoutInput(584), paymentProvider: "razorpay" }, false, crypto.randomUUID());
+  expect(placed.status).toBe(201);
+  expect(placed.body.data.payment).toMatchObject({ externalId: "order_fixture", clientToken: "rzp_live_fixture", environment: "LIVE" });
+  const variant = store.getVariant(variantId).variant;
+  expect(variant).toMatchObject({ stock: 50, reserved: 1 });
+  const verify = { orderNumber: placed.body.data.order.number, provider: "razorpay", attemptToken: placed.body.data.paymentAttemptToken, paymentId: "pay_fixture", signature: crypto.createHmac("sha256", "razorpay-fixture-secret").update("order_fixture|pay_fixture").digest("hex") };
+  gatewayRequest.mockClear();
+  expect((await call("/api/v1/payments/verify", "POST", { ...verify, signature: "0".repeat(64) })).status).toBe(401);
+  expect(gatewayRequest).not.toHaveBeenCalled();
+  expect((await call("/api/v1/payments/verify", "POST", verify)).body.data.orderStatus).toBe("PAYMENT_PENDING");
+  expect(variant).toMatchObject({ stock: 50, reserved: 1 });
+  status = "captured"; amount = 100;
+  expect((await call("/api/v1/payments/verify", "POST", verify)).body.error.code).toBe("PAYMENT_VALUE_MISMATCH");
+  amount = 58400;
+  expect((await call("/api/v1/payments/verify", "POST", verify)).body.data).toMatchObject({ status: "CAPTURED", orderStatus: "PAID" });
+  expect((await call("/api/v1/payments/verify", "POST", verify)).body.data.orderStatus).toBe("PAID");
+  expect(variant).toMatchObject({ stock: 49, reserved: 0 });
+});

@@ -4,8 +4,8 @@ import type { AppConfig } from "../src/config.js";
 import { SecretVault } from "../src/security.js";
 import { processNotificationBatch } from "../src/notification-worker.js";
 const config = { NODE_ENV: "test", INTEGRATION_ENCRYPTION_KEY: "x".repeat(32) } as AppConfig;
-function fixture(configured = true, firstAttemptAt?: Date) {
-  const notification = { id: "notification-1", template: "order.confirmed", channel: "EMAIL", destination: "buyer@example.com", payload: { orderNumber: "RU-1" }, attempts: 0, firstAttemptAt };
+function fixture(configured = true, firstAttemptAt?: Date, template = "order.confirmed") {
+  const notification = { id: "notification-1", template, channel: "EMAIL", destination: "buyer@example.com", payload: { orderNumber: "RU-1" }, attempts: 0, firstAttemptAt };
   const update = vi.fn(async () => ({}));
   const query = vi.fn(async (_sql: TemplateStringsArray) => [{ id: notification.id }]);
   const tx = { $queryRaw: query, notification: { updateMany: vi.fn(async () => ({ count: 1 })), findMany: vi.fn(async () => [notification]) } };
@@ -14,6 +14,14 @@ function fixture(configured = true, firstAttemptAt?: Date) {
   return { db: db as unknown as PrismaClient, update, query };
 }
 describe("notification delivery", () => {
+  it("delivers merchant alerts through the same durable outbox", async () => {
+    const f = fixture(true, undefined, "order.received");
+    const request = vi.fn(async () => new Response(JSON.stringify({ id: "merchant-message" }), { status: 200 }));
+    expect(await processNotificationBatch({ ...f, config, request })).toMatchObject({ sent: 1 });
+    expect(f.query.mock.calls[0]?.[0].join(" ")).toContain("'order.received'");
+    const [, init] = request.mock.calls[0] as unknown as [string, RequestInit];
+    expect(JSON.parse(String(init.body))).toMatchObject({ subject: "New order RU-1 — Our store" });
+  });
   it("claims MySQL rows and sends a stable Resend idempotency key before marking SENT", async () => {
     const f = fixture(); const request = vi.fn(async () => new Response(JSON.stringify({ id: "resend-id" }), { status: 200 }));
     expect(await processNotificationBatch({ ...f, config, request })).toMatchObject({ processed: 1, sent: 1 });

@@ -26,7 +26,7 @@ export function renderEmailNotification(
   payload: NotificationPayload,
 ) {
   const storeName = text(payload.storeName, "Our store", 100);
-  if (template === "order.confirmed") {
+  if (template === "order.confirmed" || template === "order.received") {
     const object = (value: unknown) => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
     const contact = object(payload.customer), business = object(payload.business), charges = object(payload.charges);
     const currency = /^[A-Z]{3}$/.test(String(payload.currency)) ? String(payload.currency) : "INR";
@@ -48,11 +48,12 @@ export function renderEmailNotification(
     }
     const lines = Array.isArray(payload.items) ? payload.items.slice(0, 100).map(object) : [];
     const items = lines.map(line => `${text(line.name, "Item", 200)} (${text(line.sku, "", 100)}) — ${Number(line.quantity) || 0} × ${money(line.unitPrice)} = ${money((Number(line.quantity) || 0) * (Number(line.unitPrice) || 0))}`);
-    const greeting = `Thank you, ${customerName}. Your order ${number} is confirmed.`;
+    const merchantAlert = template === "order.received";
+    const greeting = merchantAlert ? `New order ${number} from ${customerName}. Prepare the items for dispatch.` : `Thank you, ${customerName}. Your order ${number} is confirmed.`;
     return {
-      subject: `Order ${number} confirmed — ${storeName}`,
+      subject: merchantAlert ? `New order ${number} — ${storeName}` : `Order ${number} confirmed — ${storeName}`,
       text: [greeting, "", ...rows.map(([label, value]) => `${label}: ${value}`), "", "Items", ...items].join("\n"),
-      html: `<h1>Order confirmed</h1><p>${escapeHtml(greeting)}</p><table role="presentation">${rows.map(([label, value]) => `<tr><th align="left">${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`).join("")}</table><h2>Items</h2><ul>${items.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`,
+      html: `<h1>${merchantAlert ? "New order received" : "Order confirmed"}</h1><p>${escapeHtml(greeting)}</p><table role="presentation">${rows.map(([label, value]) => `<tr><th align="left">${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`).join("")}</table><h2>Items</h2><ul>${items.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`,
     };
   }
   if (template === "account.registered") {

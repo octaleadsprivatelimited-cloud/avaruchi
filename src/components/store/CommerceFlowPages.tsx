@@ -27,6 +27,7 @@ import { customerTransactionPath, loginReturnPath } from "@/lib/transactions";
 import { toast, Toaster } from "sonner";
 import { usePostalLookup } from "@/lib/postal-lookup";
 import { freeDeliveryQualifies } from "@/lib/delivery-policy";
+import { openOnlineCheckout, type PaymentProof } from "@/lib/online-checkout";
 
 type AppliedCoupon = { code: string; discount: number; freeShipping: boolean; appliesTo: "ALL_PRODUCTS" | "SELECTED_PRODUCTS" };
 type DeliveryRate = {
@@ -63,6 +64,8 @@ type CheckoutQuote = {
   freeShipping: boolean;
 };
 type PendingPayment = {
+  provider: string;
+  proof?: PaymentProof;
   analytics: ReturnType<typeof analyticsPurchase>;
   orderNumber: string;
   total: number;
@@ -284,6 +287,7 @@ export function CheckoutPage() {
     [address, setAddress] = useState<CheckoutAddress>({ line1: "", line2: "", city: "", state: "", country: "IN" }),
     [paymentProvider, setPaymentProvider] = useState("cod"),
     [cashfreeEnabled, setCashfreeEnabled] = useState(false),
+    [razorpayEnabled, setRazorpayEnabled] = useState(false),
     [codEnabled, setCodEnabled] = useState(false),
     [checkoutAvailability, setCheckoutAvailability] = useState<"loading" | "ready" | "unavailable" | "error">("loading"),
     [selectedService, setSelectedService] = useState(""),
@@ -303,13 +307,15 @@ export function CheckoutPage() {
   const checkCheckoutAvailability = useCallback(async () => {
     setCheckoutAvailability(current => current === "ready" ? current : "loading");
     try {
-      const result = await commerceApi<{ cashfree: { enabled: boolean }; cod: { enabled: boolean }; checkout: { enabled: boolean } }>("/api/v1/payments/providers");
+      const result = await commerceApi<{ razorpay?: { enabled: boolean }; cashfree: { enabled: boolean }; cod: { enabled: boolean }; checkout: { enabled: boolean } }>("/api/v1/payments/providers");
       setCashfreeEnabled(result.cashfree.enabled);
+      setRazorpayEnabled(result.razorpay?.enabled === true);
       setCodEnabled(result.cod.enabled);
-      setPaymentProvider(current => current === "cod" && result.cod.enabled || current === "cashfree" && result.cashfree.enabled ? current : result.cashfree.enabled ? "cashfree" : result.cod.enabled ? "cod" : "");
+      setPaymentProvider(current => current === "cod" && result.cod.enabled || current === "cashfree" && result.cashfree.enabled || current === "razorpay" && result.razorpay?.enabled ? current : result.razorpay?.enabled ? "razorpay" : result.cashfree.enabled ? "cashfree" : result.cod.enabled ? "cod" : "");
       setCheckoutAvailability(result.checkout?.enabled === true ? "ready" : "unavailable");
     } catch {
       setCashfreeEnabled(false);
+      setRazorpayEnabled(false);
       setCodEnabled(false);
       setCheckoutAvailability("error");
     }
@@ -536,20 +542,6 @@ export function CheckoutPage() {
     cart.clear();
     setPlaced(true);
   };
-  const openCashfree = async (payment: { externalId: string; clientToken?: string; environment?: "TEST" | "LIVE"; attemptToken: string }, _number: string) => {
-    if (!payment.clientToken) throw new Error("Payment session is unavailable. Please retry.");
-    if (!(window as any).Cashfree) await new Promise<void>((resolve, reject) => {
-      const script = document.createElement("script");
-      script.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
-      script.async = true;
-      script.onload = () => resolve();
-      script.onerror = () => { script.remove(); reject(new Error("Cashfree checkout could not be loaded")); };
-      document.head.appendChild(script);
-    });
-    const gateway = (window as any).Cashfree({ mode: payment.environment === "LIVE" ? "production" : "sandbox" });
-    const result = await gateway.checkout({ paymentSessionId: payment.clientToken, redirectTarget: "_modal" });
-    if (result?.error) throw new Error(result.error.message || "Payment was not completed. You can retry safely.");
-  };
   const placeOrder = async () => {
     if (coupon.busy) return;
     if (!validateDeliveryDetails()) {
@@ -585,7 +577,7 @@ export function CheckoutPage() {
         items: orderAnalytics.items,
         currency: orderAnalytics.currency,
         value: orderAnalytics.value,
-        payment_type: paymentProvider === "cod" ? "Cash on delivery" : "Cashfree",
+        payment_type: paymentProvider === "cod" ? "Cash on delivery" : paymentProvider === "razorpay" ? "Razorpay" : "Cashfree",
       }, { dedupeKey: `payment-info:${result.order.number}` });
       setOrderNumber(result.order.number);
       const etaDays = result.shipping?.etaDays ?? latestQuote.selectedShipping.etaDays;
@@ -597,6 +589,7 @@ export function CheckoutPage() {
         const message =
           "The selected payment gateway is temporarily unavailable. Your saved order can be retried safely below.";
         setPendingPayment({
+          provider: paymentProvider,
           analytics: orderAnalytics,
           orderNumber: result.order.number,
           total: result.order.total,
@@ -610,6 +603,7 @@ export function CheckoutPage() {
       if (paymentProvider !== "cod") {
         if (!result.payment) {
           setPendingPayment({
+            provider: paymentProvider,
             analytics: orderAnalytics,
             orderNumber: result.order.number,
             total: result.order.total,
@@ -620,14 +614,16 @@ export function CheckoutPage() {
           });
           return;
         }
+        let proof: PaymentProof;
         try {
-          await openCashfree({ ...result.payment, attemptToken: result.paymentAttemptToken! }, result.order.number);
+          proof = await openOnlineCheckout({ provider: paymentProvider, payment: result.payment, orderNumber: result.order.number, total: result.order.total, storeName: storefront.storeName, contact });
         } catch (error) {
           const message =
             error instanceof Error
               ? error.message
               : "The payment attempt could not be completed.";
           setPendingPayment({
+            provider: paymentProvider,
             analytics: orderAnalytics,
             orderNumber: result.order.number,
             total: result.order.total,
@@ -639,6 +635,7 @@ export function CheckoutPage() {
           return;
         }
         const submitted = {
+          provider: paymentProvider, proof,
           analytics: orderAnalytics,
           orderNumber: result.order.number,
           total: result.order.total,
@@ -667,8 +664,8 @@ export function CheckoutPage() {
   const verifySubmittedPayment = async (submitted: PendingPayment) => {
     setBusy(true);
     try {
-      const result = await commerceApi<{ status: string; orderStatus: string }>("/api/v1/payments/verify", { method: "POST", body: JSON.stringify({ orderNumber: submitted.orderNumber, provider: "cashfree", attemptToken: submitted.attemptToken }) });
-      if (purchaseIsConfirmed("cashfree", result.orderStatus, result.status)) completeOrder(submitted.orderNumber, submitted.total, submitted.etaDays, submitted.analytics);
+      const result = await commerceApi<{ status: string; orderStatus: string }>("/api/v1/payments/verify", { method: "POST", body: JSON.stringify({ orderNumber: submitted.orderNumber, provider: submitted.provider, attemptToken: submitted.attemptToken, ...submitted.proof }) });
+      if (purchaseIsConfirmed(submitted.provider, result.orderStatus, result.status)) completeOrder(submitted.orderNumber, submitted.total, submitted.etaDays, submitted.analytics);
       else toast.info("Payment is still awaiting confirmation. Please check again shortly.");
     } catch (error) { toast.error(error instanceof Error ? error.message : "Payment verification is temporarily unavailable"); }
     finally { setBusy(false); }
@@ -685,14 +682,14 @@ export function CheckoutPage() {
         method: "POST",
         body: JSON.stringify({
           orderNumber: pendingPayment.orderNumber,
-          provider: "cashfree",
+          provider: pendingPayment.provider,
           attemptToken: pendingPayment.attemptToken,
         }),
       });
-      await openCashfree({ ...result.payment, attemptToken: result.paymentAttemptToken }, result.order.number);
+      const proof = await openOnlineCheckout({ provider: pendingPayment.provider, payment: result.payment, orderNumber: result.order.number, total: pendingPayment.total, storeName: storefront.storeName, contact });
       setPendingPayment(null);
       const submitted = {
-        ...pendingPayment,
+        ...pendingPayment, proof,
         attemptToken: result.paymentAttemptToken,
         orderNumber: result.order.number,
         message:
@@ -954,20 +951,14 @@ export function CheckoutPage() {
               <h1>Payment.</h1>
               {quoteError && <p role="alert">{quoteError}</p>}
               <div className="payment-choice">
-                <label>
-                  <input
-                    type="radio"
-                    name="pay"
-                    checked={paymentProvider === "cashfree"}
-                    onChange={() => void choosePayment("cashfree")}
-                    disabled={quoteBusy || !cashfreeEnabled}
-                  />
-                  <span>
-                    <b>Cards, UPI & Netbanking</b>
-                    <small>{cashfreeEnabled ? "Processed securely by Cashfree" : "Online payment is currently unavailable."}</small>
-                    {cashfreeEnabled && storefront.onlinePaymentDiscountEnabled && storefront.onlinePaymentDiscountValue > 0 && <small className="online-offer-note">Save up to {storefront.onlinePaymentDiscountType === "PERCENTAGE" ? `${storefront.onlinePaymentDiscountValue}%` : money(storefront.onlinePaymentDiscountValue)} on items after coupons when paying online. Minimum ₹1 payable.</small>}
-                  </span>
-                </label>
+                {[{ id: "razorpay", name: "Razorpay", enabled: razorpayEnabled }, { id: "cashfree", name: "Cashfree", enabled: cashfreeEnabled }].filter(gateway => gateway.enabled).map(gateway => (
+                  <label key={gateway.id}>
+                    <input type="radio" name="pay" checked={paymentProvider === gateway.id} onChange={() => void choosePayment(gateway.id)} disabled={quoteBusy} />
+                    <span><b>Cards, UPI &amp; Netbanking</b><small>Processed securely by {gateway.name}</small>
+                      {storefront.onlinePaymentDiscountEnabled && storefront.onlinePaymentDiscountValue > 0 && <small className="online-offer-note">Save up to {storefront.onlinePaymentDiscountType === "PERCENTAGE" ? `${storefront.onlinePaymentDiscountValue}%` : money(storefront.onlinePaymentDiscountValue)} on items after coupons when paying online. Minimum ₹1 payable.</small>}
+                    </span>
+                  </label>
+                ))}
                 <label>
                   <input
                     type="radio"
@@ -995,7 +986,7 @@ export function CheckoutPage() {
               <button
                 className="continue"
                 onClick={placeOrder}
-                disabled={busy || quoteBusy || coupon.busy || !quote || !cart.lines.length || (paymentProvider === "cod" ? !codEnabled : !cashfreeEnabled)}
+                disabled={busy || quoteBusy || coupon.busy || !quote || !cart.lines.length || (paymentProvider === "cod" ? !codEnabled : paymentProvider === "razorpay" ? !razorpayEnabled : !cashfreeEnabled)}
               >
                 {busy || quoteBusy
                   ? "Confirming current total…"

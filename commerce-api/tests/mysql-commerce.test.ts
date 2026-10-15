@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { PrismaPersistence } from "../src/persistence.js";
-import { orderConfirmationId } from "../src/order-confirmation.js";
+import { orderAlertId, orderConfirmationId } from "../src/order-confirmation.js";
 import { CommerceStore } from "../src/store.js";
 describe.skipIf(process.env.RUN_DB_TESTS !== "1")(
   "MySQL commerce operations",
@@ -214,7 +214,7 @@ describe.skipIf(process.env.RUN_DB_TESTS !== "1")(
         expect(stale.status).toBe("CAPTURED");
       } finally {
         if (orderId) {
-          await p.db.notification.deleteMany({ where: { id: orderConfirmationId(orderId) } });
+          await p.db.notification.deleteMany({ where: { id: { in: [orderConfirmationId(orderId), orderAlertId(orderId)] } } });
           await p.db.paymentTransaction.deleteMany({
             where: { payment: { orderId } },
           });

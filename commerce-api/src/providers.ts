@@ -20,7 +20,13 @@ export class RazorpayPaymentProvider implements PaymentProvider {
   async createOrder(input: { orderId: string; amount: Money; idempotencyKey: string }) {
     const body = await providerJson(await this.call("https://api.razorpay.com/v1/orders", { method: "POST", headers: { authorization: this.authorization, "content-type": "application/json" }, body: JSON.stringify({ amount: Math.round(input.amount.amount * 100), currency: input.amount.currency, receipt: input.idempotencyKey.slice(0, 40), notes: { internalOrderId: input.orderId } }) }));
     if (typeof body.id !== "string") throw new AppError(502, "INVALID_PROVIDER_RESPONSE", "Razorpay response did not contain an order ID");
-    return { externalId: body.id, clientToken: this.credentials.keyId };
+    return { externalId: body.id, clientToken: this.credentials.keyId, environment: this.credentials.keyId.startsWith("rzp_live_") ? "LIVE" as const : "TEST" as const };
+  }
+  verifyCheckoutSignature(orderId: string, paymentId: string, signature: string) {
+    const expected = crypto.createHmac("sha256", this.credentials.keySecret).update(`${orderId}|${paymentId}`).digest();
+    const supplied = /^[a-f0-9]{64}$/i.test(signature) ? Buffer.from(signature, "hex") : Buffer.alloc(0);
+    if (supplied.length !== expected.length || !crypto.timingSafeEqual(expected, supplied))
+      throw new AppError(401, "INVALID_PAYMENT_SIGNATURE", "Payment could not be verified securely. Refresh payment status before retrying.");
   }
   async verifyWebhook(raw: Buffer, signature: string) {
     const expected = crypto.createHmac("sha256", this.credentials.keySecret).update(raw).digest("hex"), a = Buffer.from(expected), b = Buffer.from(signature || "");

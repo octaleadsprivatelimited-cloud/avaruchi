@@ -6,11 +6,18 @@ import {
 } from "../src/providers.js";
 
 describe("Razorpay payment adapter", () => {
+  it("binds checkout signatures to the server's order and payment IDs", () => {
+    const provider = new RazorpayPaymentProvider({ keyId: "rzp_live_public", keySecret: "checkout-secret" });
+    const signature = crypto.createHmac("sha256", "checkout-secret").update("order_server|pay_123").digest("hex");
+    expect(() => provider.verifyCheckoutSignature("order_server", "pay_123", signature)).not.toThrow();
+    for (const [order, payment, supplied] of [["order_other", "pay_123", signature], ["order_server", "pay_other", signature], ["order_server", "pay_123", "invalid"]])
+      expect(() => provider.verifyCheckoutSignature(order!, payment!, supplied!)).toThrow(expect.objectContaining({ code: "INVALID_PAYMENT_SIGNATURE" }));
+  });
   it("creates provider orders in minor currency units without exposing the secret", async () => {
     const request = vi.fn(async (_input: string | URL | Request, _init?: RequestInit) => new Response(JSON.stringify({ id: "order_live_123" }), { status: 200, headers: { "content-type": "application/json" } }));
     const provider = new RazorpayPaymentProvider({ keyId: "rzp_live_public", keySecret: "private-secret" }, request as typeof fetch);
     const result = await provider.createOrder({ orderId: "internal-order", amount: { amount: 1250.45, currency: "INR" }, idempotencyKey: "checkout-unique-key" });
-    expect(result).toEqual({ externalId: "order_live_123", clientToken: "rzp_live_public" });
+    expect(result).toEqual({ externalId: "order_live_123", clientToken: "rzp_live_public", environment: "LIVE" });
     const [url, init] = request.mock.calls[0]!;
     expect(url).toBe("https://api.razorpay.com/v1/orders");
     expect(JSON.parse(String(init?.body))).toMatchObject({ amount: 125045, notes: { internalOrderId: "internal-order" } });

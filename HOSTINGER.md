@@ -39,9 +39,15 @@ Keep `SEED_CATALOG=false` for an empty new store. For an intentional sample prev
 
 Firebase defaults are empty. Supply Avaruchi's `FIREBASE_PROJECT_ID`, `FIREBASE_API_KEY`, `FIREBASE_AUTH_DOMAIN` and `FIREBASE_APP_ID` together. Enable Google in Firebase and authorize the storefront hostname. Set `STORE_ADMIN_EMAIL` to Avaruchi's verified admin Google account. `/api/v1/auth/providers` reports the public configuration and enabled state. Sign-in remains disabled until configured; no local login bypass exists.
 
-After verified admin sign-in, configure Cashfree and signed webhooks for online payments, delivery settings/shipping providers, and Resend for order emails through Admin → Integrations. Production checkout retains its readiness requirements. Set accurate business identity and support details before accepting orders. Analytics are optional and require provider IDs and customer consent.
+After verified admin sign-in, use Admin → Products → Pickle jars to edit jar labels, prices, MRP, stock and shipping weight in grams. New gram/kg jar labels suggest a weight; each variant's weight remains editable. Products stay draft until the merchant publishes them.
 
-The production notification worker sends persisted order confirmations after an accepted COD order or verified online payment. Missing email configuration defers delivery. Verify real delivery in the email provider; a queued notification is not evidence that a message arrived.
+Configure Razorpay in Admin → Integrations as PAYMENT / razorpay / LIVE with credentials `keyId`, `keySecret` and a separate `webhookSecret`. Production requires an `rzp_live_` public key. Configure the signed webhook at `https://aavaruchi.in/webhooks/razorpay` for payment captured, payment failed and refund events. Checkout creates the order on the server, verifies the callback HMAC and checks the captured amount/currency with Razorpay before marking it paid. Closing the payment window leaves a saved, retryable order.
+
+Use Store settings for manual delivery charges, free-shipping threshold, delivery days and COD availability, or configure a shipping provider. Set accurate business identity and support details before accepting orders. Analytics are optional and require provider IDs and customer consent.
+
+For Resend, verify `aavaruchi.in` in the Resend dashboard using its exact DKIM/SPF records, then save an EMAIL / resend / LIVE integration with credential `apiKey` and public settings `fromEmail` (for example `orders@aavaruchi.in`) and `fromName` (`Avaruchi`). Do not invent DNS values or place the API key in frontend settings. Add the domain's exact DNS records only after Resend supplies them.
+
+The production notification worker sends persisted customer confirmations and merchant new-order alerts after an accepted COD order or verified online payment. Merchant alerts go to `STORE_ORDER_ALERT_EMAIL`, falling back to `STORE_ADMIN_EMAIL`. Each recipient gets a separate durable, deduplicated outbox entry. Missing email configuration defers delivery. Verify real delivery in the email provider; a queued notification is not evidence that a message arrived.
 
 ## Release checks
 
