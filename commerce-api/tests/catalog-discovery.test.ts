@@ -15,6 +15,16 @@ const product = (overrides: Partial<StoredProduct> = {}): StoredProduct => ({
 });
 
 describe("Merchant feed", () => {
+  it("keeps realistic product mockups out of the feed until real packaging is photographed", () => {
+    const illustrated = product();
+    illustrated.media[0]!.url = "/images/catalog-2026/mango-avakaya.webp";
+    illustrated.media[0]!.alt = "AI-generated product illustration of Avaruchi Mango Avakaya";
+    const result = buildMerchantFeed([illustrated], origin);
+    expect(result.report).toMatchObject({ eligibleItems: 0, excludedItems: 2 });
+    expect(result.report.issues.some(issue => issue.message.includes("actual product and packaging"))).toBe(true);
+    expect(result.xml).not.toContain("<item>");
+    expect(buildSitemap([illustrated], origin)).toContain("/product/groundnut-sesame-oils");
+  });
   it("uses option IDs and deep links, tax-inclusive major-unit INR, and sellable inventory", () => {
     const { xml, report } = buildMerchantFeed([product()], origin);
     expect(report).toMatchObject({ activeProducts: 1, eligibleItems: 2, excludedItems: 0, issues: [] });

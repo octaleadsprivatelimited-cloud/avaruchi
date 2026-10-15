@@ -73,6 +73,8 @@ export function buildMerchantFeed(products: Iterable<StoredProduct>, origin: str
       const description = plainText(product.description);
       const link = publicHttpUrl(`/product/${encodeURIComponent(product.slug)}?variant=${encodeURIComponent(variant.id)}`, origin);
       const image = publicHttpUrl(imageFor(product, variant), origin);
+      const selectedImage = product.media.find(media => media.url === imageFor(product, variant));
+      const illustration = /(?:ai.generated|illustration|mockup|proposed packaging)/i.test(selectedImage?.alt || "") || /(?:illustration|mockup)/i.test(field(product.specifications, "Image type") || "");
       const price = merchantPrice(variant.price, product.taxRate);
       const brand = plainText(product.brand || "");
       // Product-level identifiers are safe only for a single-option product.
@@ -85,6 +87,7 @@ export function buildMerchantFeed(products: Iterable<StoredProduct>, origin: str
       if (!description) errors.push("Add an accurate product description.");
       if (!link) errors.push("Configure a public store URL.");
       if (!image || /\.(svg|gif)(\?|$)/i.test(image) || /(?:placeholder|favicon)/i.test(image)) errors.push("Add a public product photo in JPEG, PNG, WebP, BMP or TIFF format; avoid placeholders.");
+      if (illustration) errors.push("Replace the product illustration with a photo of the actual product and packaging before submitting to Google Merchant Center.");
       if (!Number.isFinite(price) || price <= 0 || !Number.isFinite(product.taxRate) || product.taxRate < 0 || product.taxRate > 100) errors.push("Add a valid positive price and GST rate.");
       if (brand.length > 70) errors.push("Brand must be at most 70 characters.");
       if (!brand && !explicitlyNoIdentifiers) errors.push("Add the actual brand, or confirm Identifier exists = no in specifications only if no identifiers were assigned.");

@@ -21,11 +21,12 @@ import {
 import { AccountLink } from "./AccountLink";
 import { useInitialCatalog } from "@/lib/store-data";
 import { useStoreProducts } from "@/lib/store-products";
-import { catalogCategories } from "@/lib/catalog-categories";
+import { catalogCategoryTree } from "@/lib/catalog-categories";
 
 export function StoreHeader() {
   const store = useStorefrontConfig();
-  const categories = catalogCategories(useStoreProducts(useInitialCatalog()));
+  const categories = catalogCategoryTree(useStoreProducts(useInitialCatalog()));
+  const [expandedCategory, setExpandedCategory] = useState("");
   const { cart } = useStoreCommerce();
   const location = useLocation();
   const navigate = useNavigate();
@@ -37,6 +38,7 @@ export function StoreHeader() {
   useEffect(() => {
     setBagOpen(false);
     setSearchOpen(false);
+    setExpandedCategory("");
     menu.current?.removeAttribute("open");
   }, [location.pathname, location.searchStr]);
   useEffect(() => {
@@ -119,17 +121,22 @@ export function StoreHeader() {
               >
                 Products <span aria-hidden="true">⌄</span>
               </summary>
-              <div className="products-dropdown">
-                {categories.map((category) => (
-                  <Link
-                    key={category}
-                    to="/shop"
-                    search={{ category }}
-                    onClick={() => menu.current?.removeAttribute("open")}
-                  >
-                    {category}
-                  </Link>
-                ))}
+              <div className="products-dropdown category-mega-menu">
+                <div className="category-menu-intro"><span>THE AVARUCHI PANTRY</span><Link to="/shop" onClick={() => menu.current?.removeAttribute("open")}>Shop all products <span aria-hidden="true">↗</span></Link></div>
+                <div className="category-menu-columns">
+                  {categories.map((category, index) => (
+                    <section className="category-menu-group" key={category.path}>
+                      <div className="category-menu-heading">
+                        <Link to="/shop" search={{ category: category.path }} onClick={() => menu.current?.removeAttribute("open")}><span>{category.name}</span><small>{category.count}</small></Link>
+                        {category.children.length > 0 && <button type="button" aria-label={`${expandedCategory === category.path ? "Collapse" : "Expand"} ${category.name} categories`} aria-expanded={expandedCategory === category.path} aria-controls={`category-submenu-${index}`} onClick={() => setExpandedCategory(current => current === category.path ? "" : category.path)}><span aria-hidden="true">{expandedCategory === category.path ? "−" : "+"}</span></button>}
+                      </div>
+                      {category.children.length > 0 && <ul id={`category-submenu-${index}`} className={`category-submenu ${expandedCategory === category.path ? "expanded" : ""}`}>
+                        {category.children.map(child => <li key={child.path}><Link to="/shop" search={{ category: child.path }} onClick={() => menu.current?.removeAttribute("open")}>{child.name}<span>{child.count}</span></Link></li>)}
+                      </ul>}
+                      <Link className="category-browse" to="/shop" search={{ category: category.path }} onClick={() => menu.current?.removeAttribute("open")}>Explore {category.name.toLowerCase()} <span aria-hidden="true">→</span></Link>
+                    </section>
+                  ))}
+                </div>
               </div>
             </details>
             <Link
@@ -175,7 +182,7 @@ export function StoreHeader() {
             }}
           >
             <label className="sr-only" htmlFor="header-query">
-              Search pickles
+              Search products
             </label>
             <input
               id="header-query"
@@ -323,13 +330,14 @@ export function StoreFooter() {
             <Link className="merchant-brand-button" to="/our-story">{store.legalName || BRAND.legalName}</Link>
             <span>{store.businessAddress || BRAND.address}</span>
             <span>Established {BRAND.established}</span>
+            {store.fssaiLicense && <span>FSSAI Reg. No. {store.fssaiLicense}</span>}
             <a href={`tel:${phone.replace(/[^+\d]/g, "")}`}>{phone}</a>
           </p>
         </div>
         <div className="footer-links">
           <h3>At the table</h3>
           <Link to="/our-story">Our story</Link>
-          <Link to="/shop">Shop all pickles</Link>
+          <Link to="/shop">Shop all products</Link>
           <Link to="/journal">Pairing notes</Link>
           <Link to="/wishlist">Saved flavours</Link>
         </div>

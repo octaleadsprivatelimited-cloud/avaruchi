@@ -8,7 +8,7 @@ import { priceIncludingTax } from "@/lib/catalog-price";
 import { CampaignSlot } from "@/lib/promotions";
 import { ReferenceIcon, ReferenceProductCard } from "./ReferencePrimitives";
 import { StorePage } from "./StoreHeader";
-import { catalogCategories } from "@/lib/catalog-categories";
+import { ALL_PRODUCTS, catalogCategories, catalogCategoryTree, categoryParts, matchesCategory } from "@/lib/catalog-categories";
 
 export function ShopPage() {
   const products = useStoreProducts(useInitialCatalog());
@@ -16,7 +16,7 @@ export function ShopPage() {
   const navigate = useNavigate();
   const params = new URLSearchParams(location.searchStr);
   const [category, setCategory] = useState(
-    params.get("category") || "All pickles",
+    params.get("category") || ALL_PRODUCTS,
   );
   const [query, setQuery] = useState(
     params.get("q") || params.get("search") || "",
@@ -24,10 +24,11 @@ export function ShopPage() {
   const [sort, setSort] = useState("featured");
   useEffect(() => {
     const params = new URLSearchParams(location.searchStr);
-    setCategory(params.get("category") || "All pickles");
+    setCategory(params.get("category") || ALL_PRODUCTS);
     setQuery(params.get("q") || params.get("search") || "");
   }, [location.searchStr]);
   const categories = catalogCategories(products);
+  const subcategories = catalogCategoryTree(products).find(root => matchesCategory({ category }, root.path))?.children || [];
   const chooseCategory = (value: string) => {
     setCategory(value);
     void navigate({ to: "/shop", search: { category: value, q: query }, resetScroll: false });
@@ -37,8 +38,7 @@ export function ShopPage() {
       products
         .filter(
           (product) =>
-            (["All", "All pickles"].includes(category) ||
-              product.category.toLowerCase() === category.toLowerCase()) &&
+            matchesCategory(product, category) &&
             `${product.name} ${product.category} ${product.description || ""}`
               .toLowerCase()
               .includes(query.toLowerCase()),
@@ -67,13 +67,12 @@ export function ShopPage() {
           <div className="section-heading">
             <div>
               <span className="eyebrow">THE COLLECTION</span>
-              <h1>Pickles</h1>
+              <h1>{category === ALL_PRODUCTS ? "The Avaruchi pantry" : categoryParts(category).at(-1)}</h1>
             </div>
             <div className="section-intro">
               <p>
-                From the familiar tang of mango to
-                <br className="desktop" /> the bold bite of gongura. Find your
-                jar.
+                Pickles, flavourful podis and crisp fryums.
+                <br className="desktop" /> Find a little taste of home.
               </p>
             </div>
           </div>
@@ -81,7 +80,7 @@ export function ShopPage() {
             <div className="search-field">
               <ReferenceIcon name="search" />
               <input
-                aria-label="Search pickles"
+                aria-label="Search products"
                 placeholder="Search a flavour or ingredient"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
@@ -100,6 +99,7 @@ export function ShopPage() {
               </select>
             </label>
           </div>
+          {subcategories.length > 0 && <div className="subcategory-row" aria-label="Subcategories">{subcategories.map(item => <button type="button" key={item.path} aria-pressed={category.toLowerCase() === item.path.toLowerCase()} onClick={() => chooseCategory(item.path)}>{item.name} <small>{item.count}</small></button>)}</div>}
           <div className="category-row">
             {categories.map((item) => (
               <button
@@ -128,23 +128,23 @@ export function ShopPage() {
             </div>
           ) : (
             <div className="empty-state">
-              <h3>No jars found.</h3>
+              <h3>No products found.</h3>
               <p>
                 {products.length
                   ? "Try another flavour, ingredient, or category."
                   : "Our collection is coming together. Check back for fresh flavours."}
               </p>
-              {(query || category !== "All pickles") && (
+              {(query || category !== ALL_PRODUCTS) && (
                 <button
                   type="button"
                   className="button"
                   onClick={() => {
                     setQuery("");
-                    setCategory("All pickles");
+                    setCategory(ALL_PRODUCTS);
                     void navigate({ to: "/shop", resetScroll: false });
                   }}
                 >
-                  Browse pickles
+                  Browse all products
                 </button>
               )}
             </div>

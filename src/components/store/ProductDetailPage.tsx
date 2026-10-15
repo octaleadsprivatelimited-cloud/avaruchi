@@ -168,6 +168,7 @@ export function ProductDetailPage() {
             <div className="detail-art main">
               {activeImage ? <img src={activeImage.url} alt={activeImage.alt} fetchPriority="high" /> : product.glyph}
             </div>
+            {/ai.generated|illustration|mockup/i.test(primaryAlt || "") && <p className="product-image-disclosure">AI-generated product illustration. Actual packaging and appearance may vary.</p>}
             {galleryImages.length > 1 && <div className="product-thumbnails" aria-label="Choose a product photo">
               {galleryImages.map((image, index) => <button
                 type="button"

@@ -7,6 +7,7 @@ import { useCommerceImpression } from "@/lib/commerce-analytics-hooks";
 import { analyticsItemsForProducts } from "@/lib/commerce-analytics";
 import { CampaignSlot } from "@/lib/promotions";
 import { BRAND } from "@/lib/brand";
+import { catalogCategoryTree, matchesCategory } from "@/lib/catalog-categories";
 import { StorePage } from "./StoreHeader";
 import {
   CollectionRow,
@@ -45,25 +46,8 @@ export function EcommerceHome() {
             )}
           </div>
         </Reveal>
-        <CollectionRow
-          title="pickles"
-          category="All pickles"
-          products={products}
-        />
-        {products.some(product => product.category.toLowerCase() === "andhra favourites") && <CollectionRow
-          title="Andhra favourites"
-          category="Andhra favourites"
-          products={products.filter(
-            (product) => product.category.toLowerCase() === "andhra favourites",
-          )}
-        />}
-        {products.some(product => product.category.toLowerCase() === "bold flavours") && <CollectionRow
-          title="bold flavours"
-          category="Bold flavours"
-          products={products.filter(
-            (product) => product.category.toLowerCase() === "bold flavours",
-          )}
-        />}
+        {catalogCategoryTree(products).map(category => <CollectionRow key={category.path} title={category.name} category={category.path} products={products.filter(product => matchesCategory(product, category.path))} />)}
+        {!products.length && <CollectionRow title="The collection" category="All products" products={[]} />}
         <Reveal as="section" className="reference-story wrap">
           <div>
             <span className="eyebrow">ESTABLISHED {BRAND.established}</span>

@@ -9,7 +9,7 @@ export function pageMetadata(path: string, store?: Partial<StorefrontConfig>) {
   const name = store?.storeName || "Avaruchi";
   const titles: Record<string, string> = {
     "/": "The taste of home, in every jar.",
-    "/shop": "Pickles",
+    "/shop": "Pickles, powders & fryums",
     "/wishlist": "Your saved flavours",
     "/our-story": "Our story",
     "/journal": "Pairing notes",
@@ -38,7 +38,7 @@ export function pageMetadata(path: string, store?: Partial<StorefrontConfig>) {
           : "Page not found");
   return {
     title: `${title} | ${name}`,
-    description: `Familiar tang, bold spice and a taste of home. Explore ${name} pickles, find your favourite jar and make a little room at the table.`,
+    description: `Familiar tang, bold spice and a taste of home. Explore ${name} pickles, powders and fryums for your everyday table.`,
     private: privatePage,
   };
 }

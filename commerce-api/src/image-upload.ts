@@ -106,8 +106,12 @@ export async function convertProductImage(
         "The uploaded file is not a supported image",
       );
 
-    // Sharp strips EXIF/IPTC metadata by default. Capping the long edge and using
-    // a picture-tuned WebP encoding keeps catalog images small without upscaling.
+    // Preserve the explicit AI source classification without forwarding private
+    // EXIF locations, device identifiers or unrelated XMP fields.
+    const sourceType = metadata.xmp?.toString("utf8").match(/https?:\/\/cv\.iptc\.org\/newscodes\/digitalsourcetype\/(?:trainedAlgorithmicMedia|compositeSynthetic|algorithmicMedia)\b/)?.[0];
+    if (sourceType) image.withXmp(`<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description rdf:about="" xmlns:Iptc4xmpExt="http://iptc.org/std/Iptc4xmpExt/2008-02-29/" Iptc4xmpExt:DigitalSourceType="${sourceType}"/></rdf:RDF></x:xmpmeta>`);
+
+    // Cap the long edge and use picture-tuned WebP without upscaling.
     const main = await image
       .clone()
       .resize({

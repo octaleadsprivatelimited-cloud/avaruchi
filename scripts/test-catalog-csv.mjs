@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import { catalogCsvHeaders, parseCatalogCsv } from '../src/lib/catalog-csv.ts';
+import { catalogImportUpdate } from '../src/lib/catalog-import-update.ts';
+import { catalogCategories, catalogCategoryTree, matchesCategory } from '../src/lib/catalog-categories.ts';
 
 const row = { name: 'Mango Pickle', slug: 'mango-pickle', description: 'Tangy mango, with a bold finish.', category: 'All pickles', brand: 'Avaruchi', status: 'ACTIVE', taxRate: '18', jarSize: '250 g', sku: 'AVA-MANGO-250', price: '199', mrp: '199', stock: '0', weightGrams: '250', imageUrl: 'https://aavaruchi.in/images/pickles/mango.svg', imageAlt: 'Jar illustration' };
 const csv = rows => '\uFEFF' + catalogCsvHeaders.join(',') + '\r\n' + rows.map(item => catalogCsvHeaders.map(key => '"' + String(item[key]).replaceAll('"', '""') + '"').join(',')).join('\r\n');
@@ -18,3 +20,23 @@ assert.throws(() => parseCatalogCsv('name,name\nMango,Mango'), /template columns
 assert.throws(() => parseCatalogCsv(catalogCsvHeaders.join(',') + '\n"unfinished'), /unfinished/);
 assert.throws(() => parseCatalogCsv('x'.repeat(1000001)), /smaller than/);
 console.log('Catalog CSV checks passed: quoted/multiline fields, grouped jar variants, zero stock, numeric validation, duplicate protection and unsafe image URLs.');
+const current = { specifications: { Storage: 'Keep dry' }, hsnCode: '2001', variants: [{ id: 'kept-500', sku: 'OLD-500', title: '500 g', inventory: { onHand: 12, reserved: 3 } }, { id: 'old-250', sku: 'OLD-250', title: '250 g', inventory: { onHand: 0, reserved: 0 } }] };
+const update = catalogImportUpdate(grouped[0], current);
+assert.deepEqual(update.variants[1], { ...grouped[0].variants[1], id: 'kept-500', sku: 'OLD-500', stock: 12, reserved: 3 });
+assert.equal(update.specifications.Storage, 'Keep dry');
+assert.equal(update.hsnCode, '2001');
+assert.equal(update.variants[0].id, 'old-250');
+assert.equal(catalogImportUpdate({ ...grouped[0], variants: [{ ...grouped[0].variants[0], title: '1 kg', sku: 'NEW-1000' }] }, current).variants[0].id, undefined);
+const imageCsv = csv([{ ...row }]).replace('imageAlt\r\n', 'imageAlt,imageType\r\n').replace('"Jar illustration"', '"Jar illustration","ILLUSTRATION"');
+assert.equal(parseCatalogCsv(imageCsv)[0].specifications['Image type'], 'AI-generated product illustration');
+const collection = [{ category: 'Veg pickles > Avakaya' }, { category: 'Veg pickles > Traditional pickles' }, { category: 'Powders > Karam podis' }, { category: 'Powders > Cooking powders' }, { category: 'Fryums' }];
+assert.deepEqual(catalogCategories(collection), ['All products', 'Veg pickles', 'Powders', 'Fryums']);
+assert.equal(catalogCategoryTree(collection)[0].count, 2);
+assert.equal(catalogCategoryTree(collection)[0].children[0].name, 'Avakaya');
+assert.equal(collection.filter(item => matchesCategory(item, 'Veg pickles')).length, 2);
+assert.equal(collection.filter(item => matchesCategory(item, 'All pickles')).length, 2);
+assert.equal(collection.filter(item => matchesCategory(item, 'Powders > Karam podis')).length, 1);
+assert.equal(collection.filter(item => matchesCategory(item, 'All products')).length, 5);
+assert.equal(matchesCategory({ category: 'Veg pickles > Avakaya' }, 'Veg'), false);
+assert.equal(matchesCategory({ category: 'Fryums' }, 'Unknown'), false);
+console.log('Catalog updates retain inventory and variant IDs; nested category filters and image provenance checks passed.');

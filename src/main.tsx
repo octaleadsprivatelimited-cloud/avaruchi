@@ -16,6 +16,7 @@ import "./branding-settings.css";
 import "./home-delivery.css";
 import "./avaruchi-reference.css";
 import "./avaruchi-adaptations.css";
+import "./catalog-navigation.css";
 
 declare global {
   interface Window {

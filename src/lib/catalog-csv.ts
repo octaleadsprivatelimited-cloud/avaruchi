@@ -12,6 +12,7 @@ const csvRow = z.object({
   price: decimal, mrp: decimal, stock: integer(0, 1000000), weightGrams: integer(1, 100000),
   imageUrl: z.union([z.literal(""), z.string().url().max(2000).refine(value => { const url = new URL(value); return url.protocol === "https:" && !url.username && !url.password; }, "Use a public HTTPS image URL")]),
   imageAlt: z.string().trim().max(200),
+  imageType: z.enum(["PHOTO", "ILLUSTRATION", ""]).optional(),
 }).refine(row => row.mrp >= row.price, { path: ["mrp"], message: "MRP cannot be below price" });
 
 export type CatalogImportProduct = {
@@ -52,14 +53,14 @@ export function parseCatalogCsv(source: string): CatalogImportProduct[] {
     if (cells.length !== headers.length) throw new Error(`Row ${index + 2}: the number of columns does not match the header.`);
     const parsed = csvRow.safeParse(Object.fromEntries(headers.map((header, column) => [header, cells[column]])));
     if (!parsed.success) { const issue = parsed.error.issues[0]; throw new Error(`Row ${index + 2}, ${issue.path.join(".")}: ${issue.message}`); }
-    const { jarSize, sku, price, mrp, stock, weightGrams, imageUrl, imageAlt, ...details } = parsed.data;
-    const fingerprint = JSON.stringify({ ...details, imageUrl, imageAlt });
+    const { jarSize, sku, price, mrp, stock, weightGrams, imageUrl, imageAlt, imageType, ...details } = parsed.data;
+    const fingerprint = JSON.stringify({ ...details, imageUrl, imageAlt, imageType });
     if (metadata.has(details.slug) && metadata.get(details.slug) !== fingerprint) throw new Error(`Row ${index + 2}: product details must agree for URL handle ${details.slug}.`);
     if (skus.has(sku.toLowerCase())) throw new Error(`Row ${index + 2}: SKU ${sku} is repeated.`);
     skus.add(sku.toLowerCase()); metadata.set(details.slug, fingerprint);
-    const product = products.get(details.slug) || { ...details, specifications: {}, media: imageUrl ? [{ url: imageUrl, alt: imageAlt || details.name, type: "IMAGE" as const, position: 0 }] : [], variants: [] };
+    const product = products.get(details.slug) || { ...details, specifications: imageType ? { "Image type": imageType === "ILLUSTRATION" ? "AI-generated product illustration" : "Product photograph" } : {}, media: imageUrl ? [{ url: imageUrl, alt: imageAlt || details.name, type: "IMAGE" as const, position: 0 }] : [], variants: [] };
     if (product.variants.some(variant => variant.title.toLowerCase() === jarSize.toLowerCase())) throw new Error(`Row ${index + 2}: jar size ${jarSize} is repeated for ${details.name}.`);
-    product.variants.push({ sku, title: jarSize, price, mrp, stock, reserved: 0, active: true, weightGrams, attributes: { "Jar size": jarSize } });
+    product.variants.push({ sku, title: jarSize, price, mrp, stock, reserved: 0, active: true, weightGrams, attributes: { "Pack size": jarSize } });
     if (product.variants.length > 200) throw new Error("A product can have up to 200 jar variants.");
     products.set(details.slug, product);
   });
