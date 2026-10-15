@@ -4,7 +4,8 @@ import {
   StorefrontProvider,
   useStorefrontConfig,
 } from "./lib/storefront-config";
-import { StoreDataContext, type StoreBootstrap } from "./lib/store-data";
+import { StoreDataContext, useInitialCatalog, type StoreBootstrap } from "./lib/store-data";
+import { useStoreProducts } from "./lib/store-products";
 import { PromotionsProvider } from "./lib/promotions";
 import { AnalyticsConsent } from "./components/store/AnalyticsConsent";
 import { EcommerceHome } from "./components/store/EcommerceHome";
@@ -27,7 +28,7 @@ import {
   StoryPage,
   WishlistPage,
 } from "./components/store/EditorialPages";
-import { pageMetadata } from "./lib/page-metadata";
+import { storefrontMetadata } from "./lib/page-metadata";
 
 export class StoreErrorBoundary extends Component<
   { children: ReactNode },
@@ -73,12 +74,13 @@ export function NotFoundPage() {
 function Metadata() {
   const location = useLocation();
   const store = useStorefrontConfig();
+  const products = useStoreProducts(useInitialCatalog());
   useEffect(() => {
-    const meta = pageMetadata(location.pathname, store);
+    const meta = storefrontMetadata(location.pathname, products, store, import.meta.env.VITE_PUBLIC_SITE_URL || window.location.origin);
     document.title = meta.title;
     for (const [name, content] of [
       ["description", meta.description],
-      ["robots", meta.private ? "noindex, nofollow" : "index, follow"],
+      ["robots", meta.robots],
     ]) {
       let element = document.querySelector<HTMLMetaElement>(
         `meta[name="${name}"]`,
@@ -98,17 +100,26 @@ function Metadata() {
       canonical.rel = "canonical";
       document.head.append(canonical);
     }
-    canonical.href = new URL(
-      location.pathname,
-      import.meta.env.VITE_PUBLIC_SITE_URL || window.location.origin,
-    ).href;
+    canonical.href = meta.canonical;
+    for (const [property, content] of [["og:title", meta.title], ["og:description", meta.description], ["og:url", meta.canonical], ["og:site_name", store.storeName], ["og:image", meta.image]]) {
+      let element = document.querySelector<HTMLMetaElement>(`meta[property="${property}"]`);
+      if (!content) { element?.remove(); continue; }
+      if (!element) { element = document.createElement("meta"); element.setAttribute("property", property!); document.head.append(element); }
+      element.content = content;
+    }
+    document.querySelectorAll("script[data-storefront-schema]").forEach(script => script.remove());
+    for (const content of meta.scripts) {
+      const script = document.createElement("script");
+      script.type = "application/ld+json"; script.setAttribute("data-storefront-schema", ""); script.textContent = content;
+      document.head.append(script);
+    }
     if (location.hash) {
       // A malformed fragment in a shared link must not take down the route.
       let id = location.hash.slice(1);
       try { id = decodeURIComponent(id); } catch { /* Use the literal fragment. */ }
       document.getElementById(id)?.scrollIntoView();
     }
-  }, [location.pathname, location.hash, store]);
+  }, [location.pathname, location.hash, store, products]);
   return null;
 }
 

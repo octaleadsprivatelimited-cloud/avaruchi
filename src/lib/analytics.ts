@@ -84,7 +84,7 @@ export function saveAnalyticsConsent(value: { analytics: boolean; advertising: b
 /** Only known storefront paths can be sent. Unknown/private route strings are never exported. */
 export function analyticsPath(pathname: string): string | null {
   const path = pathname.replace(/\/+$/, "") || "/";
-  if (["/", "/shop", "/cart", "/checkout", "/privacy", "/terms", "/shipping-returns", "/contact"].includes(path)) return path;
+  if (["/", "/shop", "/our-story", "/journal", "/cart", "/checkout", "/privacy", "/terms", "/shipping", "/returns", "/shipping-returns", "/contact"].includes(path)) return path;
   if (/^\/product\/[a-zA-Z0-9][a-zA-Z0-9_-]{0,119}$/.test(path)) return path;
   return null;
 }
@@ -158,7 +158,7 @@ function installNavigationGuard() {
 export function prepareAnalyticsNavigation(href: string) { if (typeof window !== "undefined") beforeLocationChange(href); }
 
 export async function initializeAnalytics() {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined") return {} as AnalyticsConfig;
   installNavigationGuard();
   if (!configPromise) configPromise = commerceApi<AnalyticsConfig>("/api/v1/storefront/analytics").then((value) => {
     // Validate even the public endpoint response before constructing script URLs.
@@ -170,6 +170,7 @@ export async function initializeAnalytics() {
     syncAnalyticsPage();
   }).catch(() => { /* Storefront remains usable if analytics configuration is unavailable. */ });
   await configPromise;
+  return { ...config };
 }
 function startProviders() {
   const consent = readAnalyticsConsent();

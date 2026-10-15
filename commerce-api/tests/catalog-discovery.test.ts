@@ -95,7 +95,7 @@ describe("Search discovery", () => {
     const sitemap = buildSitemap([sample, real], origin)!;
     expect(sitemap).not.toContain("sample-preview");
     expect(sitemap).toContain("real-sold-out");
-    expect((sitemap.match(/<url>/g) || []).length).toBe(7);
+    expect((sitemap.match(/<url>/g) || []).length).toBe(9);
   });
 
   it("does not infer sample status from unrelated specifications or names", () => {
@@ -110,8 +110,10 @@ describe("Search discovery", () => {
   it("includes all live product URLs beyond 100, excludes private pages and drafts", () => {
     const products = Array.from({ length: 105 }, (_, index) => product({ id: `internal-${index}`, slug: `product-${index}` }));
     const xml = buildSitemap([...products, product({ id: "draft", status: "DRAFT" })], origin)!;
-    expect((xml.match(/<url>/g) || []).length).toBe(111);
+    expect((xml.match(/<url>/g) || []).length).toBe(113);
     expect(xml).toContain("product-104");
+    expect(xml).toContain("/our-story</loc>");
+    expect(xml).toContain("/journal</loc>");
     expect(xml).toContain("<lastmod>2026-09-29T00:00:00.000Z</lastmod>");
     expect(xml).toContain("<image:loc>https://avaruchi.example/uploads/groundnut-oil.jpg</image:loc>");
     for (const value of ["/admin", "/account", "/checkout", "?variant=", "/product/draft"]) expect(xml).not.toContain(value);
@@ -122,7 +124,7 @@ describe("Search discovery", () => {
     const index = buildSitemap(products, origin)!;
     expect(index).toContain("<sitemapindex");
     const second = buildSitemap(products, origin, "/sitemap-2.xml")!;
-    expect((second.match(/<url>/g) || []).length).toBe(6);
+    expect((second.match(/<url>/g) || []).length).toBe(8);
     expect(second).not.toContain("lastmod");
     expect(buildSitemap(products, origin, "/sitemap-99.xml")).toBeUndefined();
     expect(buildRobots(origin)).toContain(`Sitemap: ${origin}/sitemap.xml`);

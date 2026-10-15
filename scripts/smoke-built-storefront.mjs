@@ -76,6 +76,11 @@ try {
   assert.equal(unknown.status, 404);
   assert.ok(unknown.body.includes('Explore the shop'));
   assert.ok(unknown.body.includes('Page not found | Avaruchi'));
+  const malformed = await request('/product/%E0%A4%A');
+  assert.equal(malformed.status, 404, 'malformed product encoding must not crash SSR');
+  assert.ok(malformed.body.includes('noindex, nofollow'));
+  assert.ok((await request('/wishlist')).body.includes('name="robots" content="noindex, nofollow"'), 'saved customer favourites must remain private after hydration');
+  assert.ok((await request('/shipping')).body.includes('rel="canonical" href="https://avaruchi.example/shipping-returns"'), 'duplicate policy routes share their canonical');
   const transaction = await request('/transaction/AVA-smoke');
   assert.equal(transaction.status, 200);
   assert.ok(transaction.body.includes('noindex, nofollow'));
@@ -94,6 +99,11 @@ try {
   assert.match(product.body, /detail-price[^>]*>₹293\.48/);
   assert.ok(product.body.includes('"price":"293.48"'));
   assert.ok(product.body.includes('variant=oil-1000'));
+  assert.ok(product.body.includes('name="description" content="A local smoke-test fixture only."'), 'use the product description in SSR metadata');
+  assert.ok(product.body.includes('property="og:image" content="https://avaruchi.example/uploads/groundnut-oil.jpg"'));
+  assert.ok(product.body.includes('Shop pickles') && !product.body.includes('Shop oils'), 'structured breadcrumbs use the current brand catalog');
+  const legacyProduct = await request('/shop/smoke-groundnut-oil');
+  assert.ok(legacyProduct.body.includes('rel="canonical" href="https://avaruchi.example/product/smoke-groundnut-oil"'), 'legacy product aliases point to the published product canonical');
   const category = await request('/shop?category=Cooking+oils');
   assert.equal(category.status, 200);
   assert.ok(category.body.includes('Smoke test groundnut oil') && category.body.includes('Cooking oils'), 'category routes render matching products');

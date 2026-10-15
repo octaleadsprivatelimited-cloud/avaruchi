@@ -1,6 +1,6 @@
 import type { StoredProduct, StoredVariant } from "./store.js";
 
-const publicPages = ["/", "/shop", "/contact", "/shipping-returns", "/privacy", "/terms"];
+const publicPages = ["/", "/shop", "/our-story", "/journal", "/contact", "/shipping-returns", "/privacy", "/terms"];
 const sitemapPageSize = 10000;
 const escapeXml = (value: unknown) => String(value).replace(/[<>&"']/g, (character) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&apos;" })[character]!);
 const plainText = (value: string) => value.replace(/<[^>]*>/g, " ").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();

@@ -63,7 +63,6 @@ export function ProductDetailPage() {
   const [gallerySelection, setGallerySelection] = useState({ key: "", url: "" });
   const [wishlistBusy, setWishlistBusy] = useState(false);
   useEffect(() => { setQty(1); }, [product?.id, requestedVariantId]);
-  useEffect(() => { if (product) document.title = product.seoTitle || `${product.name} | Buy Online | ${storefront.storeName}`; }, [product, storefront.storeName]);
   const selectedVariant = product?.variants?.find(
     (variant) =>
       Object.keys(variant.options).length === Object.keys(selected).length &&

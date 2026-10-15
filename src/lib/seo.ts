@@ -65,7 +65,7 @@ export function productSeo(product: Product) {
     "@context": "https://schema.org", "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Avaruchi", item: storeOrigin },
-      { "@type": "ListItem", position: 2, name: "Shop oils", item: absoluteUrl("/shop") },
+      { "@type": "ListItem", position: 2, name: "Shop pickles", item: absoluteUrl("/shop") },
       { "@type": "ListItem", position: 3, name: product.name, item: absoluteUrl(path) },
     ],
   };

@@ -53,6 +53,12 @@ Configure Resend under **Admin → Integrations → Live → Resend**. Store the
 
 Change the first homepage banner under **Admin → Settings → Homepage hero image**. Upload a wide PNG/JPEG/WebP/AVIF/HEIC image (up to 10 MB), or publish an image URL and an accessible description. Uploads publish immediately and survive deployments in the durable upload directory. Resetting restores the bundled hero. Shared images remain until their final website, product or campaign reference is removed.
 
+## Analytics and search
+
+Production tracking IDs are managed in **Admin → Integrations → Live**: Google Analytics 4 measurement ID `G-BHKSYLVWZQ` (property `559112995`, web stream `16131978810`) and Microsoft Clarity project `yy0uhtx1ae`. These are public identifiers, not credentials. Keep GA4 Enhanced Measurement off because the storefront sends its own page and shopping events. Clarity uses Strict masking, and the application masks the document before loading its SDK. Optional scripts require visitor consent; private account/admin/sign-in/order-tracking pages are excluded and checkout is never recorded by Clarity. The consent prompt is enabled in **Admin → Settings**; customers can change their choice in the footer.
+
+Google Search Console uses the `sc-domain:aavaruchi.in` property under the business Google account. Ownership is verified by the root DNS TXT record supplied by Google; preserve it across DNS changes. The submitted sitemap is `https://aavaruchi.in/sitemap.xml`. It is generated from published products and public editorial/policy pages, with large catalogs split automatically. `/robots.txt` advertises it. Product aliases and duplicate policy routes have a single canonical, while private routes, missing pages and explicit sample previews use noindex. Google controls crawl timing and indexing after submission.
+
 ## Release checks
 
 Run `pnpm verify` and `pnpm verify:db` before uploading a release. These commands check lint, types, API tests, production builds, public assets and compiled startup/rendering behavior. GitHub Actions validates `main` and pull requests using an isolated MySQL service. Hostinger's GitHub connection deploys the full application from `main`.

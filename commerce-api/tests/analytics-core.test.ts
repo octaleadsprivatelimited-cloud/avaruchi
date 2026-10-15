@@ -45,6 +45,16 @@ describe("consent-aware analytics delivery", () => {
     expect(analytics.trackCommerceEvent("purchase", purchase)).toBe(false);
     for (const path of ["/admin", "/admin/orders", "/login", "/track", "/account", "/transaction/AVA-123", "/unknown/customer-email"]) expect(analytics.analyticsPath(path)).toBeNull();
   });
+  it("continues measuring public editorial and policy routes", async () => {
+    grant(true, false);
+    const analytics = await import(analyticsModule); await analytics.initializeAnalytics();
+    for (const path of ["/our-story", "/journal", "/shipping", "/returns"]) {
+      expect(analytics.analyticsPath(path)).toBe(path);
+      win.history.pushState({}, "", path); analytics.syncAnalyticsPage();
+    }
+    expect(commands().filter((item: unknown[]) => item[1] === "page_view")).toHaveLength(5);
+    expect(win.clarity.q).not.toContainEqual(["stop"]);
+  });
   it("stops recordings and pixel before a private history transition", async () => {
     grant(); const analytics = await import(analyticsModule); await analytics.initializeAnalytics();
     const original = win.history.pushState;
