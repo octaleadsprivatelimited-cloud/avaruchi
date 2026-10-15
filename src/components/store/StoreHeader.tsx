@@ -369,6 +369,12 @@ export function StoreFooter() {
           © {new Date().getFullYear()} {store.legalName || BRAND.legalName}.
           Avaruchi.
         </span>
+        <span className="developer-credit">
+          Developed by{" "}
+          <a href="https://www.octaleads.com/" target="_blank" rel="noopener noreferrer">
+            Octaleads
+          </a>
+        </span>
         <Link to="/track">Track your order</Link>
       </div>
     </footer>
