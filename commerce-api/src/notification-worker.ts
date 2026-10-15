@@ -4,8 +4,9 @@ import {
   renderEmailNotification,
 } from "./notification-content.js";
 import { SecretVault } from "./security.js";
+import { EmailConfigurationError, sendResendEmail } from "./resend-email.js";
 
-class DeliveryNotConfigured extends Error {}
+class DeliveryNotConfigured extends EmailConfigurationError {}
 class DeliveryWindowExpired extends Error {}
 export async function processNotificationBatch({ db, config, request = fetch }: { db: PrismaClient; config: AppConfig; request?: typeof fetch }) {
 const vault = new SecretVault(config.INTEGRATION_ENCRYPTION_KEY);
@@ -48,53 +49,15 @@ async function sendEmail(notification: {
   const { credentials, publicConfig } = await configuredIntegration(
       "EMAIL",
       "resend",
-    ),
-    fromEmail = String(publicConfig.fromEmail || "").trim();
-  if (
-    fromEmail.length > 254 ||
-    !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(fromEmail)
-  )
-    throw new DeliveryNotConfigured("Resend requires a valid publicConfig.fromEmail");
-  if (!credentials.apiKey)
-    throw new DeliveryNotConfigured("Resend requires an apiKey credential");
-  const fromName = String(publicConfig.fromName || "")
-      .replace(/[\r\n]/g, " ")
-      .replace(/["\\]/g, "")
-      .replace(/\s+/g, " ")
-      .trim()
-      .slice(0, 100),
-    from = fromName ? `"${fromName}" <${fromEmail}>` : fromEmail,
-    content = renderEmailNotification(
+    );
+  const content = renderEmailNotification(
       notification.template,
       publicRecord(notification.payload),
     ),
     firstAttemptAt = notification.firstAttemptAt || new Date();
   if (Date.now() - firstAttemptAt.getTime() >= 23 * 60 * 60_000) throw new DeliveryWindowExpired("Automatic delivery stopped after the safe idempotency window; verify provider delivery before retrying manually");
   if (!notification.firstAttemptAt) await db.notification.update({ where: { id: notification.id }, data: { firstAttemptAt } });
-  const response = await request("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${credentials.apiKey}`,
-        "content-type": "application/json",
-        "idempotency-key": notification.id,
-      },
-      body: JSON.stringify({
-        from,
-        to: notification.destination,
-        subject: content.subject,
-        html: content.html,
-        text: content.text,
-      }),
-      signal: AbortSignal.timeout(10_000),
-    }),
-    body = (await response.json().catch(() => ({}))) as { id?: string };
-  if ([401, 403].includes(response.status)) throw new DeliveryNotConfigured("Resend authorization or sender configuration requires attention");
-  if (!response.ok)
-    throw new Error(
-      `Resend rejected notification with status ${response.status}`,
-    );
-  if (!body.id) throw new Error("Resend accepted response did not include a message ID");
-  return body.id;
+  return sendResendEmail({ credentials, publicConfig, destination: notification.destination, content, idempotencyKey: notification.id, request });
 }
 
   const batch = await db.$transaction(async (tx) => {
@@ -143,7 +106,7 @@ async function sendEmail(notification: {
       });
       sent += 1;
     } catch (error) {
-      const unconfigured = error instanceof DeliveryNotConfigured;
+      const unconfigured = error instanceof EmailConfigurationError;
       const attempts = notification.attempts + (unconfigured ? 0 : 1),
         exhausted = error instanceof DeliveryWindowExpired || (!unconfigured && attempts >= maxAttempts),
         delayMinutes = unconfigured ? 5 : Math.min(60, 2 ** attempts);

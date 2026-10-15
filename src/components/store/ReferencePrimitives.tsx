@@ -199,6 +199,7 @@ const heroSlides = [
   },
 ];
 export function ReferenceHero({ products }: { products: Product[] }) {
+  const store = useStorefrontConfig();
   const [slide, setSlide] = useState(0);
   const reduced = useReducedMotion();
   const item = heroSlides[slide]!;
@@ -222,9 +223,16 @@ export function ReferenceHero({ products }: { products: Product[] }) {
         >
           {slide === 0 ? (
             <img
-              src="/images/hero.png"
-              alt="Avaruchi mango pickle jar with a bowl of spiced mango and chillies"
+              key={store.heroImageUrl || "default-hero"}
+              src={store.heroImageUrl || "/images/hero.png"}
+              alt={store.heroImageAlt || (store.heroImageUrl ? `${store.storeName} featured pickles` : "Avaruchi mango pickle jar with a bowl of spiced mango and chillies")}
               fetchPriority="high"
+              onError={event => {
+                if (store.heroImageUrl && event.currentTarget.getAttribute("src") !== "/images/hero.png") {
+                  event.currentTarget.src = "/images/hero.png";
+                  event.currentTarget.alt = "Avaruchi mango pickle jar with a bowl of spiced mango and chillies";
+                }
+              }}
             />
           ) : (
             <PickleArtwork
@@ -460,6 +468,8 @@ export function ReferenceModal({
   drawer?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => { onCloseRef.current = onClose; }, [onClose]);
   const reduced = useReducedMotion();
   useEffect(() => {
     const prev = document.activeElement as HTMLElement;
@@ -467,7 +477,7 @@ export function ReferenceModal({
     document.body.style.overflow = "hidden";
     ref.current?.focus();
     const key = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
       if (e.key === "Tab") {
         const nodes = Array.from(
           ref.current?.querySelectorAll<HTMLElement>(

@@ -47,10 +47,11 @@ beforeAll(async () => {
 afterAll(async () => { if (server) await new Promise<void>(resolve => server.close(() => resolve())); await rm(directory, { recursive: true, force: true }); });
 
 it("upgrades saved settings with the analytics popup hidden and configurable footer identity", async () => {
-  const { analyticsPromptEnabled: _prompt, footerLogoUrl: _footer, fssaiLicense: _license, ...legacy } = defaultStorefrontConfig;
+  const { analyticsPromptEnabled: _prompt, footerLogoUrl: _footer, fssaiLicense: _license, heroImageUrl: _hero, heroImageAlt: _alt, ...legacy } = defaultStorefrontConfig;
   const upgraded = storefrontConfigSchema.parse(legacy);
   expect(upgraded.analyticsPromptEnabled).toBe(false); expect(upgraded.footerLogoUrl).toBe("");
   expect(upgraded.fssaiLicense).toBe("");
+  expect(upgraded.heroImageUrl).toBe(""); expect(upgraded.heroImageAlt).toBe("");
   expect((await save({ ...upgraded, analyticsPromptEnabled: true })).status).toBe(200);
   expect((await read()).analyticsPromptEnabled).toBe(true);
   expect((await save(upgraded)).status).toBe(200);
@@ -107,6 +108,25 @@ it("updates favicon redirects and mobile manifests and retires replaced icons", 
   const manifest = await fetch(`${base}/api/v1/storefront/manifest`);
   expect(manifest.headers.get("content-type")).toContain("application/manifest+json");
   expect((await manifest.json()).icons[0].src).toBe(next.body.data.faviconUrl);
+});
+it("publishes a full-width hero, preserves shared images and rejects a stale replacement", async () => {
+  const wide = await sharp({ create: { width: 3000, height: 1200, channels: 3, background: "#61a638" } }).jpeg().toBuffer();
+  const first = await upload("hero", token, wide);
+  expect(first.status).toBe(201);
+  const original = first.body.data.heroImageUrl;
+  const metadata = await sharp(path.join(directory, path.basename(original))).metadata();
+  expect(metadata.width).toBe(2400); expect(metadata.height).toBe(960);
+  expect((await save({ ...await read(), heroImageAlt: "Avaruchi pickle collection", footerLogoUrl: original })).status).toBe(200);
+  const replacement = await upload("hero", token, wide);
+  expect(replacement.status).toBe(201); expect(replacement.body.data.heroImageAlt).toBe("Avaruchi pickle collection");
+  expect(await exists(original)).toBe(true);
+  expect((await save({ ...await read(), footerLogoUrl: "" })).status).toBe(200);
+  expect(await exists(original)).toBe(false);
+  expect((await save({ ...await read(), heroImageUrl: original })).status).toBe(409);
+  expect((await read()).heroImageUrl).toBe(replacement.body.data.heroImageUrl);
+  expect((await save({ ...await read(), heroImageUrl: "javascript:alert(1)" })).status).toBe(400);
+  expect((await save({ ...await read(), heroImageUrl: "", heroImageAlt: "" })).status).toBe(200);
+  expect(await exists(replacement.body.data.heroImageUrl)).toBe(false);
 });
 it("never deletes an external, product, bundled or traversal URL, and protects shared tenant assets", () => {
   const name = "brand-17fb914a-b08c-426e-9825-90c40a5e801d.png", baseUrl = config.PUBLIC_UPLOAD_BASE_URL;

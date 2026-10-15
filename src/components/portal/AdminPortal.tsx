@@ -354,10 +354,10 @@ function WhiteLabelSettings() {
       const saved = await commerceApi<StorefrontConfig>(`/api/v1/admin/storefront-config/assets/${kind}`, { method: "POST", body });
       updateForm({ [brandingFields[kind]]: saved[brandingFields[kind]] });
       publishStorefrontConfig(saved);
-      if (saved.assetCleanupPending) toast.warning("Logo published. Previous upload cleanup is pending; publish settings again to retry.");
+      if (saved.assetCleanupPending) toast.warning("Image published. Previous upload cleanup is pending; publish settings again to retry.");
       else toast.success("Image published. Unused previous uploads removed.");
     } catch (reason) {
-      const message = reason instanceof Error ? reason.message : "Logo could not be uploaded";
+      const message = reason instanceof Error ? reason.message : "Image could not be uploaded";
       setError(message); toast.error(message);
     } finally { setSaving(false); }
   };

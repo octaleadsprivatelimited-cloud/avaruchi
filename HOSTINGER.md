@@ -49,6 +49,10 @@ For Resend, verify `aavaruchi.in` in the Resend dashboard using its exact DKIM/S
 
 The production notification worker sends persisted customer confirmations and merchant new-order alerts after an accepted COD order or verified online payment. Merchant alerts go to `STORE_ORDER_ALERT_EMAIL`, falling back to `STORE_ADMIN_EMAIL`. Each recipient gets a separate durable, deduplicated outbox entry. Missing email configuration defers delivery. Verify real delivery in the email provider; a queued notification is not evidence that a message arrived.
 
+Configure Resend under **Admin → Integrations → Live → Resend**. Store the API key there (encrypted in MySQL), use a verified sender domain, and optionally set a reply-to mailbox. **Send test email to my account** uses the production sender and the signed-in administrator's email; it cannot send to arbitrary addresses and does not create an order. Confirm receipt in the inbox and Resend delivery logs. Never put the key in browser build variables or source control.
+
+Change the first homepage banner under **Admin → Settings → Homepage hero image**. Upload a wide PNG/JPEG/WebP/AVIF/HEIC image (up to 10 MB), or publish an image URL and an accessible description. Uploads publish immediately and survive deployments in the durable upload directory. Resetting restores the bundled hero. Shared images remain until their final website, product or campaign reference is removed.
+
 ## Release checks
 
 Run `pnpm verify` and `pnpm verify:db` before uploading a release. These commands check lint, types, API tests, production builds, public assets and compiled startup/rendering behavior. GitHub Actions validates `main` and pull requests using an isolated MySQL service. Hostinger's GitHub connection deploys the full application from `main`.

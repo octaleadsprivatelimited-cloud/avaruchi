@@ -120,11 +120,13 @@ export const integrationDefinitions: IntegrationDefinition[] = [
     publicFields: [
       { key: "fromEmail", label: "From email", required: true },
       { key: "fromName", label: "From name", required: false },
+      { key: "replyTo", label: "Reply-to email", required: false },
     ],
     publicSchema: z
       .object({
         fromEmail: z.string().trim().email().max(254).optional(),
         fromName: optionalText(100),
+        replyTo: z.string().trim().email().max(254).optional(),
       })
       .strict()
       .transform((value) => value as Record<string, unknown>),

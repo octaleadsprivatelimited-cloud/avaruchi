@@ -26,6 +26,11 @@ export function renderEmailNotification(
   payload: NotificationPayload,
 ) {
   const storeName = text(payload.storeName, "Our store", 100);
+  if (template === "email.test") {
+    const message = `This is a delivery test from ${storeName}. Your Hostinger backend can send email through Resend. Accepted orders will send a customer confirmation and a separate store alert. This test does not create an order or charge a payment.`;
+    return { subject: `${storeName} — order email delivery test`, text: message,
+      html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:24px auto;color:#203d25"><div style="background:#3c692f;color:#fff;padding:24px;font-size:26px">${escapeHtml(storeName)}</div><div style="padding:24px;background:#fcfbf6"><h1 style="font-size:22px">Order email delivery test</h1><p style="line-height:1.7">${escapeHtml(message)}</p><p>${escapeHtml(text(payload.legalName, storeName, 160))}</p></div></div>` };
+  }
   if (template === "order.confirmed" || template === "order.received") {
     const object = (value: unknown) => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
     const contact = object(payload.customer), business = object(payload.business), charges = object(payload.charges);

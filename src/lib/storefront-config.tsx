@@ -6,6 +6,7 @@ import { BRAND } from "./brand";
 export type StorefrontConfig = {
   storeName: string; legalName: string; businessGstin: string; businessAddress: string;
   logoUrl: string; footerLogoUrl: string; faviconUrl: string; fssaiLicense: string;
+  heroImageUrl: string; heroImageAlt: string;
   analyticsPromptEnabled: boolean; assetCleanupPending?: boolean;
   primaryColor: string; accentColor: string; backgroundColor: string;
   currency: string; locale: string; supportEmail: string; supportPhone: string;
@@ -17,6 +18,7 @@ export type StorefrontConfig = {
 export const defaultStorefrontConfig: StorefrontConfig = {
   storeName: "Avaruchi", legalName: BRAND.legalName, businessGstin: "", businessAddress: "",
   logoUrl: "/favicon.svg", footerLogoUrl: "", faviconUrl: "/favicon.svg", fssaiLicense: "",
+  heroImageUrl: "", heroImageAlt: "",
   analyticsPromptEnabled: false, primaryColor: "#173f2b", accentColor: "#dc6b32", backgroundColor: "#fbf7ec",
   currency: "INR", locale: "en-IN", supportEmail: "", supportPhone: BRAND.phone,
   freeShippingThreshold: 999, manualDeliveryEnabled: false, deliveryCharge: 59, deliveryMinDays: 3, deliveryMaxDays: 6, announcement: "",

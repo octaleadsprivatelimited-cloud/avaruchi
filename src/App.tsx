@@ -102,10 +102,12 @@ function Metadata() {
       location.pathname,
       import.meta.env.VITE_PUBLIC_SITE_URL || window.location.origin,
     ).href;
-    if (location.hash)
-      document
-        .getElementById(decodeURIComponent(location.hash.slice(1)))
-        ?.scrollIntoView();
+    if (location.hash) {
+      // A malformed fragment in a shared link must not take down the route.
+      let id = location.hash.slice(1);
+      try { id = decodeURIComponent(id); } catch { /* Use the literal fragment. */ }
+      document.getElementById(id)?.scrollIntoView();
+    }
   }, [location.pathname, location.hash, store]);
   return null;
 }

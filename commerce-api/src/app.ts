@@ -98,6 +98,8 @@ import {
   removeConvertedProductImage,
 } from "./image-upload.js";
 import { generateInvoicePdf } from "./invoice.js";
+import { EmailConfigurationError, sendResendEmail } from "./resend-email.js";
+import { renderEmailNotification } from "./notification-content.js";
 import { assertBrandingAssetsExist, brandingFields, brandingFileName, convertBrandingAsset, removeBrandingAsset, unusedBrandingAssets, type BrandingKind } from "./branding-assets.js";
 import { adminOrderDto, adminRefundDto } from "./admin-orders.js";
 import {
@@ -1415,8 +1417,8 @@ export async function createApp(overrides?: {
   );
   app.post("/api/v1/admin/storefront-config/assets/:kind", auth, authorize("settings:update"), productImageUpload, async (req, res) => {
     const kind = String(req.params.kind) as BrandingKind;
-    if (!Object.hasOwn(brandingFields, kind)) throw new AppError(400, "BRANDING_KIND_INVALID", "Choose a header logo, footer logo or favicon");
-    if (!req.file) throw new AppError(400, "IMAGE_REQUIRED", "Choose a logo image to upload");
+    if (!Object.hasOwn(brandingFields, kind)) throw new AppError(400, "BRANDING_KIND_INVALID", "Choose a header logo, footer logo, favicon or hero image");
+    if (!req.file) throw new AppError(400, "IMAGE_REQUIRED", "Choose a website image to upload");
     const value = await withBrandingWrite(async () => {
       const settings = await readStorefront(requestHostname(req));
       const url = await convertBrandingAsset(req.file!.buffer, kind, config.UPLOAD_DIR, config.PUBLIC_UPLOAD_BASE_URL);
@@ -4744,6 +4746,27 @@ export async function createApp(overrides?: {
       );
     },
   );
+  app.post("/api/v1/admin/integrations/:id/test-email", auth, authorize("settings:update"), limiter(2, 60_000, accountRateLimitKey), async (req, res) => {
+    const existing = store.integrations.get(String(req.params.id));
+    if (!existing || existing.kind !== "EMAIL" || existing.provider !== "resend")
+      throw new AppError(404, "INTEGRATION_NOT_FOUND", "Resend configuration was not found");
+    if (!existing.enabled || existing.environment !== runtimeEnvironment(config.NODE_ENV))
+      throw new AppError(409, "EMAIL_INTEGRATION_INACTIVE", "Enable Resend in the running store environment before sending a test");
+    // The destination is the authenticated administrator, never a caller-supplied address.
+    const user = persistence ? await persistence.findAuthUser({ id: req.principal!.sub }) : store.users.get(req.principal!.sub);
+    if (!user?.email) throw new AppError(409, "EMAIL_RECIPIENT_MISSING", "Your administrator account needs an email address");
+    const settings = await readStorefront(requestHostname(req));
+    const { credentials } = decryptIntegration(existing);
+    let providerMessageId: string;
+    try {
+      providerMessageId = await sendResendEmail({ credentials, publicConfig: providerPublicConfig(integrationDefinition("EMAIL", "resend")!, existing.publicConfig), destination: user.email,
+        content: renderEmailNotification("email.test", settings), idempotencyKey: crypto.randomUUID(), request: providerRequest });
+    } catch (error) {
+      throw new AppError(error instanceof EmailConfigurationError ? 409 : 502, "EMAIL_TEST_FAILED", error instanceof EmailConfigurationError ? error.message : "Resend did not accept the test email. Check sender verification and provider logs before retrying.");
+    }
+    pushIntegrationAudit("integration.email_test_sent", existing, req.principal!.sub, undefined, { destination: user.email, providerMessageId });
+    return ok(res, { destination: user.email, providerMessageId }, "Resend accepted the test email. Check the recipient inbox to confirm delivery.");
+  });
   app.post(
     "/api/v1/admin/integrations/:id/disconnect",
     auth,

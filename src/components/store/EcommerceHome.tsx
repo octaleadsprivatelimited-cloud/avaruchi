@@ -50,20 +50,20 @@ export function EcommerceHome() {
           category="All pickles"
           products={products}
         />
-        <CollectionRow
+        {products.some(product => product.category.toLowerCase() === "andhra favourites") && <CollectionRow
           title="Andhra favourites"
           category="Andhra favourites"
           products={products.filter(
             (product) => product.category.toLowerCase() === "andhra favourites",
           )}
-        />
-        <CollectionRow
+        />}
+        {products.some(product => product.category.toLowerCase() === "bold flavours") && <CollectionRow
           title="bold flavours"
           category="Bold flavours"
           products={products.filter(
             (product) => product.category.toLowerCase() === "bold flavours",
           )}
-        />
+        />}
         <Reveal as="section" className="reference-story wrap">
           <div>
             <span className="eyebrow">ESTABLISHED {BRAND.established}</span>

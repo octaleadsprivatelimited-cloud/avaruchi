@@ -60,6 +60,11 @@ try {
   assert.ok(home.body.includes('reference-story'), 'render the reference brand story');
   assert.ok(home.body.includes('Our collection is coming together.'), 'an empty backend must stay empty in the new UI');
   assert.ok(home.body.includes('₹62 delivery') && home.body.includes('₹800'), 'SSR must use saved delivery prices before hydration');
+  storefrontSettings = { ...storefrontSettings, heroImageUrl: '/uploads/admin-hero.png', heroImageAlt: 'Pickles selected by the store administrator' };
+  const customHero = await request('/');
+  assert.ok(customHero.body.includes('src="/uploads/admin-hero.png"') && customHero.body.includes('alt="Pickles selected by the store administrator"'), 'SSR must render the published hero image and description');
+  storefrontSettings = { ...storefrontSettings, heroImageUrl: '', heroImageAlt: '' };
+  assert.ok((await request('/')).body.includes('src="/images/hero.png"'), 'resetting the hero restores the bundled image');
   storefrontSettings = { ...storefrontSettings, deliveryCharge: 89, freeShippingThreshold: 799 };
   const updatedShop = await request('/shop');
   assert.ok(updatedShop.body.includes('₹89 delivery') && updatedShop.body.includes('₹799'), 'fresh SSR must read the replacement policy');
@@ -89,6 +94,10 @@ try {
   assert.match(product.body, /detail-price[^>]*>₹293\.48/);
   assert.ok(product.body.includes('"price":"293.48"'));
   assert.ok(product.body.includes('variant=oil-1000'));
+  const category = await request('/shop?category=Cooking+oils');
+  assert.equal(category.status, 200);
+  assert.ok(category.body.includes('Smoke test groundnut oil') && category.body.includes('Cooking oils'), 'category routes render matching products');
+  assert.ok(!category.body.includes('>Bold flavours</a>'), 'navigation must not send customers to hard-coded empty categories');
   const untrustedText = '</script><script>alert("storefront-xss")</script>';
   catalog[0].description = untrustedText;
   storefrontSettings = { ...storefrontSettings, storeName: `Avaruchi ${untrustedText}` };

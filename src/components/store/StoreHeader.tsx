@@ -19,9 +19,13 @@ import {
   ReferenceModal,
 } from "./ReferencePrimitives";
 import { AccountLink } from "./AccountLink";
+import { useInitialCatalog } from "@/lib/store-data";
+import { useStoreProducts } from "@/lib/store-products";
+import { catalogCategories } from "@/lib/catalog-categories";
 
 export function StoreHeader() {
   const store = useStorefrontConfig();
+  const categories = catalogCategories(useStoreProducts(useInitialCatalog()));
   const { cart } = useStoreCommerce();
   const location = useLocation();
   const navigate = useNavigate();
@@ -29,6 +33,7 @@ export function StoreHeader() {
   const [query, setQuery] = useState("");
   const [bagOpen, setBagOpen] = useState(false);
   const menu = useRef<HTMLDetailsElement>(null);
+  const menuPointer = useRef("");
   useEffect(() => {
     setBagOpen(false);
     setSearchOpen(false);
@@ -38,6 +43,8 @@ export function StoreHeader() {
     const close = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setSearchOpen(false);
+        if (menu.current?.open && menu.current.contains(document.activeElement))
+          menu.current.querySelector("summary")?.focus();
         menu.current?.removeAttribute("open");
       }
     };
@@ -78,8 +85,31 @@ export function StoreHeader() {
             <Link className={location.pathname === "/" ? "current" : ""} to="/">
               Home
             </Link>
-            <details className="products-menu" ref={menu}>
+            <details
+              className="products-menu"
+              ref={menu}
+              onPointerEnter={event => {
+                menuPointer.current = event.pointerType;
+                if (event.pointerType === "mouse") event.currentTarget.open = true;
+              }}
+              onPointerLeave={event => {
+                if (event.pointerType === "mouse" && (!event.currentTarget.contains(document.activeElement) || document.activeElement === event.currentTarget.querySelector("summary")))
+                  event.currentTarget.open = false;
+              }}
+              onBlur={event => {
+                if (!event.currentTarget.contains(event.relatedTarget as Node | null))
+                  event.currentTarget.open = false;
+              }}
+            >
               <summary
+                onPointerDown={event => { menuPointer.current = event.pointerType; }}
+                onClick={event => {
+                  // Hover already opened it; a following mouse click must not close it again.
+                  if (event.detail > 0 && menuPointer.current === "mouse") {
+                    event.preventDefault();
+                    if (menu.current) menu.current.open = true;
+                  }
+                }}
                 className={
                   location.pathname === "/shop" ||
                   /\/(product|shop)\//.test(location.pathname)
@@ -90,12 +120,7 @@ export function StoreHeader() {
                 Products <span aria-hidden="true">⌄</span>
               </summary>
               <div className="products-dropdown">
-                {[
-                  "All pickles",
-                  "Classics",
-                  "Andhra favourites",
-                  "Bold flavours",
-                ].map((category) => (
+                {categories.map((category) => (
                   <Link
                     key={category}
                     to="/shop"

@@ -5,7 +5,7 @@ import sharp from "sharp";
 import { AppError } from "./errors.js";
 import type { StorefrontConfig } from "./storefront-config.js";
 
-export const brandingFields = { logo: "logoUrl", footer: "footerLogoUrl", favicon: "faviconUrl" } as const;
+export const brandingFields = { logo: "logoUrl", footer: "footerLogoUrl", favicon: "faviconUrl", hero: "heroImageUrl" } as const;
 export type BrandingKind = keyof typeof brandingFields;
 const ownedName = /^brand-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.png$/i;
 
@@ -33,7 +33,7 @@ export async function assertBrandingAssetsExist(settings: StorefrontConfig, dire
     try { await stat(path.join(path.resolve(directory), name)); }
     catch (error) {
       if ((error as NodeJS.ErrnoException).code === "ENOENT")
-        throw new AppError(409, "BRANDING_ASSET_REPLACED", "An uploaded logo has already been replaced. Reload settings before publishing");
+        throw new AppError(409, "BRANDING_ASSET_REPLACED", "An uploaded website image has already been replaced. Reload settings before publishing");
       throw error;
     }
   }
@@ -56,9 +56,9 @@ export async function convertBrandingAsset(buffer: Buffer, kind: BrandingKind, d
     const image = sharp(buffer, { limitInputPixels: 40_000_000, failOn: "warning" }).rotate();
     const metadata = await image.metadata();
     if (!metadata.width || !metadata.height || !["jpeg", "png", "webp", "avif", "heif"].includes(metadata.format || ""))
-      throw new AppError(415, "IMAGE_CONTENT_INVALID", "Choose a supported logo image");
-    const size = kind === "favicon" ? 256 : 1024;
-    const output = await image.resize({ width: size, height: size,
+      throw new AppError(415, "IMAGE_CONTENT_INVALID", "Choose a supported website image");
+    const size = kind === "favicon" ? 256 : kind === "hero" ? 2400 : 1024;
+    const output = await image.resize({ width: size, height: kind === "hero" ? 1600 : size,
       fit: kind === "favicon" ? "contain" : "inside", withoutEnlargement: kind !== "favicon",
       background: { r: 0, g: 0, b: 0, alpha: 0 },
     }).png({ compressionLevel: 9 }).toBuffer();
@@ -68,6 +68,6 @@ export async function convertBrandingAsset(buffer: Buffer, kind: BrandingKind, d
   } catch (error) {
     await unlink(file).catch(() => undefined);
     if (error instanceof AppError) throw error;
-    throw new AppError(422, "IMAGE_PROCESSING_FAILED", "The logo could not be processed. Try a PNG, JPEG or WebP image");
+    throw new AppError(422, "IMAGE_PROCESSING_FAILED", "The image could not be processed. Try a PNG, JPEG or WebP image");
   }
 }

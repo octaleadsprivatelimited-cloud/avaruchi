@@ -231,11 +231,11 @@ export function AdminIntegrationsWorkspace() {
   const [priority, setPriority] = useState(1);
   const [credentials, setCredentials] = useState<Record<string, string>>({});
   const [publicConfig, setPublicConfig] = useState<Record<string, string>>({});
-  const [busyAction, setBusyAction] = useState<"save" | "test" | "disconnect" | null>(null);
+  const [busyAction, setBusyAction] = useState<"save" | "test" | "email" | "disconnect" | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [confirmDisconnect, setConfirmDisconnect] = useState(false);
   const requestIdRef = useRef(0);
-  const busyActionRef = useRef<"save" | "test" | "disconnect" | null>(null);
+  const busyActionRef = useRef<"save" | "test" | "email" | "disconnect" | null>(null);
   const modalRef = useRef<HTMLElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
@@ -478,7 +478,7 @@ export function AdminIntegrationsWorkspace() {
   };
 
   const testConnection = async () => {
-    if (!selected || !selected.capabilities.testConnection) return;
+    if (!selected || !selected.capabilities.testConnection || busyActionRef.current) return;
     busyActionRef.current = "test";
     setBusyAction("test");
     setNotice(null);
@@ -513,6 +513,19 @@ export function AdminIntegrationsWorkspace() {
       busyActionRef.current = null;
       setBusyAction(null);
     }
+  };
+
+  const sendTestEmail = async () => {
+    if (!selected || selected.provider !== "resend" || busyActionRef.current) return;
+    busyActionRef.current = "email"; setBusyAction("email"); setNotice(null);
+    try {
+      const result = await commerceApi<{ destination: string; providerMessageId: string }>(`/api/v1/admin/integrations/${encodeURIComponent(selected.id)}/test-email`, { method: "POST" });
+      const message = `Resend accepted the test email to ${result.destination}. Check that inbox and spam folder to confirm delivery. Message ID: ${result.providerMessageId}`;
+      setNotice({ tone: "success", message }); toast.success("Test email accepted by Resend");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Test email could not be sent";
+      setNotice({ tone: "error", message }); toast.error(message);
+    } finally { busyActionRef.current = null; setBusyAction(null); }
   };
 
   const disconnect = async () => {
@@ -1031,6 +1044,11 @@ export function AdminIntegrationsWorkspace() {
                   </button>
                 )}
               </section>
+
+              {selected.provider === "resend" && <section className="integration-test-panel">
+                <div><h3>Verify order email delivery</h3><p>Send a clearly labelled test to your signed-in administrator email. It uses the same sender and server adapter as customer order confirmations and store alerts. Verify receipt in your inbox; a connection check alone cannot confirm delivery.</p></div>
+                <button type="button" className="secondary" disabled={busyAction !== null || !selected.enabled || !selected.configured || formDirty} onClick={() => void sendTestEmail()}>{busyAction === "email" ? <RefreshCw className="spin" /> : <Mail />}{busyAction === "email" ? "Sending…" : "Send test email to my account"}</button>
+              </section>}
 
               {confirmDisconnect && (
                 <section className="integration-disconnect-confirm" role="alert">

@@ -15,6 +15,8 @@ export const storefrontConfigSchema = z.object({
   logoUrl: optionalUrl.default(""),
   footerLogoUrl: optionalUrl.default(""),
   faviconUrl: optionalUrl.default(""),
+  heroImageUrl: optionalUrl.default(""),
+  heroImageAlt: z.string().trim().max(240).default(""),
   fssaiLicense: z.union([z.string().regex(/^\d{14}$/), z.literal("")]).default(""),
   analyticsPromptEnabled: z.boolean().default(false),
   primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/),
@@ -44,7 +46,7 @@ export const storefrontConfigSchema = z.object({
 export type StorefrontConfig = z.infer<typeof storefrontConfigSchema>;
 
 export const defaultStorefrontConfig: StorefrontConfig = {
-  storeName: "Avaruchi", legalName: "LAKSHMI'S TAPASI TREATS", businessGstin:"", businessAddress:"", logoUrl: "/favicon.svg", footerLogoUrl: "", faviconUrl: "/favicon.svg", fssaiLicense: "", analyticsPromptEnabled: false,
+  storeName: "Avaruchi", legalName: "LAKSHMI'S TAPASI TREATS", businessGstin:"", businessAddress:"", logoUrl: "/favicon.svg", footerLogoUrl: "", faviconUrl: "/favicon.svg", heroImageUrl: "", heroImageAlt: "", fssaiLicense: "", analyticsPromptEnabled: false,
   primaryColor: "#173f2b", accentColor: "#dc6b32", backgroundColor: "#fbf7ec",
   currency: "INR", locale: "en-IN", supportEmail: "",
   supportPhone: "9932433243", freeShippingThreshold: 999, manualDeliveryEnabled: false, deliveryCharge: 59, deliveryMinDays: 3, deliveryMaxDays: 6, announcement: "",

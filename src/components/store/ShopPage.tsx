@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation } from "@/lib/navigation";
+import { useLocation, useNavigate } from "@/lib/navigation";
 import { useInitialCatalog } from "@/lib/store-data";
 import { useStoreProducts } from "@/lib/store-products";
 import { useCommerceImpression } from "@/lib/commerce-analytics-hooks";
@@ -8,10 +8,12 @@ import { priceIncludingTax } from "@/lib/catalog-price";
 import { CampaignSlot } from "@/lib/promotions";
 import { ReferenceIcon, ReferenceProductCard } from "./ReferencePrimitives";
 import { StorePage } from "./StoreHeader";
+import { catalogCategories } from "@/lib/catalog-categories";
 
 export function ShopPage() {
   const products = useStoreProducts(useInitialCatalog());
   const location = useLocation();
+  const navigate = useNavigate();
   const params = new URLSearchParams(location.searchStr);
   const [category, setCategory] = useState(
     params.get("category") || "All pickles",
@@ -25,15 +27,11 @@ export function ShopPage() {
     setCategory(params.get("category") || "All pickles");
     setQuery(params.get("q") || params.get("search") || "");
   }, [location.searchStr]);
-  const categories = [
-    ...new Set([
-      "All pickles",
-      "Classics",
-      "Andhra favourites",
-      "Bold flavours",
-      ...products.map((product) => product.category),
-    ]),
-  ];
+  const categories = catalogCategories(products);
+  const chooseCategory = (value: string) => {
+    setCategory(value);
+    void navigate({ to: "/shop", search: { category: value, q: query }, resetScroll: false });
+  };
   const shown = useMemo(
     () =>
       products
@@ -109,7 +107,7 @@ export function ShopPage() {
                 key={item}
                 className={category === item ? "active" : ""}
                 aria-pressed={category === item}
-                onClick={() => setCategory(item)}
+                onClick={() => chooseCategory(item)}
               >
                 {item}
               </button>
@@ -143,6 +141,7 @@ export function ShopPage() {
                   onClick={() => {
                     setQuery("");
                     setCategory("All pickles");
+                    void navigate({ to: "/shop", resetScroll: false });
                   }}
                 >
                   Browse pickles

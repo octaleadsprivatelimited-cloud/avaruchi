@@ -4052,7 +4052,8 @@
 /* Avaruchi storefront: an announcement, image-led carousel and shop rails. */
 .avaruchi-ui.reference-store {
   --paper: #fcfbf6;
-  --green: #4e7134;
+  --green: #3c692f;
+  --leaf-green: #61a638;
   --ink: #42473e;
   --muted: #62675d;
   --rule: #d9ddcf;
@@ -4089,8 +4090,8 @@
   letter-spacing: 0;
   line-height: 1.4;
   padding: 10px 18px;
-  background: #527736;
-  color: #fcfbf6;
+  background: linear-gradient(105deg, var(--leaf-green), #85bd50 55%, #6bad3f);
+  color: #142e17;
 }
 .avaruchi-ui.reference-store .site-header {
   height: 80px;
@@ -4169,6 +4170,22 @@
   border: 1px solid var(--rule);
   padding: 10px 16px;
   z-index: 50;
+  border-radius: 0 0 12px 12px;
+  box-shadow: 0 12px 28px #203d1b18;
+}
+.avaruchi-ui .products-dropdown::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 10px;
+  bottom: 100%;
+}
+.avaruchi-ui .products-menu summary > span {
+  transition: transform .18s ease;
+}
+.avaruchi-ui .products-menu[open] summary > span {
+  transform: rotate(180deg);
 }
 .avaruchi-ui.reference-store .products-dropdown a {
   display: flex;

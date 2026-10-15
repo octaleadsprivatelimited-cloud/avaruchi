@@ -2,7 +2,7 @@ import { ImagePlus, Save, Trash2 } from "lucide-react";
 import { Link } from "@/lib/navigation";
 import type { StorefrontConfig } from "@/lib/storefront-config";
 
-export const brandingFields = { logo: "logoUrl", footer: "footerLogoUrl", favicon: "faviconUrl" } as const;
+export const brandingFields = { logo: "logoUrl", footer: "footerLogoUrl", favicon: "faviconUrl", hero: "heroImageUrl" } as const;
 export type BrandingKind = keyof typeof brandingFields;
 type Props = {
   form: StorefrontConfig; error: string; saving: boolean;
@@ -37,7 +37,21 @@ export function BrandingSettingsForm({ form, error, saving, onChange, onSave, on
               <details><summary>Use an image URL</summary><label>Image URL<input value={form[field]} onChange={e => text(field, e.target.value)} placeholder="https://… or /uploads/…" /></label></details>
             </article>;
           })}</div>
-          <p className="branding-help">PNG, JPEG, WebP, AVIF or HEIC · up to 10 MB. Replaced website uploads are deleted once they are no longer used by a logo, product or campaign. URL edits and resets apply when you publish settings.</p>
+          <p className="branding-help">PNG, JPEG, WebP, AVIF or HEIC · up to 10 MB. Replaced website uploads are deleted once they are no longer used by a website image, product or campaign. URL edits and resets apply when you publish settings.</p>
+        </section>
+        <section className="panel form-panel" id="homepage-hero"><div className="panel-head"><div><h2>Homepage hero image</h2><p>Change the main banner without editing code or redeploying.</p></div></div>
+          <div className="branding-asset hero-image-settings">
+            <div className="branding-asset-preview hero-image-preview"><img src={form.heroImageUrl || "/images/hero.png"} alt={form.heroImageAlt || "Homepage hero preview"} /></div>
+            <p>Use a wide image, ideally 2400 × 900 px. It fills the first carousel slide on desktop and mobile; keep the subject near the centre. Your banner text and shop link stay visible.</p>
+            <label className="branding-upload"><ImagePlus />Upload hero image<input type="file" accept="image/png,image/jpeg,image/webp,image/avif,image/heic,image/heif" onChange={event => {
+              const file = event.target.files?.[0]; event.target.value = "";
+              if (file) void onUpload("hero", file);
+            }} /></label>
+            <button type="button" className="branding-remove" disabled={!form.heroImageUrl} onClick={() => onChange({ heroImageUrl: "", heroImageAlt: "" })}><Trash2 />Use default hero image</button>
+            <label>Hero image description<input value={form.heroImageAlt} maxLength={240} onChange={e => text("heroImageAlt", e.target.value)} placeholder="Describe the image for customers using a screen reader" /></label>
+            <details><summary>Use a hero image URL</summary><label>Hero image URL<input value={form.heroImageUrl} onChange={e => text("heroImageUrl", e.target.value)} placeholder="https://… or /uploads/…" /></label></details>
+            <small>Uploads publish immediately. Description, URL edits and resetting to the default apply when you select Publish settings.</small>
+          </div>
         </section>
         <section className="panel form-panel"><div className="panel-head"><div><h2>Popups &amp; notifications</h2><p>Choose what appears while customers browse.</p></div></div>
           <label className="website-setting-switch"><input type="checkbox" role="switch" checked={form.analyticsPromptEnabled} onChange={e => onChange({ analyticsPromptEnabled: e.target.checked })} /><span><b>Show the analytics permission popup</b><small>Off by default. Customers can still open Cookie preferences in the footer. Optional tracking only runs after consent.</small></span></label>
