@@ -531,12 +531,7 @@ export function CheckoutPage() {
     trackCommerceEvent("purchase", analytics, { dedupeKey: `purchase:${number}` });
     setOrderNumber(number);
     setConfirmedTotal(orderTotal);
-    setEstimatedDelivery(
-      new Date(Date.now() + etaDays * 86_400_000).toLocaleDateString(
-        storefront.locale,
-        { day: "numeric", month: "long", year: "numeric" },
-      ),
-    );
+    setEstimatedDelivery(`${etaDays} business ${etaDays === 1 ? "day" : "days"} after dispatch`);
     setPendingPayment(null);
     setPaymentSubmitted(null);
     cart.clear();
@@ -934,7 +929,7 @@ export function CheckoutPage() {
                     <b>{rate.label}</b>
                     <small>
                       Estimated in {rate.etaMinDays && rate.etaMinDays !== rate.etaDays ? `${rate.etaMinDays}–${rate.etaDays}` : rate.etaDays}{" "}
-                      {rate.etaDays === 1 ? "business day" : "business days"}
+                      {rate.etaDays === 1 ? "business day" : "business days"} after dispatch
                     </small>
                   </span>
                   <strong>{rate.shipping ? money(rate.shipping) : "Free"}</strong>

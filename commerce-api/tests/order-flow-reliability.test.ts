@@ -142,6 +142,40 @@ describe("checkout failure recovery", () => {
   });
 });
 
+describe("Razorpay payment attempt webhooks", () => {
+  it("keeps a failed attempt retryable and accepts capture without releasing or double-committing stock", async () => {
+    const webhookSecret = "fixture-only-razorpay-webhook-secret";
+    const { store, post } = await start(null, vi.fn(async () => new Response(JSON.stringify({ id: "order_fixture_razorpay" }))) as typeof fetch);
+    store.integrations.set("razorpay-fixture", {
+      id: "razorpay-fixture", kind: "PAYMENT", provider: "razorpay", enabled: true, priority: 1, environment: "TEST",
+      encryptedCredentials: new SecretVault(config.INTEGRATION_ENCRYPTION_KEY).encrypt({ keyId: "rzp_test_fixture", keySecret: "fixture-only-api-secret", webhookSecret }),
+      publicConfig: { currency: "INR" }, updatedAt: new Date().toISOString(),
+    });
+    const variant = store.listProducts()[0]!.variants[0]!;
+    const before = { stock: variant.stock, reserved: variant.reserved };
+    const created = await post("/api/v1/checkout", checkout(variant.id, "razorpay"), { "idempotency-key": crypto.randomUUID() });
+    expect(created.status).toBe(201);
+    const { order, payment } = created.body.data;
+    const event = (type: string, id: string) => ({ event: type, payload: { payment: { entity: { id, order_id: payment.externalId, amount: Math.round(order.total * 100), currency: "INR" } } } });
+    const signed = (payload: unknown) => ({ "x-razorpay-signature": crypto.createHmac("sha256", webhookSecret).update(JSON.stringify(payload)).digest("hex") });
+    const failed = event("payment.failed", "pay_failed_fixture");
+    expect((await post("/webhooks/razorpay", failed)).status).toBe(401);
+    expect((await post("/webhooks/razorpay", failed, signed(failed))).status).toBe(200);
+    expect(store.orders.get(order.id)?.status).toBe("PAYMENT_PENDING");
+    expect(variant).toMatchObject({ stock: before.stock, reserved: before.reserved + 2 });
+    const captured = event("payment.captured", "pay_captured_fixture");
+    expect((await post("/webhooks/razorpay", captured, signed(captured))).status).toBe(202);
+    expect(store.orders.get(order.id)?.status).toBe("PAID");
+    expect(variant).toMatchObject({ stock: before.stock - 2, reserved: before.reserved });
+    expect((await post("/webhooks/razorpay", captured, signed(captured))).body.data.duplicate).toBe(true);
+    const lateFailure = event("payment.failed", "pay_late_failed_fixture");
+    expect((await post("/webhooks/razorpay", lateFailure, signed(lateFailure))).status).toBe(200);
+    expect(store.orders.get(order.id)?.status).toBe("PAID");
+    expect(store.orders.get(order.id)?.payment?.status).toBe("CAPTURED");
+    expect(variant).toMatchObject({ stock: before.stock - 2, reserved: before.reserved });
+  });
+});
+
 describe("persisted Cashfree verification", () => {
   it("commits catalog stock once when refreshing a captured payment from MySQL", async () => {
     let persistedOrder: StoredOrder;

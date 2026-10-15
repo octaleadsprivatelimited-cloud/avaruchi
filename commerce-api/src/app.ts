@@ -661,6 +661,18 @@ export async function createApp(overrides?: {
           orderId = bound.orderId;
           shipmentId = bound.shipmentId;
         }
+        if (provider === "razorpay" && eventType === "payment.failed") {
+          // Razorpay reports individual failed attempts. The same gateway
+          // order can still be paid, so retain its order and stock reservation.
+          await persistence?.processWebhook({
+            provider,
+            eventId,
+            payloadHash: crypto.createHash("sha256").update(raw).digest("hex"),
+            safePayload: { type: eventType, orderId: orderId || undefined },
+          });
+          store.webhookIds.add(`${provider}:${eventId}`);
+          return ok(res, { received: true });
+        }
         const target =
             eventType === "payment.captured"
               ? "PAID"
