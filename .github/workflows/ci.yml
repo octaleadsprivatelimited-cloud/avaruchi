@@ -74,6 +74,6 @@ jobs:
         run: |
           node scripts/check-public-secrets.mjs
           node scripts/smoke-built-storefront.mjs
-          node scripts/smoke-hostinger-startup.mjs
+          node --no-experimental-require-module scripts/smoke-hostinger-startup.mjs
           node --no-experimental-require-module scripts/smoke-vercel.mjs
           node scripts/smoke-commerce-proxy.mjs

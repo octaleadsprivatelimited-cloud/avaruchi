@@ -6,7 +6,7 @@ import { join } from 'node:path';
 const requireApi = createRequire(new URL('./commerce-api/package.json', import.meta.url));
 const serveStatic = requireApi('express').static(fileURLToPath(new URL('./.output/public/', import.meta.url)), { index: false });
 import { prepareHostingerDatabase } from './commerce-api/dist/src/hostinger-startup.js';
-import { createApp } from './commerce-api/dist/src/app.js';
+import { createApp } from './commerce-api/dist/bundle/commerce-entry.js';
 import { storefrontProductDto } from './commerce-api/dist/src/admin-products.js';
 import { buildMerchantFeed, buildRobots, buildSitemap } from './commerce-api/dist/src/catalog-discovery.js';
 import { startNotificationWorker } from './commerce-api/dist/src/notification-worker.js';
