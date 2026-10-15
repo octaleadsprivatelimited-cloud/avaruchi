@@ -267,7 +267,7 @@ export function ProductDetailPage() {
                 <Truck />
                 <span>
                   <b>Delivery</b>
-                  <small>{deliveryAnnouncement(storefront)} · Estimated {deliveryEstimate(storefront)}</small>
+                  <small>{storefront.manualDeliveryEnabled ? <>{deliveryAnnouncement(storefront)} · Estimated {deliveryEstimate(storefront)}</> : "Delivery availability and charges are confirmed at checkout."}</small>
                 </span>
               </div>
               <div>
@@ -281,7 +281,7 @@ export function ProductDetailPage() {
                 <Check />
                 <span>
                   <b>Freshness promise</b>
-                  <small>Pickles, carefully packed for your pantry</small>
+                  <small>Products, carefully packed for your pantry</small>
                 </span>
               </div>
             </div>
