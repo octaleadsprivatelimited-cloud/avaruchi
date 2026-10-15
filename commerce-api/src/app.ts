@@ -2813,12 +2813,12 @@ export async function createApp(overrides?: {
     if (!order?.payment?.externalId) throw new AppError(404, "PAYMENT_NOT_FOUND", "Payment was not found");
     verifyPaymentAttemptToken(req.body.attemptToken, { orderId: order.id, orderNumber: order.number });
     const payment = order.payment;
+    if (!["PAYMENT_PENDING", "FAILED"].includes(order.status)) return ok(res, { status: payment.status, orderStatus: order.status });
     const provider = resolvePaymentProvider(payment.provider || "cashfree");
     if (req.body.paymentId || req.body.signature) {
       if (!(provider instanceof RazorpayPaymentProvider)) throw new AppError(400, "INVALID_PAYMENT_PROVIDER", "Checkout signatures are only accepted for Razorpay");
       provider.verifyCheckoutSignature(payment.externalId!, req.body.paymentId, req.body.signature);
     }
-    if (!["PAYMENT_PENDING", "FAILED"].includes(order.status)) return ok(res, { status: payment.status, orderStatus: order.status });
     const status = await provider.lookup(payment.externalId!);
     if (status.status === "CAPTURED") {
       if (req.body.paymentId && status.gatewayPaymentId !== req.body.paymentId) throw new AppError(422, "PAYMENT_REFERENCE_MISMATCH", "The verified payment does not match this checkout attempt");

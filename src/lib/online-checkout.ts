@@ -37,7 +37,8 @@ export async function openOnlineCheckout(input: CheckoutInput): Promise<PaymentP
     const gateway = new Razorpay({
       key: input.payment.clientToken, order_id: input.payment.externalId,
       amount: Math.round(input.total * 100), currency: "INR", name: input.storeName,
-      description: `Order ${input.orderNumber}`, prefill: input.contact,
+      description: `Order ${input.orderNumber}`,
+      prefill: { name: input.contact.name, email: input.contact.email, contact: input.contact.phone },
       handler: (result: RazorpayResult) => {
         if (result.razorpay_order_id !== input.payment.externalId || !result.razorpay_payment_id || !result.razorpay_signature) {
           reject(new Error("The payment response did not match this order. Check payment status before retrying.")); return;
