@@ -12,6 +12,8 @@ Create a new Node.js 24 app for Avaruchi with this project root as its app direc
 
 The process serves React and Express on the hosting platform's `PORT`. It needs both `.output/` and `commerce-api/`. Browser API requests use the same domain; leave `VITE_COMMERCE_API_URL` empty. MySQL is required. Redis is optional and is not used for authentication or inventory correctness.
 
+The Express preset may show no build command. The root production `postinstall` hook then runs `build:hostinger` before publishing the entry file. It reads `NODE_ENV` from the process or Hostinger's `.env`; development and test installs skip this hook. API build dependencies are installed explicitly even when the deployment environment is production.
+
 Hostinger serves the frontend, API, uploads and background worker together. Set `APP_URL`, `CORS_ORIGINS`, `VITE_PUBLIC_SITE_URL` and `PUBLIC_UPLOAD_BASE_URL` to the Hostinger site's HTTPS hostname. Leave `COMMERCE_BACKEND_URL` and `AVARUCHI_PROXY_SECRET` unset. MySQL remains local to the hosting account; no remote database access rule is needed. Automatic Vercel deployments are disabled in the repository.
 
 ## Hosting environment

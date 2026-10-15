@@ -8,6 +8,7 @@
     "node": "24.x"
   },
   "scripts": {
+    "postinstall": "node scripts/build-after-production-install.mjs",
     "dev": "vite dev",
     "dev:api": "pnpm --dir commerce-api dev",
     "build": "pnpm build:hostinger",
@@ -18,7 +19,7 @@
     "format": "prettier --write .",
     "build:api": "pnpm --dir commerce-api build",
     "test:api": "pnpm --dir commerce-api test",
-    "build:hostinger": "pnpm --dir commerce-api install --frozen-lockfile && pnpm --dir commerce-api build && VITE_COMMERCE_API_URL= pnpm build:frontend && pnpm build:api-runtime",
+    "build:hostinger": "pnpm --dir commerce-api install --frozen-lockfile --prod=false && pnpm --dir commerce-api build && VITE_COMMERCE_API_URL= pnpm build:frontend && pnpm build:api-runtime",
     "start": "node hostinger.mjs",
     "setup:local": "node scripts/setup-local.mjs",
     "dev:local": "node scripts/dev-local.mjs",
