@@ -4764,8 +4764,17 @@ export async function createApp(overrides?: {
     } catch (error) {
       throw new AppError(error instanceof EmailConfigurationError ? 409 : 502, "EMAIL_TEST_FAILED", error instanceof EmailConfigurationError ? error.message : "Resend did not accept the test email. Check sender verification and provider logs before retrying.");
     }
-    pushIntegrationAudit("integration.email_test_sent", existing, req.principal!.sub, undefined, { destination: user.email, providerMessageId });
-    return ok(res, { destination: user.email, providerMessageId }, "Resend accepted the test email. Check the recipient inbox to confirm delivery.");
+    const definition = integrationDefinition("EMAIL", "resend")!;
+    const record: StoredIntegration = { ...existing, updatedAt: new Date().toISOString(), publicConfig: {
+      ...providerPublicConfig(definition, existing.publicConfig),
+      _connection: { outcome: "CONNECTED", testedAt: new Date().toISOString(), message: "Resend accepted a test email. Confirm receipt in the administrator inbox." },
+    } };
+    const before = integrationAuditSnapshot(existing, Object.keys(credentials));
+    const after = { ...integrationAuditSnapshot(record, Object.keys(credentials)), destination: user.email, providerMessageId };
+    await persistence?.saveIntegration(record, { actorId: req.principal!.sub, action: "integration.email_test_sent", before, after });
+    store.integrations.set(record.id, record);
+    pushIntegrationAudit("integration.email_test_sent", record, req.principal!.sub, before, after);
+    return ok(res, { destination: user.email, providerMessageId, integration: integrationDto({ definition, environment: record.environment as "TEST" | "LIVE", record, credentials, mask: value => vault.mask(value) }) }, "Resend accepted the test email. Check the recipient inbox to confirm delivery.");
   });
   app.post(
     "/api/v1/admin/integrations/:id/disconnect",

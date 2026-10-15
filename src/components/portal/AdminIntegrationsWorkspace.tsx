@@ -519,7 +519,8 @@ export function AdminIntegrationsWorkspace() {
     if (!selected || selected.provider !== "resend" || busyActionRef.current) return;
     busyActionRef.current = "email"; setBusyAction("email"); setNotice(null);
     try {
-      const result = await commerceApi<{ destination: string; providerMessageId: string }>(`/api/v1/admin/integrations/${encodeURIComponent(selected.id)}/test-email`, { method: "POST" });
+      const result = await commerceApi<{ destination: string; providerMessageId: string; integration?: IntegrationDto }>(`/api/v1/admin/integrations/${encodeURIComponent(selected.id)}/test-email`, { method: "POST" });
+      if (result.integration) upsertItem(result.integration);
       const message = `Resend accepted the test email to ${result.destination}. Check that inbox and spam folder to confirm delivery. Message ID: ${result.providerMessageId}`;
       setNotice({ tone: "success", message }); toast.success("Test email accepted by Resend");
     } catch (error) {
