@@ -2,6 +2,16 @@
 
 Account owner: **Avaruchi’s approved Google account**. Use this account for Google Analytics, Search Console and Merchant Center; do not create properties in another signed-in Google account.
 
+## Connected production account
+
+- Merchant Center account: **Avaruchi — 5874406617**, owned by `lakshmistapasitreats@gmail.com`.
+- `https://aavaruchi.in` is verified and claimed. The business address and customer-service contacts match the published website.
+- Product source: **Avaruchi Hostinger catalog**, data source ID `10774641056`, fetching `https://aavaruchi.in/merchant-feed.xml` every 24 hours at **00:00 Asia/Calcutta**.
+- Source markets: India, Australia, Canada, United Kingdom and United States; language English; feed label IN; marketing method Free listings. Creating this source does not start an advertising campaign.
+- The India returns policy links to `https://aavaruchi.in/shipping-returns`: defective-product returns only, no exchanges. Google reviews it separately.
+
+The initial feed fetch recognized the XML, but it contains **zero eligible items** because the current catalog uses SVG jar illustrations. Merchant Center also has ten products detected during onboarding; they were not approved at setup. Replace illustrations with photographs of the actual products, complete stock and checkout configuration, and configure accurate shipping before expecting products to show. Target-country selection alone does not establish shipping coverage. International charges and delivery/dispatch times have not been supplied. Do not substitute India's draft shipping rates for international rates.
+
 ## What the website publishes
 
 - Canonical website: `https://aavaruchi.in`.
