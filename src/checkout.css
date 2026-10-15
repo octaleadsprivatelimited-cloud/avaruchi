@@ -1,0 +1,296 @@
+/* Keep commerce actions readable after the reference storefront's inherited link/button resets. */
+.avaruchi-ui .confirmation {
+  padding: 56px 20px;
+}
+.avaruchi-ui .confirmation > div {
+  width: min(100%, 760px);
+  min-width: 0;
+}
+.avaruchi-ui .confirmation > div > svg {
+  display: block;
+  margin: 0 auto 20px;
+}
+.avaruchi-ui .confirmation h1 {
+  font-size: clamp(30px, 4.5vw, 56px);
+  line-height: 1.12;
+  margin: 14px 0 20px;
+  overflow-wrap: anywhere;
+}
+.avaruchi-ui .confirmation > div > p:not(.eyebrow) {
+  max-width: 640px;
+  margin: 10px auto;
+  font-size: 15px;
+  line-height: 1.7;
+}
+.avaruchi-ui .confirmation > div > .eyebrow {
+  margin-inline: auto;
+  text-align: center;
+}
+.avaruchi-ui .confirmation .confirmation-details {
+  flex-wrap: wrap;
+  gap: 20px 40px;
+  margin: 28px 0;
+}
+.avaruchi-ui .confirmation-details span {
+  min-width: 0;
+  font-size: 13px;
+  color: #526258;
+}
+.avaruchi-ui .confirmation-details b {
+  font-size: 19px;
+  overflow-wrap: anywhere;
+}
+.avaruchi-ui .confirmation .confirmation-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 16px 0 0;
+}
+.avaruchi-ui .confirmation .confirmation-action,
+.checkout-form .continue,
+.cart-layout .order-summary > a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 50px;
+  height: auto;
+  padding: 14px 22px;
+  border: 1px solid #173f2b;
+  border-radius: 8px;
+  background: #173f2b;
+  color: #fff;
+  font: 650 15px/1.4 "Work Sans", Arial, sans-serif;
+  text-align: center;
+  text-decoration: none;
+  text-transform: none;
+  opacity: 1;
+}
+.avaruchi-ui .confirmation .confirmation-action.secondary {
+  border-color: #657c69;
+  background: #fff;
+  color: #173f2b;
+}
+.avaruchi-ui .confirmation .confirmation-action:hover:not(:disabled),
+.checkout-form .continue:hover:not(:disabled),
+.cart-layout .order-summary > a:hover {
+  background: #285d40;
+  color: #fff;
+}
+.avaruchi-ui .confirmation .confirmation-action.secondary:hover {
+  background: #e9f1e9;
+  color: #173f2b;
+}
+.avaruchi-ui .confirmation .confirmation-action svg,
+.checkout-form .continue svg,
+.cart-layout .order-summary > a svg {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+}
+.avaruchi-ui .confirmation .confirmation-verify {
+  min-height: 44px;
+  padding: 10px 12px;
+  color: #173f2b;
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.avaruchi-ui .confirmation .confirmation-action:disabled,
+.checkout-form .continue:disabled {
+  background: #56645b;
+  border-color: #56645b;
+  color: #fff;
+  opacity: 1;
+  cursor: not-allowed;
+}
+.checkout-shell .back-link,
+.checkout-shell > header > span {
+  font-size: 13px;
+}
+.checkout-shell .checkout-steps button {
+  min-height: 44px;
+  font-size: 13px;
+  color: #5f685f;
+}
+.checkout-shell .checkout-steps button.active,
+.checkout-shell .checkout-steps button.done {
+  color: #173f2b;
+  font-weight: 600;
+}
+.checkout-shell .checkout-steps button span {
+  display: inline;
+}
+.checkout-shell .checkout-form > label,
+.checkout-shell .two-fields label,
+.checkout-shell .three-fields label {
+  font-size: 14px;
+}
+.checkout-shell .checkout-form input,
+.checkout-shell .checkout-form select {
+  font-size: 16px;
+  color: #182e21;
+}
+.checkout-shell .delivery-choice,
+.checkout-shell .payment-choice label {
+  height: auto !important;
+  min-height: 76px;
+}
+.checkout-shell .delivery-choice b,
+.checkout-shell .payment-choice b,
+.checkout-shell .payment-note b,
+.checkout-shell .checkout-line b {
+  font-size: 15px;
+}
+.checkout-shell .delivery-choice small,
+.checkout-shell .payment-choice small,
+.checkout-shell .payment-note small,
+.checkout-shell .checkout-line small {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #526258;
+}
+.checkout-shell .checkout-line strong,
+.checkout-shell > main > aside > p,
+.cart-layout .order-summary > div {
+  font-size: 14px;
+  line-height: 1.5;
+  gap: 12px;
+}
+.checkout-shell > main > aside > p b {
+  text-align: right;
+}
+.avaruchi-ui .cart-layout .order-summary {
+  display: block;
+  min-width: 0;
+}
+.cart-layout .order-summary > p {
+  font-size: 12px;
+}
+.checkout-shell .store-coupon-entry,
+.cart-layout .store-coupon-entry {
+  display: block;
+  min-width: 0;
+  margin: 22px 0;
+  padding: 18px;
+  border: 1px solid #c5cfbe;
+  border-radius: 10px;
+  background: #f9fbf5;
+  color: #173f2b;
+}
+.store-coupon-entry > label,
+.cart-layout .order-summary .store-coupon-entry > label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.store-coupon-entry > label svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+.store-coupon-entry form input {
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+  height: 48px;
+  font-size: 16px;
+  line-height: 1.4;
+  color: #173f2b;
+}
+.store-coupon-entry form input::placeholder {
+  color: #657260;
+  opacity: 1;
+}
+.store-coupon-entry form input[readonly] {
+  background: #eaf2e7;
+  font-weight: 600;
+}
+.store-coupon-entry form input[aria-invalid="true"] {
+  border-color: #a33c26;
+}
+.store-coupon-entry form button {
+  min-height: 48px;
+  padding: 10px 16px;
+  background: #173f2b;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.4;
+  white-space: nowrap;
+  opacity: 1;
+}
+.store-coupon-entry form button:hover:not(:disabled) {
+  background: #285d40;
+}
+.store-coupon-entry form button:disabled {
+  background: #56645b;
+  cursor: wait;
+}
+.store-coupon-entry .coupon-hint,
+.store-coupon-entry .coupon-error {
+  display: block;
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #526258;
+  overflow-wrap: anywhere;
+}
+.store-coupon-entry .coupon-error {
+  color: #96351f;
+}
+.store-coupon-entry .coupon-applied {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: #173f2b;
+}
+.store-coupon-entry .coupon-applied > svg {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+}
+.store-coupon-entry .coupon-applied > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.store-coupon-entry .coupon-applied p {
+  margin: 3px 0 0;
+  line-height: 1.5;
+}
+.avaruchi-ui .confirmation :is(a, button):focus-visible,
+.store-coupon-entry :is(input, button):focus-visible,
+.cart-layout .order-summary > a:focus-visible {
+  outline: 3px solid #a85132;
+  outline-offset: 3px;
+}
+@media (max-width: 550px) {
+  .avaruchi-ui .confirmation .confirmation-actions {
+    flex-direction: column;
+  }
+  .avaruchi-ui .confirmation .confirmation-action {
+    width: 100%;
+  }
+  .checkout-shell .checkout-steps button {
+    font-size: 12px;
+  }
+  .checkout-shell .store-coupon-entry,
+  .cart-layout .store-coupon-entry {
+    padding: 14px;
+  }
+}
+@media (max-width: 360px) {
+  .store-coupon-entry form {
+    flex-wrap: wrap;
+  }
+  .store-coupon-entry form input,
+  .store-coupon-entry form button {
+    flex-basis: 100%;
+    width: 100%;
+  }
+}

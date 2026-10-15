@@ -22,16 +22,23 @@ import { AccountLink } from "./AccountLink";
 import { useInitialCatalog } from "@/lib/store-data";
 import { useStoreProducts } from "@/lib/store-products";
 import { catalogCategoryTree } from "@/lib/catalog-categories";
+import { matchesProductSearch } from "@/lib/product-search";
+import { productPath } from "@/lib/product-url";
 
 export function StoreHeader() {
   const store = useStorefrontConfig();
-  const categories = catalogCategoryTree(useStoreProducts(useInitialCatalog()));
+  const products = useStoreProducts(useInitialCatalog());
+  const categories = catalogCategoryTree(products);
   const [expandedCategory, setExpandedCategory] = useState("");
   const { cart } = useStoreCommerce();
   const location = useLocation();
   const navigate = useNavigate();
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const matchingProducts = products.filter(product => matchesProductSearch(product, query));
+  const inStock = (product: (typeof products)[number]) => product.variants?.some(variant => variant.stock > 0) || false;
+  const searchResults = (query.trim() ? matchingProducts : products.filter(inStock))
+    .sort((a, b) => Number(inStock(b)) - Number(inStock(a))).slice(0, 6);
   const [bagOpen, setBagOpen] = useState(false);
   const menu = useRef<HTMLDetailsElement>(null);
   const menuPointer = useRef("");
@@ -172,9 +179,9 @@ export function StoreHeader() {
           </div>
         </header>
         {searchOpen && (
+          <section className="header-search-panel" id="header-search" aria-label="Product search">
           <form
             className="header-search wrap"
-            id="header-search"
             onSubmit={(event) => {
               event.preventDefault();
               setSearchOpen(false);
@@ -186,10 +193,18 @@ export function StoreHeader() {
             </label>
             <input
               id="header-query"
+              type="search"
               autoFocus
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search a flavour or ingredient"
+              aria-controls="header-search-results"
+              onKeyDown={event => {
+                if (event.key === "ArrowDown") {
+                  event.preventDefault();
+                  document.querySelector<HTMLAnchorElement>("#header-search-results a")?.focus();
+                }
+              }}
             />
             <button type="submit">Search</button>
             <button
@@ -200,6 +215,18 @@ export function StoreHeader() {
               ×
             </button>
           </form>
+          <div className="header-search-results wrap" id="header-search-results">
+            <p className="header-search-caption" role="status">{query.trim() ? `${matchingProducts.length} ${matchingProducts.length === 1 ? "product matches" : "products match"} your search` : "Available now"}</p>
+            {searchResults.length ? <ul aria-label="Matching products">{searchResults.map(product => <li key={product.id}>
+              <Link className="header-search-product" to={productPath(product)} onClick={() => setSearchOpen(false)}>
+                <ProductPhoto product={product} />
+                <span><strong>{product.name}</strong><small>{product.category.split(">").at(-1)?.trim()}</small><span className={inStock(product) ? "search-stock available" : "search-stock"}>{inStock(product) ? "In stock" : "Sold out"} · {money(priceIncludingTax(product.price, product.taxRate))}</span></span>
+                <span className="search-product-arrow" aria-hidden="true">↗</span>
+              </Link>
+            </li>)}</ul> : <p className="header-search-empty">{query.trim() ? "No matching products. Try another name, flavour or category." : "Explore the collection to find your favourites and check stock."}</p>}
+            <Link className="header-search-all" to="/shop" search={query.trim() ? { q: query.trim() } : undefined} onClick={() => setSearchOpen(false)}>{query.trim() ? "View all search results" : "Browse the collection"} <span aria-hidden="true">→</span></Link>
+          </div>
+          </section>
         )}
       </div>
       <AnimatePresence>

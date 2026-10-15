@@ -1,4 +1,15 @@
 /* Adapt the reference design to the existing commerce components. */
+@media (max-width: 600px) {
+  .avaruchi-ui.reference-store .announcement,
+  .avaruchi-ui.reference-store .announcement > span {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .avaruchi-ui.reference-store .announcement {
+    padding: 8px 12px;
+    line-height: 1.5;
+  }
+}
 body {
   margin: 0;
   background: #fcfbf6;

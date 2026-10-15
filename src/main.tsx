@@ -17,6 +17,8 @@ import "./home-delivery.css";
 import "./avaruchi-reference.css";
 import "./avaruchi-adaptations.css";
 import "./catalog-navigation.css";
+import "./checkout.css";
+import "./product-search.css";
 
 declare global {
   interface Window {

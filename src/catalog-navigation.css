@@ -20,7 +20,7 @@
 @media (max-width: 760px) {
   .avaruchi-ui .products-dropdown.category-mega-menu { position: fixed; top: auto; left: 16px; right: 16px; width: auto; transform: none; padding: 18px; max-height: 70dvh; overflow-y: auto; overscroll-behavior: contain; }
   .avaruchi-ui .category-menu-columns { grid-template-columns: 1fr; gap: 0; }
-  .avaruchi-ui .category-menu-intro { margin-bottom: 4px; gap: 12px; }
+  .avaruchi-ui .category-menu-intro { margin-bottom: 4px; gap: 12px; flex-wrap: wrap; }
   .avaruchi-ui .category-menu-group { padding: 15px 0; border-bottom: 1px solid var(--rule); }
   .avaruchi-ui .category-menu-group:last-child { border-bottom: 0; padding-bottom: 0; }
   .avaruchi-ui.reference-store .site-header nav .category-menu-heading > a { font-size: 21px; padding: 0; }

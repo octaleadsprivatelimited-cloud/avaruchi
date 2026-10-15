@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@/lib/navigation";
 import { loadPortalSession } from "@/lib/portal-auth";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -11,6 +11,7 @@ import {
   Plus,
   ShieldCheck,
   ShoppingBag,
+  Tag,
   Truck,
 } from "lucide-react";
 import { trackCommerceEvent } from "@/lib/analytics";
@@ -89,7 +90,7 @@ function useCoupon(lines: ReturnType<typeof useCommerceCart>["lines"]) {
     const normalized = code.trim().toUpperCase();
     const currentLines = JSON.parse(cartKey) as Array<{ variantId?: string; quantity: number; unresolved: boolean }>;
     if (!normalized || !currentLines.length || currentLines.some(line => !line.variantId || line.unresolved)) {
-      if (announce) toast.error(!normalized ? "Enter a coupon code" : "Wait for your bag to load before applying a coupon");
+      setError(!normalized ? "Enter a coupon or voucher code first." : "Wait for your bag to load before applying a code.");
       return;
     }
     const request = ++sequence.current;
@@ -121,17 +122,19 @@ function useCoupon(lines: ReturnType<typeof useCommerceCart>["lines"]) {
     if (saved) void apply(saved, false);
     return invalidate;
   }, [apply, invalidate]);
-  return { input, setInput, applied: result?.cartKey === cartKey ? result.coupon : null, busy, error, apply: (code = input) => apply(code), remove };
+  return { input, setInput: (value: string) => { setInput(value); setError(""); }, applied: result?.cartKey === cartKey ? result.coupon : null, busy, error, apply: (code = input) => apply(code), remove };
 }
 function CouponEntry({ coupon }: { coupon: ReturnType<typeof useCoupon> }) {
-  return <div className="store-coupon-entry">
+  const id = useId();
+  return <div className="store-coupon-entry" aria-busy={coupon.busy}>
+    <label htmlFor={id}><Tag aria-hidden="true" /> Coupon or voucher code</label>
     <form onSubmit={event => { event.preventDefault(); if (!coupon.busy) { if (coupon.applied) coupon.remove(); else void coupon.apply(); } }}>
-      <input aria-label="Coupon code" placeholder="Coupon code" value={coupon.input} onChange={event => coupon.setInput(event.target.value.toUpperCase())} disabled={coupon.busy || !!coupon.applied} maxLength={40} />
-      <button disabled={coupon.busy}>{coupon.busy ? "Checking…" : coupon.applied ? "Remove" : "Apply"}</button>
+      <input id={id} placeholder="Enter your code" value={coupon.input} onChange={event => coupon.setInput(event.target.value.toUpperCase())} readOnly={!!coupon.applied} disabled={coupon.busy} autoComplete="off" autoCapitalize="characters" spellCheck={false} aria-invalid={!!coupon.error} aria-describedby={`${id}-message`} maxLength={40} />
+      <button type="submit" disabled={coupon.busy}>{coupon.busy ? "Checking…" : coupon.applied ? "Remove" : "Apply code"}</button>
     </form>
-    {coupon.error && <small role="alert">{coupon.error}</small>}
-    {coupon.applied?.appliesTo === "SELECTED_PRODUCTS" && <small>Discount applies to eligible products only.</small>}
-    {coupon.applied?.freeShipping && <small>Free shipping coupon applied.</small>}
+    {coupon.error ? <p id={`${id}-message`} className="coupon-error" role="alert">{coupon.error}</p> : coupon.applied ? <div id={`${id}-message`} className="coupon-applied" role="status">
+      <Check aria-hidden="true" /><div><strong>{coupon.applied.code} applied</strong><p>{coupon.applied.freeShipping ? "Free delivery applied." : `${money(coupon.applied.discount)} saved on your bag.`}{coupon.applied.appliesTo === "SELECTED_PRODUCTS" ? " Applies to eligible products only." : ""}</p></div>
+    </div> : <p id={`${id}-message`} className="coupon-hint">Have a code? Add it here to check your savings.</p>}
   </div>;
 }
 export function CartPage() {
@@ -710,8 +713,8 @@ export function CheckoutPage() {
             <ShoppingBag />
             <h1>{checkoutAvailability === "loading" ? "Checking checkout…" : checkoutAvailability === "error" ? "Checkout could not be loaded." : "Checkout is temporarily unavailable."}</h1>
             <p>{checkoutAvailability === "loading" ? "Checking payment and delivery availability for your order." : checkoutAvailability === "error" ? "Please check your connection and try again. Your bag is unchanged." : "Ordering is temporarily paused while payment or delivery options are unavailable. Your items will stay in your bag."}</p>
-            {checkoutAvailability === "error" ? <button type="button" onClick={() => void checkCheckoutAvailability()}>Try again</button> : null}
-            {checkoutAvailability !== "loading" ? <Link to="/cart">Return to your bag <ArrowRight /></Link> : null}
+            {checkoutAvailability === "error" ? <button className="confirmation-action" type="button" onClick={() => void checkCheckoutAvailability()}>Try again</button> : null}
+            {checkoutAvailability !== "loading" ? <div className="confirmation-actions"><Link className="confirmation-action secondary" to="/cart">Return to your bag <ArrowRight /></Link></div> : null}
           </div>
         </main>
       </StorePage>
@@ -728,7 +731,7 @@ export function CheckoutPage() {
               Your order <b>#{orderNumber}</b> has been received. You can follow
               its progress on the order tracking page.
             </p>
-            <div>
+            <div className="confirmation-details">
               <span>
                 Order total <b>{money(confirmedTotal)}</b>
               </span>
@@ -736,10 +739,10 @@ export function CheckoutPage() {
                 Estimated delivery <b>{estimatedDelivery}</b>
               </span>
             </div>
-            <Link to="/track">
+            <div className="confirmation-actions"><Link className="confirmation-action" to="/track">
               Track your order <ArrowRight />
             </Link>
-            <a href={customerTransactionPath(orderNumber)}>View transaction &amp; invoice</a>
+            <a className="confirmation-action secondary" href={customerTransactionPath(orderNumber)}>View transaction &amp; invoice</a></div>
           </div>
         </main>
       </StorePage>
@@ -758,7 +761,7 @@ export function CheckoutPage() {
               payment gateway is confirming the transaction. We will update
               the order as soon as the verified result arrives.
             </p>
-            <div>
+            <div className="confirmation-details">
               <span>
                 Submitted amount <b>{money(paymentSubmitted.total)}</b>
               </span>
@@ -766,11 +769,11 @@ export function CheckoutPage() {
                 Status <b>Pending verification</b>
               </span>
             </div>
-            <button disabled={busy} onClick={() => void verifySubmittedPayment(paymentSubmitted)}>{busy ? "Verifying…" : "Verify payment status"}</button>
-            <Link to="/track">
+            <button className="confirmation-action" disabled={busy} onClick={() => void verifySubmittedPayment(paymentSubmitted)}>{busy ? "Verifying…" : "Verify payment status"}</button>
+            <div className="confirmation-actions"><Link className="confirmation-action secondary" to="/track">
               Check order status <ArrowRight />
             </Link>
-            <a href={customerTransactionPath(paymentSubmitted.orderNumber)}>View transaction details</a>
+            <a className="confirmation-action secondary" href={customerTransactionPath(paymentSubmitted.orderNumber)}>View transaction details</a></div>
           </div>
         </main>
       </StorePage>
@@ -790,8 +793,8 @@ export function CheckoutPage() {
               this same order—it does not create a duplicate order.
             </p>
             <p role="alert">{pendingPayment.message}</p>
-            <button disabled={busy} onClick={() => void verifySubmittedPayment(pendingPayment)}>Already paid? Verify payment</button>
-            <div>
+            <button className="confirmation-verify" disabled={busy} onClick={() => void verifySubmittedPayment(pendingPayment)}>Already paid? Verify payment</button>
+            <div className="confirmation-details">
               <span>
                 Amount due <b>{money(pendingPayment.total)}</b>
               </span>
@@ -799,14 +802,14 @@ export function CheckoutPage() {
                 Contact <b>{contact.email}</b>
               </span>
             </div>
-            <button className="continue" onClick={retryPayment} disabled={busy}>
+            <button className="confirmation-action" onClick={retryPayment} disabled={busy}>
               {busy ? "Opening secure payment…" : "Retry secure payment"}{" "}
               <LockKeyhole />
             </button>
-            <Link to="/track">
+            <div className="confirmation-actions"><Link className="confirmation-action secondary" to="/track">
               Track saved order <ArrowRight />
             </Link>
-            <a href={customerTransactionPath(pendingPayment.orderNumber)}>View transaction details</a>
+            <a className="confirmation-action secondary" href={customerTransactionPath(pendingPayment.orderNumber)}>View transaction details</a></div>
           </div>
         </main>
       </StorePage>

@@ -9,6 +9,7 @@ import { CampaignSlot } from "@/lib/promotions";
 import { ReferenceIcon, ReferenceProductCard } from "./ReferencePrimitives";
 import { StorePage } from "./StoreHeader";
 import { ALL_PRODUCTS, catalogCategories, catalogCategoryTree, categoryParts, matchesCategory } from "@/lib/catalog-categories";
+import { matchesProductSearch } from "@/lib/product-search";
 
 export function ShopPage() {
   const products = useStoreProducts(useInitialCatalog());
@@ -39,9 +40,7 @@ export function ShopPage() {
         .filter(
           (product) =>
             matchesCategory(product, category) &&
-            `${product.name} ${product.category} ${product.description || ""}`
-              .toLowerCase()
-              .includes(query.toLowerCase()),
+            matchesProductSearch(product, query),
         )
         .sort((a, b) =>
           sort === "price-low"
