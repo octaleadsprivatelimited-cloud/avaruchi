@@ -43,6 +43,8 @@ pnpm verify:db
 
 Configure the production MySQL, session/encryption secrets and provider settings in Vercel before using commerce services. The public UI can render before those services are configured; API requests return an explicit unavailable response. The complete backend's persistent uploads and background notification worker require a durable Node host. [HOSTINGER.md](HOSTINGER.md) documents that deployment.
 
+For a persistent Hostinger backend behind Vercel, set `COMMERCE_BACKEND_URL` and a unique `AVARUCHI_PROXY_SECRET` on Vercel. The same proxy secret goes on the backend. The adapter then streams all dynamic requests to the persistent service, retaining the storefront's same-origin session cookies, cart tokens, binary uploads and raw signed webhooks. Keep database, session and provider secrets on the backend only. Run `node scripts/smoke-commerce-proxy.mjs` to verify the bridge.
+
 The backend catalog is the source of products and prices. The reference site's demo products, coupons and checkout state are not imported into the new database.
 
 ## Production setup

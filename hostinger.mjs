@@ -12,6 +12,7 @@ import { buildMerchantFeed, buildRobots, buildSitemap } from './commerce-api/dis
 import { startNotificationWorker } from './commerce-api/dist/src/notification-worker.js';
 import { baseSecurityHeaders } from './commerce-api/dist/src/http-security.js';
 import { serveStorefront } from './server/storefront.mjs';
+import { authorizeCommerceProxy } from './server/commerce-proxy.mjs';
 
 const origin = new URL(process.env.APP_URL || 'http://localhost:5180').origin;
 process.env.CORS_ORIGINS ||= origin;
@@ -29,6 +30,7 @@ const privatePath = /^\/(admin|account|cart|checkout|login|track|transaction|api
 const server = createServer(async (req, res) => {
   for (const [name, value] of Object.entries(baseSecurityHeaders(process.env.NODE_ENV === 'production'))) res.setHeader(name, value);
   const path = new URL(req.url || '/', origin).pathname;
+  if (!['/health', '/ready'].includes(path) && !authorizeCommerceProxy(req, res, { secret: process.env.AVARUCHI_PROXY_SECRET, origin })) return;
   if (!ready && path !== '/ready' && path !== '/health') {
     // New Hostinger workers can receive traffic during initialization. Hold the
     // first customer request briefly instead of showing a cold-start error page.

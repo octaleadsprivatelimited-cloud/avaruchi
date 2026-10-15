@@ -2,6 +2,7 @@ import { storefrontProductDto } from '../commerce-api/dist/src/admin-products.js
 import { buildMerchantFeed, buildRobots, buildSitemap } from '../commerce-api/dist/src/catalog-discovery.js';
 import { defaultStorefrontConfig } from '../commerce-api/dist/src/storefront-config.js';
 import { serveStorefront } from '../server/storefront.mjs';
+import { proxyCommerce } from '../server/commerce-proxy.mjs';
 
 let backendPromise;
 function deploymentOrigin() {
@@ -23,6 +24,11 @@ async function backend() {
 
 export default async function handler(req, res) {
   const origin = deploymentOrigin();
+  if (process.env.COMMERCE_BACKEND_URL) return proxyCommerce(req, res, {
+    backendUrl: process.env.COMMERCE_BACKEND_URL,
+    secret: process.env.AVARUCHI_PROXY_SECRET,
+    origin,
+  });
   const path = new URL(req.url || '/', origin).pathname;
   const apiPath = /^\/(api|webhooks|uploads)(\/|$)/.test(path) || ['/health', '/ready'].includes(path);
   let runtime;
