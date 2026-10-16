@@ -33,9 +33,9 @@ export function EcommerceHome() {
           <div>
             <h2>Pickles for the everyday Andhra table</h2>
             <p>
-              Avaruchi brings familiar tang and bold spice to the meals you
-              love. Explore mango, gongura, tomato and more, choose your jar
-              size, and find a new favourite for your table.
+              Aavaruchi brings the warmth of Amma’s kitchen to your table.
+              Discover homemade pickles, podis and pachadis, prepared in small
+              batches with traditional family recipes and carefully selected ingredients.
             </p>
             <p>
               Warm rice, a crisp dosa, a comforting bowl of dal. There is always
@@ -51,15 +51,15 @@ export function EcommerceHome() {
         <Reveal as="section" className="reference-story wrap">
           <div>
             <span className="eyebrow">ESTABLISHED {BRAND.established}</span>
-            <h2>Avaruchi. A familiar ritual.</h2>
+            <h2>Aavaruchi. Made with love.</h2>
             <p>
-              Avaruchi is the pickle brand of{" "}
+              Aavaruchi is the homemade food brand of{" "}
               {store.legalName || BRAND.legalName}, based in{" "}
-              {store.businessAddress || BRAND.address}. Find pairing notes for
-              warm rice, breakfast and everyday lunches.
+              {store.businessAddress || BRAND.address}. Our story begins with Amma’s Avakaya and the family recipes
+              that make every spoonful feel like home.
             </p>
-            <Link className="collection-view" to="/journal">
-              Read our pairing notes
+            <Link className="collection-view" to="/our-story">
+              About us
             </Link>
           </div>
           <img
@@ -68,7 +68,7 @@ export function EcommerceHome() {
             width={640}
             height={640}
             loading="lazy"
-            alt="Avaruchi supplied brand artwork"
+            alt="Aavaruchi supplied brand artwork"
           />
         </Reveal>
         <ReferenceFaq />

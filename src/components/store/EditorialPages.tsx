@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "@/lib/navigation";
 import { BRAND } from "@/lib/brand";
+import { aboutAavaruchi, productInformation } from "@/data/brand-content";
 import { useInitialCatalog } from "@/lib/store-data";
 import { useStoreProducts } from "@/lib/store-products";
 import { useCommerceWishlist } from "@/lib/commerce-wishlist";
@@ -13,69 +14,29 @@ function StoryContent({ onShop }: { onShop: () => void }) {
   return (
     <section className="story-page wrap">
       <div className="story-page-intro">
-        <span className="eyebrow">THE AVARUCHI IDEA</span>
-        <h1>
-          Some flavours
-          <br />
-          feel like <em>coming home.</em>
-        </h1>
-        <p className="lead">
-          A jar at the centre of the table. A little rice on your plate. Someone
-          saying, “Have a little more.”
-        </p>
-        <p className="story-business-line">
-          Established in {BRAND.established} · {BRAND.legalName} ·{" "}
-          {BRAND.address}
-        </p>
-        <p className="business-tagline" lang="te">
-          {BRAND.tagline}
-        </p>
+        <span className="eyebrow">ABOUT US</span>
+        <h1>The warmth of home.<br /><em>The taste of Aavaruchi.</em></h1>
+        <p className="lead">Food, memories, and Amma chethi ruchi.</p>
+        <p className="story-business-line">{BRAND.legalName} · {BRAND.address}</p>
+        <p className="business-tagline" lang="te">{BRAND.tagline}</p>
       </div>
       <Reveal as="figure" className="story-wide-photo">
-        <img
-          src="/images/hero.png"
-          alt="Avaruchi mango pickle packaging concept, with raw mango and spices"
-        />
-        <figcaption>A FAMILIAR FLAVOUR. A NEW PLACE AT THE TABLE.</figcaption>
+        <img src="/images/hero.png" alt="Aavaruchi mango pickle with raw mango and traditional spices" />
+        <figcaption>FAMILY RECIPES. SMALL BATCHES. MADE WITH LOVE.</figcaption>
       </Reveal>
       <div className="story-chapters">
         <Reveal as="article">
-          <span className="eyebrow">01 / THE FEELING</span>
-          <h2>
-            A small spoon.
-            <br />A generous table.
-          </h2>
-          <div>
-            <p>
-              Avaruchi is a pickle company inspired by the everyday Andhra
-              table. Familiar tang, a little heat, and a good meal shared with
-              the people around you.
-            </p>
-            <p>
-              Our collection makes room for bold gongura, comforting tomato,
-              classic mango and the flavours you reach for again and again.
-            </p>
+          <span className="eyebrow">OUR STORY</span>
+          <h2>From Amma’s kitchen<br />to your family table.</h2>
+          <div>{aboutAavaruchi.map(paragraph => <p key={paragraph}>{paragraph}</p>)}
+            <a className="link-button" href={`mailto:${BRAND.email}`}>Share a recipe or feedback ↗</a>
           </div>
         </Reveal>
-        <Reveal as="article">
-          <span className="eyebrow">02 / THE RITUAL</span>
-          <h2>
-            For your everyday
-            <br />
-            favourite meals.
-          </h2>
-          <div>
-            <p>
-              Warm rice and ghee. A crisp dosa. The last corner of a paratha.
-              You don’t need a special occasion to open a jar.
-            </p>
-            <p>
-              Choose your flavour, find a pairing, and make a little room at the
-              table.
-            </p>
-            <button className="button outline" onClick={onShop}>
-              Find your flavour <span>↗</span>
-            </button>
+        <Reveal as="article" id="product-information">
+          <span className="eyebrow">PRODUCT INFORMATION</span>
+          <h2>Homemade goodness.<br />Care in every batch.</h2>
+          <div>{productInformation.map(paragraph => <p key={paragraph}>{paragraph}</p>)}
+            <button className="button outline" onClick={onShop}>Find your flavour <span>↗</span></button>
           </div>
         </Reveal>
       </div>

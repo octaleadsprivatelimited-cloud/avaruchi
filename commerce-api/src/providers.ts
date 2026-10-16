@@ -81,7 +81,7 @@ export class ManualShippingProvider implements ShippingProvider {
   constructor(private policy: DeliveryPolicy) {}
   async rates(input: { destination: string }) {
     if (!/^[1-9]\d{5}$/.test(input.destination)) throw new AppError(422, "INVALID_PIN_CODE", "Enter a valid Indian PIN code");
-    return [{ service: "MANUAL", label: "Standard delivery", amount: { amount: this.policy.deliveryCharge, currency: "INR" }, etaDays: this.policy.deliveryMaxDays, etaMinDays: this.policy.deliveryMinDays }];
+    return [{ service: "MANUAL", label: "Standard delivery", amount: { amount: this.policy.deliveryCharge, currency: "INR" }, etaDays: this.policy.deliveryMaxDays, etaMinDays: this.policy.deliveryMinDays, etaBasis: this.policy.deliveryEstimateBasis || "DISPATCH" }];
   }
   async createShipment(): Promise<never> {
     throw new AppError(422, "MANUAL_SHIPMENT_DETAILS_REQUIRED", "Enter the courier details in Orders to record a manual dispatch");

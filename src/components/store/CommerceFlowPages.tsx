@@ -27,7 +27,7 @@ import { StorePage } from "./StoreHeader";
 import { customerTransactionPath, loginReturnPath } from "@/lib/transactions";
 import { toast, Toaster } from "sonner";
 import { usePostalLookup } from "@/lib/postal-lookup";
-import { freeDeliveryQualifies } from "@/lib/delivery-policy";
+import { deliveryRateEstimate, freeDeliveryQualifies } from "@/lib/delivery-policy";
 import { OnlineCheckoutError, openOnlineCheckout, type PaymentProof } from "@/lib/online-checkout";
 
 async function reportCheckoutFailure(error: unknown, attempt: { orderNumber: string; providerOrderId: string; attemptToken: string }) {
@@ -49,6 +49,7 @@ type DeliveryRate = {
   label: string;
   etaDays: number;
   etaMinDays?: number;
+  etaBasis?: "ORDER" | "DISPATCH";
   baseAmount: number;
   shipping: number;
   currency: string;
@@ -62,6 +63,7 @@ type CheckoutQuote = {
     label: string;
     etaDays: number;
     etaMinDays?: number;
+    etaBasis?: "ORDER" | "DISPATCH";
     quotedAmount: number;
     chargedAmount: number;
     currency: string;
@@ -526,7 +528,7 @@ export function CheckoutPage() {
     if (step >= 2 && paymentProvider) void requestQuote(paymentProvider, selectedService);
   // An admin pricing update replaces the displayed quote; placement also revalidates it.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paymentProvider, storefront.deliveryCharge, storefront.freeShippingThreshold, storefront.deliveryMinDays, storefront.deliveryMaxDays, storefront.onlinePaymentDiscountEnabled, storefront.onlinePaymentDiscountType, storefront.onlinePaymentDiscountValue]);
+  }, [paymentProvider, storefront.deliveryCharge, storefront.freeShippingThreshold, storefront.deliveryMinDays, storefront.deliveryMaxDays, storefront.deliveryEstimateBasis, storefront.onlinePaymentDiscountEnabled, storefront.onlinePaymentDiscountType, storefront.onlinePaymentDiscountValue]);
 
   const continueToPayment = () => {
     if (!quote || quoteBusy || coupon.busy || !selectedService) return;
@@ -548,7 +550,7 @@ export function CheckoutPage() {
     trackCommerceEvent("purchase", analytics, { dedupeKey: `purchase:${number}` });
     setOrderNumber(number);
     setConfirmedTotal(orderTotal);
-    setEstimatedDelivery(`${etaDays} business ${etaDays === 1 ? "day" : "days"} after dispatch`);
+    setEstimatedDelivery(deliveryRateEstimate({ etaDays, ...(quote?.selectedShipping || {}) }));
     setPendingPayment(null);
     setPaymentSubmitted(null);
     cart.clear();
@@ -956,8 +958,7 @@ export function CheckoutPage() {
                   <span>
                     <b>{rate.label}</b>
                     <small>
-                      Estimated in {rate.etaMinDays && rate.etaMinDays !== rate.etaDays ? `${rate.etaMinDays}–${rate.etaDays}` : rate.etaDays}{" "}
-                      {rate.etaDays === 1 ? "business day" : "business days"} after dispatch
+                      Estimated in {deliveryRateEstimate(rate)}
                     </small>
                   </span>
                   <strong>{rate.shipping ? money(rate.shipping) : "Free"}</strong>
@@ -1004,7 +1005,7 @@ export function CheckoutPage() {
                 </span>
               </div>
               <p className="checkout-policy-note">
-                No change-of-mind returns, exchanges or refunds. Damaged, defective, wrong, missing or undelivered orders can be reported for review; statutory remedies remain available. Read our <Link to="/shipping-returns">returns and refund policy</Link> before placing your order.
+                No cancellations after order confirmation, or change-of-mind returns, exchanges or refunds. Damaged, defective, wrong, missing or undelivered orders can be reported for review; statutory remedies remain available. Read our <Link to="/shipping-returns">returns and refund policy</Link> before placing your order.
               </p>
               <button
                 className="continue"
@@ -1232,7 +1233,7 @@ export function LoginPage() {
       <Toaster richColors position="bottom-center" />
       <main className="auth-page">
         <section>
-          <p className="eyebrow">Welcome to Avaruchi</p>
+          <p className="eyebrow">Welcome to Aavaruchi</p>
           <h1>Sign in or sign up.</h1>
           <p>Use your Google account for orders, returns and saved favourites. New accounts are created automatically.</p>
           <CustomerQuickLogin />
@@ -1242,7 +1243,7 @@ export function LoginPage() {
           <blockquote>
             Familiar tang, bold spice and a little taste of home in every jar.
           </blockquote>
-          <p>Avaruchi promise</p>
+          <p>Aavaruchi promise</p>
         </aside>
       </main>
     </StorePage>

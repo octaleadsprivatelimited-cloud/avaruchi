@@ -172,8 +172,8 @@ describe("commerce API", () => {
   });
   it("serves and securely updates white-label storefront settings", async () => {
     const initial = await request("/api/v1/storefront/config");
-    expect(initial.body.data.storeName).toBe("Avaruchi");
-    expect(initial.body.data.freeShippingThreshold).toBe(999);
+    expect(initial.body.data.storeName).toBe("Aavaruchi");
+    expect(initial.body.data.freeShippingThreshold).toBe(0);
     const unauthorized = await request("/api/v1/admin/storefront-config");
     expect(unauthorized.status).toBe(401);
     const updated = {

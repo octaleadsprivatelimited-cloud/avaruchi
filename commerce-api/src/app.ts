@@ -2423,6 +2423,7 @@ export async function createApp(overrides?: {
           label: rate.label,
           etaDays: rate.etaDays,
           etaMinDays: rate.etaMinDays,
+          etaBasis: rate.etaBasis,
           baseAmount: rate.amount.amount,
           shipping,
           currency: rate.amount.currency,
@@ -2443,6 +2444,7 @@ export async function createApp(overrides?: {
         label: selectedRate.label,
         etaDays: selectedRate.etaDays,
         etaMinDays: selectedRate.etaMinDays,
+        etaBasis: selectedRate.etaBasis,
         quotedAmount: selectedRate.amount.amount,
         chargedAmount: shippingAmount,
         currency: selectedRate.amount.currency,
@@ -3834,7 +3836,6 @@ export async function createApp(overrides?: {
       const businessMissing = [
         !storefront.legalName && "legal business name",
         !storefront.businessAddress && "business postal address",
-        !storefront.supportPhone && "customer support phone",
         !storefront.supportEmail && "customer support email",
       ].filter((value): value is string => Boolean(value));
       res.setHeader("Cache-Control", "private, no-store");

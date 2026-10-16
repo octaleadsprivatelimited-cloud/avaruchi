@@ -3,6 +3,7 @@ import { Link } from "@/lib/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { toast } from "sonner";
 import { BRAND } from "@/lib/brand";
+import { aavaruchiFaq } from "@/data/brand-content";
 import { money, type Product } from "@/data/commerce";
 import { useStoreCommerce } from "@/lib/store-commerce";
 import { productRouteKey } from "@/lib/product-url";
@@ -78,7 +79,7 @@ export function ReferenceProductCard({
     if (item)
       trackCommerceEvent("select_item", {
         items: [item],
-        item_list_name: "Avaruchi collection",
+        item_list_name: "Aavaruchi collection",
       });
   };
   const save = async () => {
@@ -225,19 +226,19 @@ export function ReferenceHero({ products }: { products: Product[] }) {
             <img
               key={store.heroImageUrl || "default-hero"}
               src={store.heroImageUrl || "/images/hero.png"}
-              alt={store.heroImageAlt || (store.heroImageUrl ? `${store.storeName} featured pickles` : "Avaruchi mango pickle jar with a bowl of spiced mango and chillies")}
+              alt={store.heroImageAlt || (store.heroImageUrl ? `${store.storeName} featured pickles` : "Aavaruchi mango pickle jar with a bowl of spiced mango and chillies")}
               fetchPriority="high"
               onError={event => {
                 if (store.heroImageUrl && event.currentTarget.getAttribute("src") !== "/images/hero.png") {
                   event.currentTarget.src = "/images/hero.png";
-                  event.currentTarget.alt = "Avaruchi mango pickle jar with a bowl of spiced mango and chillies";
+                  event.currentTarget.alt = "Aavaruchi mango pickle jar with a bowl of spiced mango and chillies";
                 }
               }}
             />
           ) : (
             <PickleArtwork
               index={item.image}
-              label={`Avaruchi ${item.name} pickle`}
+              label={`Aavaruchi ${item.name} pickle`}
               className="hero-jar"
             />
           )}
@@ -424,12 +425,14 @@ const motionEase = [0.22, 1, 0.36, 1] as const;
 export function Reveal({
   children,
   className,
+  id,
   as = "div",
   delay = 0,
   enter = false,
 }: {
   children: ReactNode;
   className?: string;
+  id?: string;
   as?: "div" | "article" | "section" | "figure";
   delay?: number;
   enter?: boolean;
@@ -441,6 +444,7 @@ export function Reveal({
     : { opacity: [0.55, 1], y: [18, 0] };
   return (
     <Element
+      id={id}
       className={className}
       initial={false}
       animate={enter ? reveal : undefined}
@@ -578,7 +582,7 @@ export function BrandMark() {
         alt=""
       />
       <span className="brand-name">
-        {store.storeName === "Avaruchi" ? "avaruchi" : store.storeName}
+        {store.storeName === "Aavaruchi" ? "aavaruchi" : store.storeName}
         <small lang="te">{BRAND.tagline}</small>
       </span>
     </>
@@ -590,30 +594,13 @@ export function ReferenceFaq() {
       <div>
         <span className="eyebrow">A LITTLE HELP</span>
         <h2>
-          Before you
+          Frequently asked
           <br />
-          open the jar.
+          questions.
         </h2>
       </div>
       <div>
-        {[
-          [
-            "How do I choose a pickle?",
-            "Start with the flavour you love. Mango is bold and tangy, gongura has a leafy sharpness, and tomato is mellow. Each product page includes a heat level and pairing note.",
-          ],
-          [
-            "What sizes can I order?",
-            "Choose an available jar size on the product page. Current prices and availability are shown for each option.",
-          ],
-          [
-            "How do I track an order?",
-            "Open your account and select View order. Your order moves through confirmed, packed, shipped and delivered, with a tracking reference added by the store.",
-          ],
-          [
-            "Where do I find my invoice?",
-            "A numbered PDF invoice is created automatically when an order is confirmed. Download it from the confirmation screen or your order history.",
-          ],
-        ].map(([q, a]) => (
+        {aavaruchiFaq.map(([q, a]) => (
           <details key={q}>
             <summary>{q}</summary>
             <p>{a}</p>

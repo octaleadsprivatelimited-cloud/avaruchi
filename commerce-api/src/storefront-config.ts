@@ -26,15 +26,16 @@ export const storefrontConfigSchema = z.object({
   locale: z.string().regex(/^[a-z]{2,3}(?:-[A-Z]{2})?$/),
   supportEmail: z.union([z.string().email().max(254), z.literal("")]).default(""),
   supportPhone: z.string().trim().max(30).default(""),
-  freeShippingThreshold: z.number().min(0).max(100000000).multipleOf(0.01).default(999),
+  freeShippingThreshold: z.number().min(0).max(100000000).multipleOf(0.01).default(0),
   manualDeliveryEnabled: z.boolean().default(false),
   codEnabled: z.boolean().default(true),
   onlinePaymentDiscountEnabled: z.boolean().default(false),
   onlinePaymentDiscountType: z.enum(["PERCENTAGE", "FIXED_AMOUNT"]).default("PERCENTAGE"),
   onlinePaymentDiscountValue: z.number().min(0).max(100000).multipleOf(0.01).default(0),
-  deliveryCharge: z.number().min(0).max(100000).multipleOf(0.01).default(59),
-  deliveryMinDays: z.number().int().min(1).max(60).default(3),
-  deliveryMaxDays: z.number().int().min(1).max(60).default(6),
+  deliveryCharge: z.number().min(0).max(100000).multipleOf(0.01).default(0),
+  deliveryMinDays: z.number().int().min(1).max(60).default(4),
+  deliveryMaxDays: z.number().int().min(1).max(60).default(5),
+  deliveryEstimateBasis: z.enum(["ORDER", "DISPATCH"]).default("ORDER"),
   announcement: z.string().trim().max(180).default("").transform(additionalAnnouncement),
   footerTagline: z.string().trim().max(240).default(""),
   seoTitle: z.string().trim().max(70).default(""),
@@ -46,13 +47,13 @@ export const storefrontConfigSchema = z.object({
 export type StorefrontConfig = z.infer<typeof storefrontConfigSchema>;
 
 export const defaultStorefrontConfig: StorefrontConfig = {
-  storeName: "Avaruchi", legalName: "LAKSHMI'S TAPASI TREATS", businessGstin:"", businessAddress:"", logoUrl: "/favicon.svg", footerLogoUrl: "", faviconUrl: "/favicon.svg", heroImageUrl: "", heroImageAlt: "", fssaiLicense: "", analyticsPromptEnabled: false,
+  storeName: "Aavaruchi", legalName: "LAKSHMI'S TAPASI TREATS", businessGstin:"", businessAddress:"", logoUrl: "/favicon.svg", footerLogoUrl: "", faviconUrl: "/favicon.svg", heroImageUrl: "", heroImageAlt: "", fssaiLicense: "", analyticsPromptEnabled: false,
   primaryColor: "#173f2b", accentColor: "#dc6b32", backgroundColor: "#fbf7ec",
-  currency: "INR", locale: "en-IN", supportEmail: "",
-  supportPhone: "9932433243", freeShippingThreshold: 999, manualDeliveryEnabled: false, deliveryCharge: 59, deliveryMinDays: 3, deliveryMaxDays: 6, announcement: "",
+  currency: "INR", locale: "en-IN", supportEmail: "contact@aavaruchi.in",
+  supportPhone: "", freeShippingThreshold: 0, manualDeliveryEnabled: false, deliveryCharge: 0, deliveryMinDays: 4, deliveryMaxDays: 5, deliveryEstimateBasis: "ORDER", announcement: "",
   codEnabled: true, onlinePaymentDiscountEnabled: false, onlinePaymentDiscountType: "PERCENTAGE", onlinePaymentDiscountValue: 0,
-  footerTagline: "Traditional Andhra pickles, made with love.", seoTitle: "Avaruchi | Authentic Andhra Pickles",
-  seoDescription: "Discover traditional Andhra pickles from Avaruchi. Choose your favourite flavours and jar sizes.", primaryDomain: "",
+  footerTagline: "Traditional Andhra pickles, made with love.", seoTitle: "Aavaruchi | Authentic Andhra Pickles",
+  seoDescription: "Discover traditional Andhra pickles from Aavaruchi. Choose your favourite flavours and jar sizes.", primaryDomain: "",
 };
 
 export function normalizeHostname(value: string | undefined) {

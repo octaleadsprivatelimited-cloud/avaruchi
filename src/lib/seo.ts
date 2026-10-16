@@ -17,7 +17,7 @@ export function pageSeo(path: string, title: string, description: string) {
       { title }, { name: "description", content: description },
       { property: "og:title", content: title }, { property: "og:description", content: description },
       { property: "og:type", content: "website" }, { property: "og:url", content: url },
-      { property: "og:site_name", content: "Avaruchi" }, { property: "og:locale", content: "en_IN" },
+      { property: "og:site_name", content: "Aavaruchi" }, { property: "og:locale", content: "en_IN" },
       { name: "twitter:card", content: "summary" },
     ],
     links: [{ rel: "canonical", href: url }],
@@ -26,11 +26,11 @@ export function pageSeo(path: string, title: string, description: string) {
 
 export function productSeo(product: Product) {
   const path = productPath(product);
-  const description = product.seoDescription || product.description?.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").slice(0, 160) || `Explore ${product.name} at Avaruchi. Compare available pack sizes, current prices and delivery options.`;
-  const title = product.seoTitle || `${product.name} | Buy Online | Avaruchi`;
+  const description = product.seoDescription || product.description?.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").slice(0, 160) || `Explore ${product.name} at Aavaruchi. Compare available pack sizes, current prices and delivery options.`;
+  const title = product.seoTitle || `${product.name} | Buy Online | Aavaruchi`;
   const head = pageSeo(path, title, description);
   if (isSampleProduct(product)) {
-    const sampleHead = pageSeo(path, `${product.name} | Sample Preview | Avaruchi`, description);
+    const sampleHead = pageSeo(path, `${product.name} | Sample Preview | Aavaruchi`, description);
     return {
       ...sampleHead,
       meta: [...sampleHead.meta, { name: "robots", content: "noindex, follow" }],
@@ -51,7 +51,7 @@ export function productSeo(product: Product) {
       priceCurrency: "INR", price: priceIncludingTax(variant.price, product.taxRate).toFixed(2),
       availability: variant.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       itemCondition: "https://schema.org/NewCondition",
-      seller: { "@type": "Organization", name: "Avaruchi", url: storeOrigin },
+      seller: { "@type": "Organization", name: "Aavaruchi", url: storeOrigin },
     },
   });
   const productData = variants.length > 1 ? {
@@ -64,7 +64,7 @@ export function productSeo(product: Product) {
   const breadcrumbs = {
     "@context": "https://schema.org", "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Avaruchi", item: storeOrigin },
+      { "@type": "ListItem", position: 1, name: "Aavaruchi", item: storeOrigin },
       { "@type": "ListItem", position: 2, name: "Shop pickles", item: absoluteUrl("/shop") },
       { "@type": "ListItem", position: 3, name: product.name, item: absoluteUrl(path) },
     ],
@@ -79,7 +79,7 @@ export function productSeo(product: Product) {
 export const storeStructuredData = {
   type: "application/ld+json",
   children: jsonLd([
-    { "@context": "https://schema.org", "@type": "Organization", "@id": `${storeOrigin}/#organization`, name: "Avaruchi", url: storeOrigin },
-    { "@context": "https://schema.org", "@type": "WebSite", "@id": `${storeOrigin}/#website`, name: "Avaruchi", url: storeOrigin, inLanguage: "en-IN", publisher: { "@id": `${storeOrigin}/#organization` } },
+    { "@context": "https://schema.org", "@type": "Organization", "@id": `${storeOrigin}/#organization`, name: "Aavaruchi", url: storeOrigin },
+    { "@context": "https://schema.org", "@type": "WebSite", "@id": `${storeOrigin}/#website`, name: "Aavaruchi", url: storeOrigin, inLanguage: "en-IN", publisher: { "@id": `${storeOrigin}/#organization` } },
   ]),
 };

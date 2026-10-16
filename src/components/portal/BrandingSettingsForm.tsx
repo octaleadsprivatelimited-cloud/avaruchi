@@ -59,7 +59,7 @@ export function BrandingSettingsForm({ form, error, saving, onChange, onSave, on
         </section>
         <section className="panel form-panel"><div className="panel-head"><div><h2>Contact &amp; messaging</h2><p>Support channels and storefront copy</p></div></div>
           <div className="form-row"><label>Support email<input type="email" value={form.supportEmail} onChange={e => text("supportEmail", e.target.value)} /></label><label>Support phone<input value={form.supportPhone} onChange={e => text("supportPhone", e.target.value)} /></label></div>
-          <label>Additional announcement (optional)<input value={form.announcement} onChange={e => text("announcement", e.target.value)} /><small>Delivery prices are generated automatically from Checkout &amp; delivery settings.</small></label><label>Footer tagline<textarea value={form.footerTagline} onChange={e => text("footerTagline", e.target.value)} /></label>
+          <label>Footer tagline<textarea value={form.footerTagline} onChange={e => text("footerTagline", e.target.value)} /></label>
         </section>
         <section className="panel form-panel"><div className="panel-head"><div><h2>Search &amp; domain</h2><p>SEO defaults for this storefront</p></div></div>
           <label>Primary domain<input value={form.primaryDomain} onChange={e => text("primaryDomain", e.target.value)} placeholder="avaruchi.example" /></label><label>SEO title<input value={form.seoTitle} maxLength={70} onChange={e => text("seoTitle", e.target.value)} /></label><label>SEO description<textarea value={form.seoDescription} maxLength={170} onChange={e => text("seoDescription", e.target.value)} /></label>

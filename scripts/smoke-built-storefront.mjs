@@ -58,6 +58,9 @@ try {
   assert.ok(home.body.includes('The taste of home, in every jar.'), 'render the reference heading');
   assert.ok(home.body.includes('/images/hero.png') && home.body.includes('/brand/avaruchi-logo-small.webp'), 'use the reference photography and brand artwork');
   assert.ok(home.body.includes('reference-story'), 'render the reference brand story');
+  assert.ok(!home.body.includes('class="announcement"'), 'the top announcement bar is removed');
+  assert.ok(home.body.includes('contact@aavaruchi.in') && !home.body.includes('tel:') && !home.body.includes('wa.me/'), 'public contact uses email without phone links');
+  assert.ok((await request('/our-story')).body.includes('PRODUCT INFORMATION'), 'publish the supplied product information with the brand story');
   assert.ok(home.body.includes('Our collection is coming together.'), 'an empty backend must stay empty in the new UI');
   assert.ok(home.body.includes('₹62 delivery') && home.body.includes('₹800'), 'SSR must use saved delivery prices before hydration');
   storefrontSettings = { ...storefrontSettings, heroImageUrl: '/uploads/admin-hero.png', heroImageAlt: 'Pickles selected by the store administrator' };
@@ -66,7 +69,7 @@ try {
   storefrontSettings = { ...storefrontSettings, heroImageUrl: '', heroImageAlt: '' };
   assert.ok((await request('/')).body.includes('src="/images/hero.png"'), 'resetting the hero restores the bundled image');
   storefrontSettings = { ...storefrontSettings, deliveryCharge: 89, freeShippingThreshold: 799 };
-  const updatedShop = await request('/shop');
+  const updatedShop = await request('/shipping-returns');
   assert.ok(updatedShop.body.includes('₹89 delivery') && updatedShop.body.includes('₹799'), 'fresh SSR must read the replacement policy');
   assert.ok(!updatedShop.body.includes('₹62 delivery') && !updatedShop.body.includes('₹999'), 'old shipping prices must not remain in rendered markup');
   const missing = await request('/product/not-a-real-product');
@@ -75,7 +78,7 @@ try {
   const unknown = await request('/this-page-does-not-exist');
   assert.equal(unknown.status, 404);
   assert.ok(unknown.body.includes('Explore the shop'));
-  assert.ok(unknown.body.includes('Page not found | Avaruchi'));
+  assert.ok(unknown.body.includes('Page not found | Aavaruchi'));
   const malformed = await request('/product/%E0%A4%A');
   assert.equal(malformed.status, 404, 'malformed product encoding must not crash SSR');
   assert.ok(malformed.body.includes('noindex, nofollow'));

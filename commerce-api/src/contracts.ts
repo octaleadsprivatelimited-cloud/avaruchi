@@ -25,7 +25,7 @@ export interface ShippingProvider {
     weightGrams: number;
     cod: boolean;
   }): Promise<
-    Array<{ service: string; label: string; amount: Money; etaDays: number; etaMinDays?: number }>
+    Array<{ service: string; label: string; amount: Money; etaDays: number; etaBasis?: "ORDER" | "DISPATCH"; etaMinDays?: number }>
   >;
   createShipment(input: {
     orderId: string;

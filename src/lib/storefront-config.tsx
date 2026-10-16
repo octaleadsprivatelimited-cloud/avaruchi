@@ -11,21 +11,21 @@ export type StorefrontConfig = {
   primaryColor: string; accentColor: string; backgroundColor: string;
   currency: string; locale: string; supportEmail: string; supportPhone: string;
   freeShippingThreshold: number; announcement: string; footerTagline: string;
-  manualDeliveryEnabled: boolean; deliveryCharge: number; deliveryMinDays: number; deliveryMaxDays: number; settingsLoaded?: boolean;
+  manualDeliveryEnabled: boolean; deliveryCharge: number; deliveryMinDays: number; deliveryMaxDays: number; deliveryEstimateBasis: "ORDER" | "DISPATCH"; settingsLoaded?: boolean;
   codEnabled: boolean; onlinePaymentDiscountEnabled: boolean; onlinePaymentDiscountType: "PERCENTAGE" | "FIXED_AMOUNT"; onlinePaymentDiscountValue: number;
   seoTitle: string; seoDescription: string; primaryDomain: string;
 };
 export const defaultStorefrontConfig: StorefrontConfig = {
-  storeName: "Avaruchi", legalName: BRAND.legalName, businessGstin: "", businessAddress: "",
+  storeName: BRAND.name, legalName: BRAND.legalName, businessGstin: "", businessAddress: "",
   logoUrl: "/favicon.svg", footerLogoUrl: "", faviconUrl: "/favicon.svg", fssaiLicense: "",
   heroImageUrl: "", heroImageAlt: "",
   analyticsPromptEnabled: false, primaryColor: "#173f2b", accentColor: "#dc6b32", backgroundColor: "#fbf7ec",
-  currency: "INR", locale: "en-IN", supportEmail: "", supportPhone: BRAND.phone,
-  freeShippingThreshold: 999, manualDeliveryEnabled: false, deliveryCharge: 59, deliveryMinDays: 3, deliveryMaxDays: 6, announcement: "",
+  currency: "INR", locale: "en-IN", supportEmail: BRAND.email, supportPhone: "",
+  freeShippingThreshold: 0, manualDeliveryEnabled: false, deliveryCharge: 0, deliveryMinDays: 4, deliveryMaxDays: 5, deliveryEstimateBasis: "ORDER", announcement: "",
   codEnabled: true, onlinePaymentDiscountEnabled: false, onlinePaymentDiscountType: "PERCENTAGE", onlinePaymentDiscountValue: 0,
   footerTagline: "A little taste of home, in every jar.",
-  seoTitle: "Avaruchi | The taste of home, in every jar.",
-  seoDescription: "Explore mango, gongura, tomato and more Andhra pickles from Avaruchi.",
+  seoTitle: "Aavaruchi | The taste of home, in every jar.",
+  seoDescription: "Explore mango, gongura, tomato and more Andhra pickles from Aavaruchi.",
   primaryDomain: "",
 };
 const StorefrontContext = createContext(defaultStorefrontConfig);

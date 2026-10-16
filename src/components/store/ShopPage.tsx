@@ -17,7 +17,7 @@ export function ShopPage() {
   const navigate = useNavigate();
   const params = new URLSearchParams(location.searchStr);
   const [category, setCategory] = useState(
-    params.get("category") || ALL_PRODUCTS,
+    categoryParts(params.get("category") || ALL_PRODUCTS).join(" > "),
   );
   const [query, setQuery] = useState(
     params.get("q") || params.get("search") || "",
@@ -25,7 +25,7 @@ export function ShopPage() {
   const [sort, setSort] = useState("featured");
   useEffect(() => {
     const params = new URLSearchParams(location.searchStr);
-    setCategory(params.get("category") || ALL_PRODUCTS);
+    setCategory(categoryParts(params.get("category") || ALL_PRODUCTS).join(" > "));
     setQuery(params.get("q") || params.get("search") || "");
   }, [location.searchStr]);
   const categories = catalogCategories(products);
@@ -66,7 +66,7 @@ export function ShopPage() {
           <div className="section-heading">
             <div>
               <span className="eyebrow">THE COLLECTION</span>
-              <h1>{category === ALL_PRODUCTS ? "The Avaruchi pantry" : categoryParts(category).at(-1)}</h1>
+              <h1>{category === ALL_PRODUCTS ? "The Aavaruchi pantry" : categoryParts(category).at(-1)}</h1>
             </div>
             <div className="section-intro">
               <p>

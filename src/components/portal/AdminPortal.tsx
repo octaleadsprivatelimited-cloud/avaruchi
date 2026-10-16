@@ -388,16 +388,17 @@ function WhiteLabelSettings() {
   return (
     <>
       <section className="panel form-panel" id="delivery-rules">
-        <div className="panel-head"><div><h2>Checkout &amp; delivery</h2><p>One delivery policy for the top bar, product pages, bag and checkout</p></div></div>
+        <div className="panel-head"><div><h2>Checkout &amp; delivery</h2><p>One delivery policy for product pages, bag and checkout</p></div></div>
         <label className="website-setting-switch"><input type="checkbox" role="switch" checked={form.manualDeliveryEnabled} onChange={event => updateForm({ manualDeliveryEnabled: event.target.checked })} /><span><b>Use fixed delivery charges</b><small>Arrange dispatch yourself. Checkout also needs at least one available payment method.</small></span></label>
         <div className="form-row">
           <label>Delivery charge (₹)<input type="number" min="0" max="100000" step="0.01" value={form.deliveryCharge} onChange={event => updateForm({ deliveryCharge: Number(event.target.value) })} /></label>
           <label>Free delivery from (₹)<input type="number" min="0" max="100000000" step="0.01" value={form.freeShippingThreshold} onChange={event => updateForm({ freeShippingThreshold: Number(event.target.value) })} /></label>
         </div>
         <div className="form-row">
-          <label>Earliest delivery (business days)<input type="number" min="1" max="60" value={form.deliveryMinDays} onChange={event => updateForm({ deliveryMinDays: Number(event.target.value) })} /></label>
-          <label>Latest delivery (business days)<input type="number" min="1" max="60" value={form.deliveryMaxDays} onChange={event => updateForm({ deliveryMaxDays: Number(event.target.value) })} /></label>
+          <label>Earliest delivery (days)<input type="number" min="1" max="60" value={form.deliveryMinDays} onChange={event => updateForm({ deliveryMinDays: Number(event.target.value) })} /></label>
+          <label>Latest delivery (days)<input type="number" min="1" max="60" value={form.deliveryMaxDays} onChange={event => updateForm({ deliveryMaxDays: Number(event.target.value) })} /></label>
         </div>
+        <label>Delivery estimate basis<select value={form.deliveryEstimateBasis} onChange={event => updateForm({ deliveryEstimateBasis: event.target.value as StorefrontConfig["deliveryEstimateBasis"] })}><option value="DISPATCH">Business days after dispatch</option><option value="ORDER">Calendar days from order placement</option></select></label>
         <p className="delivery-rules-help">The free-delivery threshold applies to the item subtotal before GST. Set the threshold or delivery charge to 0 for free delivery on every order. Saving replaces the active policy; already placed orders keep their confirmed charges.</p>
         <button className="primary" type="button" disabled={saving || !Number.isFinite(form.deliveryCharge) || form.deliveryMaxDays < form.deliveryMinDays} onClick={() => void save("Delivery pricing and checkout availability updated")}><Save />{saving ? "Saving…" : "Save delivery settings"}</button>
       </section>

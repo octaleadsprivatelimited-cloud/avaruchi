@@ -14,7 +14,7 @@ async function call(path: string, method = "GET", body?: unknown, authenticated 
   return { status: response.status, body: await response.json() };
 }
 async function setPolicy(charge = 59, threshold = 999, enabled = true) {
-  return call("/api/v1/admin/storefront-config", "PUT", { ...defaultStorefrontConfig, manualDeliveryEnabled: enabled, deliveryCharge: charge, freeShippingThreshold: threshold, announcement: "Free delivery on orders above ₹999" }, true);
+  return call("/api/v1/admin/storefront-config", "PUT", { ...defaultStorefrontConfig, manualDeliveryEnabled: enabled, deliveryCharge: charge, freeShippingThreshold: threshold, deliveryMinDays: 3, deliveryMaxDays: 6, deliveryEstimateBasis: "DISPATCH", announcement: "Free delivery on orders above ₹999" }, true);
 }
 const quoteInput = (quantity = 1) => ({ lines: [{ variantId, quantity }], postalCode: "500081", paymentProvider: "cod" });
 const checkoutInput = (expectedTotal?: number) => ({ ...quoteInput(), shippingService: "MANUAL", expectedTotal, contact: { name: "Delivery fixture", email: "fixture@example.com", phone: "9876543210" }, shippingAddress: { line1: "Fixture Street", city: "Hyderabad", state: "Telangana", country: "IN" } });
@@ -73,4 +73,12 @@ it("rejects overseas delivery and invalid price configurations without creating 
   await setPolicy(); const input = checkoutInput(); input.shippingAddress.country = "US";
   expect((await call("/api/v1/checkout", "POST", input, false, crypto.randomUUID())).status).toBe(422); expect(store.orders.size).toBe(0);
   expect((await setPolicy(-1)).status).toBe(400);
+});
+it("offers free India delivery below the old threshold and retains the promised delivery basis on the order", async () => {
+  await call("/api/v1/admin/storefront-config", "PUT", { ...defaultStorefrontConfig, manualDeliveryEnabled: true, deliveryCharge: 0, freeShippingThreshold: 0, deliveryMinDays: 4, deliveryMaxDays: 5, deliveryEstimateBasis: "ORDER" }, true);
+  const quote = (await call("/api/v1/checkout/quote", "POST", quoteInput())).body.data;
+  expect(quote).toMatchObject({ shipping: 0, rates: [{ shipping: 0, etaMinDays: 4, etaDays: 5, etaBasis: "ORDER" }], selectedShipping: { etaBasis: "ORDER" } });
+  const placed = await call("/api/v1/checkout", "POST", checkoutInput(quote.total), false, crypto.randomUUID());
+  expect(placed.status).toBe(201);
+  expect(store.orders.get(placed.body.data.order.id)?.shippingSelection).toMatchObject({ chargedAmount: 0, etaMinDays: 4, etaDays: 5, etaBasis: "ORDER" });
 });

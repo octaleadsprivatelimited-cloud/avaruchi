@@ -299,7 +299,7 @@ export function ProductDetailPage() {
               </details>
               <details>
                 <summary>Delivery & returns<Plus aria-hidden="true" /></summary>
-                <p>Delivery availability and charges are shown at checkout. For order concerns and the applicable return terms, see our <a href="/shipping-returns">delivery and refund policy</a>.</p>
+                <p>Delivery availability and charges are shown at checkout. For order concerns and the applicable return terms, see our <a href="/shipping-returns">shipping, cancellation and refund policy</a>. Read more about <a href="/our-story#product-information">our ingredients and homemade preparation</a>.</p>
                 <a className="product-help-link" href="/contact">Need help? Contact us <ChevronRight size={14} /></a>
               </details>
             </section>

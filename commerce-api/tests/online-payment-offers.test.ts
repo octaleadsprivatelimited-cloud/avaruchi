@@ -16,7 +16,7 @@ async function call(path: string, method = "GET", body?: unknown, authenticated 
   const response = await fetch(base + path, { method, headers: { "content-type": "application/json", ...(authenticated ? { authorization: `Bearer ${adminToken}` } : {}), ...(key ? { "idempotency-key": key } : {}) }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
   return { status: response.status, body: await response.json() };
 }
-const setPolicy = (patch = {}) => call("/api/v1/admin/storefront-config", "PUT", { ...defaultStorefrontConfig, manualDeliveryEnabled: true, ...patch }, true);
+const setPolicy = (patch = {}) => call("/api/v1/admin/storefront-config", "PUT", { ...defaultStorefrontConfig, manualDeliveryEnabled: true, deliveryCharge: 59, freeShippingThreshold: 999, ...patch }, true);
 const quoteInput = (paymentProvider = "cashfree", extra = {}) => ({ lines: [{ variantId, quantity: 1 }], postalCode: "500081", paymentProvider, ...extra });
 const checkoutInput = (expectedTotal?: number) => ({ ...quoteInput(), expectedTotal, contact: { name: "Offer fixture", email: "offer@example.com", phone: "9876543210" }, shippingAddress: { line1: "Fixture Street", city: "Hyderabad", state: "Telangana", country: "IN" } });
 function configureCashfree(environment = "LIVE") {

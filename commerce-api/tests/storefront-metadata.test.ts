@@ -18,7 +18,7 @@ describe("storefront route metadata", () => {
   it("uses one product canonical and matching metadata for slug, ID and legacy shop links", () => {
     for (const path of ["/product/tomato-pickle", "/product/p-1", "/shop/tomato-pickle"]) {
       const metadata = storefrontMetadata(path, [product], store, origin);
-      expect(metadata).toMatchObject({ known: true, title: "Tomato Pickle | Buy Online | Avaruchi", description: product.description, canonical: `${origin}/product/tomato-pickle`, image: `${origin}/images/tomato.png` });
+      expect(metadata).toMatchObject({ known: true, title: "Tomato Pickle | Buy Online | Aavaruchi", description: product.description, canonical: `${origin}/product/tomato-pickle`, image: `${origin}/images/tomato.png` });
       expect(metadata.scripts.join("")).toContain("Shop pickles");
       expect(metadata.scripts.join("")).not.toContain("localhost");
     }

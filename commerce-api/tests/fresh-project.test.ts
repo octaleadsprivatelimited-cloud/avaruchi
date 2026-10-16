@@ -36,8 +36,8 @@ describe("fresh Avaruchi project", () => {
       expect(await read("/api/v1/storefront/analytics")).toEqual({});
       expect(await read("/api/v1/products")).toEqual([]);
       expect(await read("/api/v1/storefront/config")).toMatchObject({
-        storeName: "Avaruchi", analyticsPromptEnabled: false,
-        legalName: "LAKSHMI'S TAPASI TREATS", supportEmail: "", supportPhone: "9932433243", primaryDomain: "",
+        storeName: "Aavaruchi", analyticsPromptEnabled: false,
+        legalName: "LAKSHMI'S TAPASI TREATS", supportEmail: "contact@aavaruchi.in", supportPhone: "", primaryDomain: "",
       });
     } finally {
       await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));

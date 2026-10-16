@@ -30,7 +30,7 @@ it("matches gross storefront prices and parent canonicals with distinct purchasa
 it("escapes merchant-provided script delimiters in server-rendered JSON-LD", () => {
   const head = productSeo({ id: "safe", name: "</script><script>alert(1)</script>", category: "Cooking Oils", price: 1, mrp: 1, rating: 0, reviews: 0, tone: "", glyph: "", variants: [] });
   expect(head.scripts[0].children).not.toContain("</script>");
-  expect(head.meta.some((meta: { title?: string }) => meta.title?.includes("Avaruchi"))).toBe(true);
+  expect(head.meta.some((meta: { title?: string }) => meta.title?.includes("Aavaruchi"))).toBe(true);
 });
 
 it("marks explicit sample previews noindex and emits no product or offer schema", () => {

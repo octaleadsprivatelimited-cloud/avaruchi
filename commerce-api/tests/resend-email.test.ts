@@ -59,7 +59,7 @@ describe("administrator email delivery check", () => {
     const admin = tokenFor(); const ordersBefore = store.orders.size;
     const response = await request("/EMAIL%3Aresend%3ATEST/test-email", admin.token, "POST", { destination: "attacker@other.test" });
     expect(response.status).toBe(200); expect(response.body.data).toMatchObject({ destination: admin.email, providerMessageId: "resend-test-message", integration: { connected: true, lastTest: { outcome: "CONNECTED", message: expect.stringContaining("Confirm receipt") } } });
-    expect(sent.at(-1)).toMatchObject({ to: admin.email, subject: "Avaruchi — order email delivery test", reply_to: "support@store.test" });
+    expect(sent.at(-1)).toMatchObject({ to: admin.email, subject: "Aavaruchi — order email delivery test", reply_to: "support@store.test" });
     expect(String(sent.at(-1)?.text)).toContain("does not create an order"); expect(store.orders.size).toBe(ordersBefore);
     expect(JSON.stringify(response.body)).not.toContain("private-resend-key");
   });

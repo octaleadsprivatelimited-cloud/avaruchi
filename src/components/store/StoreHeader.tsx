@@ -6,10 +6,6 @@ import { useStorefrontConfig } from "@/lib/storefront-config";
 import { StoreCommerceProvider, useStoreCommerce } from "@/lib/store-commerce";
 import { money } from "@/data/commerce";
 import { priceIncludingTax } from "@/lib/catalog-price";
-import {
-  additionalAnnouncement,
-  deliveryAnnouncement,
-} from "@/lib/delivery-policy";
 import { openAnalyticsPreferences } from "@/lib/analytics";
 import { BRAND } from "@/lib/brand";
 import {
@@ -26,7 +22,6 @@ import { matchesProductSearch } from "@/lib/product-search";
 import { productPath } from "@/lib/product-url";
 
 export function StoreHeader() {
-  const store = useStorefrontConfig();
   const products = useStoreProducts(useInitialCatalog());
   const categories = catalogCategoryTree(products);
   const [expandedCategory, setExpandedCategory] = useState("");
@@ -68,25 +63,17 @@ export function StoreHeader() {
       document.removeEventListener("click", outside);
     };
   }, []);
-  const announcement =
-    additionalAnnouncement(store.announcement) ||
-    (store.manualDeliveryEnabled
-      ? `Bring home your favourite pickle. ${deliveryAnnouncement(store)}.`
-      : "Bring home your favourite pickle. A little taste of home.");
   return (
     <>
       <a className="skip-link" href="#main">
         Skip to content
       </a>
       <div className="header-shell">
-        <div className="announcement">
-          <span>{announcement}</span>
-        </div>
         <header className="site-header wrap">
           <Link
             className="wordmark reference-brand"
             to="/"
-            aria-label="Avaruchi home"
+            aria-label="Aavaruchi home"
           >
             <BrandMark />
           </Link>
@@ -147,10 +134,10 @@ export function StoreHeader() {
               </div>
             </details>
             <Link
-              className={location.pathname === "/journal" ? "current" : ""}
-              to="/journal"
+              className={location.pathname === "/our-story" ? "current" : ""}
+              to="/our-story"
             >
-              Stories
+              About us
             </Link>
           </nav>
           <div className="header-actions">
@@ -341,7 +328,6 @@ export function StoreHeader() {
 
 export function StoreFooter() {
   const store = useStorefrontConfig();
-  const phone = store.supportPhone || BRAND.phone;
   return (
     <footer>
       <div className="footer-main wrap">
@@ -349,7 +335,7 @@ export function StoreFooter() {
           <Link
             className="wordmark reference-brand"
             to="/"
-            aria-label="Avaruchi home"
+            aria-label="Aavaruchi home"
           >
             <BrandMark />
           </Link>
@@ -358,12 +344,13 @@ export function StoreFooter() {
             <span>{store.businessAddress || BRAND.address}</span>
             <span>Established {BRAND.established}</span>
             {store.fssaiLicense && <span>FSSAI Reg. No. {store.fssaiLicense}</span>}
-            <a href={`tel:${phone.replace(/[^+\d]/g, "")}`}>{phone}</a>
+            <a href={`mailto:${BRAND.email}`}>{BRAND.email}</a>
           </p>
         </div>
         <div className="footer-links">
           <h3>At the table</h3>
-          <Link to="/our-story">Our story</Link>
+          <Link to="/our-story">About us</Link>
+          <a href="/our-story#product-information">Product information</a>
           <Link to="/shop">Shop all products</Link>
           <Link to="/journal">Pairing notes</Link>
           <Link to="/wishlist">Saved flavours</Link>
@@ -374,22 +361,13 @@ export function StoreFooter() {
             Orders &amp; invoices
           </AccountLink>
           <Link to="/shipping">Shipping policy</Link>
-          <Link to="/returns">Returns &amp; refunds</Link>
+          <Link to="/returns">Cancellation, refunds &amp; exchanges</Link>
           <Link to="/contact">Contact us</Link>
         </div>
         <div className="footer-links footer-policy-links">
           <h3>The fine print</h3>
           <Link to="/terms">Terms of Service</Link>
           <Link to="/privacy">Privacy policy</Link>
-          <span className="footer-location">
-            <a
-              href={`https://wa.me/${phone.replace(/\D/g, "").replace(/^(\d{10})$/, "91$1")}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              WhatsApp the store
-            </a>
-          </span>
           <button
             type="button"
             className="reference-cookie-link"
@@ -402,7 +380,7 @@ export function StoreFooter() {
       <div className="footer-bottom wrap">
         <span>
           © {new Date().getFullYear()} {store.legalName || BRAND.legalName}.
-          Avaruchi.
+          Aavaruchi.
         </span>
         <span className="developer-credit">
           Developed by{" "}

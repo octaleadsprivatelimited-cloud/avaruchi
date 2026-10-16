@@ -54,7 +54,7 @@ export type StoredShippingSelection = {
   service: string;
   label: string;
   etaDays: number;
-  etaMinDays?: number;
+  etaBasis?: "ORDER" | "DISPATCH"; etaMinDays?: number;
   quotedAmount: number;
   chargedAmount: number;
   currency: string;
