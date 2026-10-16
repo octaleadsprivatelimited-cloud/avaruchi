@@ -28,7 +28,7 @@ try {
     assert.equal((await catalog.json()).error.code, 'BACKEND_NOT_CONFIGURED');
     const page = await fetch(origin);
     assert.equal(page.status, 200, 'public pages must render before production services are configured');
-    assert.ok((await page.text()).includes('Avaruchi'));
+    assert.ok((await page.text()).includes('Aavaruchi'));
     console.log('Vercel unconfigured deployment smoke passed: public storefront renders and API returns 503.');
   } else {
   const catalog = await fetch(`${origin}/api/v1/products`);
