@@ -16,7 +16,7 @@ export type StorefrontConfig = {
   seoTitle: string; seoDescription: string; primaryDomain: string;
 };
 export const defaultStorefrontConfig: StorefrontConfig = {
-  storeName: BRAND.name, legalName: BRAND.legalName, businessGstin: "", businessAddress: "",
+  storeName: BRAND.name, legalName: BRAND.legalName, businessGstin: "", businessAddress: BRAND.address,
   logoUrl: "/favicon.svg", footerLogoUrl: "", faviconUrl: "/favicon.svg", fssaiLicense: "",
   heroImageUrl: "", heroImageAlt: "",
   analyticsPromptEnabled: false, primaryColor: "#173f2b", accentColor: "#dc6b32", backgroundColor: "#fbf7ec",

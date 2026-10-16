@@ -19,7 +19,7 @@ export const productInformation = [
 ] as const;
 
 export const aavaruchiFaq = [
-  ["Where are you located?", "We are located at Ramanthapur, Hyderabad – 500013."],
+  ["Where are you located?", "We are located in Hyderabad, Telangana, India."],
   ["How long does delivery take once an order is placed?", "We generally take around 3 days to dispatch your order by courier. Delivery typically takes 4–5 days from placing the order, depending on courier availability, your location, and product freshness. Delivery is free across India."],
   ["Where do you ship from?", "All our products are shipped from Hyderabad, Telangana."],
   ["Where are the pickles made?", "Our pickles are lovingly prepared in Hyderabad using traditional homemade methods. Every batch is handcrafted in a home kitchen with the support of family members — never in factories or mass-production units."],

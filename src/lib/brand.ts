@@ -4,7 +4,7 @@ export const BRAND = {
   legalName: "LAKSHMI'S TAPASI TREATS",
   tagline: "ప్రతి ముద్దలో తెలుగు సంప్రదాయం",
   established: 2026,
-  address: "Ramanthapur, Hyderabad – 500013",
+  address: "Hyderabad, Telangana, India",
   email: "contact@aavaruchi.in",
   logo: "/brand/avaruchi-logo.webp",
   logoSmall: "/brand/avaruchi-logo-small.webp",
