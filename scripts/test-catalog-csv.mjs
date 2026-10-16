@@ -30,7 +30,7 @@ assert.equal(catalogImportUpdate({ ...grouped[0], variants: [{ ...grouped[0].var
 const imageCsv = csv([{ ...row }]).replace('imageAlt\r\n', 'imageAlt,imageType\r\n').replace('"Jar illustration"', '"Jar illustration","ILLUSTRATION"');
 assert.equal(parseCatalogCsv(imageCsv)[0].specifications['Image type'], 'AI-generated product illustration');
 const collection = [{ category: 'Veg pickles > Avakaya' }, { category: 'Veg pickles > Traditional pickles' }, { category: 'Powders > Karam podis' }, { category: 'Powders > Cooking powders' }, { category: 'Fryums' }];
-assert.deepEqual(catalogCategories(collection), ['All products', 'Veg pickles', 'Powders', 'Fryums']);
+assert.deepEqual(catalogCategories(collection), ['All products', 'Pickles', 'Powders', 'Fryums']);
 assert.equal(catalogCategoryTree(collection)[0].count, 2);
 assert.equal(catalogCategoryTree(collection)[0].children[0].name, 'Avakaya');
 assert.equal(collection.filter(item => matchesCategory(item, 'Veg pickles')).length, 2);
