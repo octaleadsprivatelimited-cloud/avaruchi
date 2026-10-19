@@ -569,7 +569,7 @@ export function Skeleton() {
     </div>
   );
 }
-export function BrandMark() {
+export function BrandMark({ showTagline = true }: { showTagline?: boolean }) {
   const store = useStorefrontConfig();
   const customLogo = store.logoUrl && store.logoUrl !== "/favicon.svg";
   return (
@@ -583,7 +583,7 @@ export function BrandMark() {
       />
       <span className="brand-name">
         {store.storeName === "Aavaruchi" ? "aavaruchi" : store.storeName}
-        <small lang="te">{BRAND.tagline}</small>
+        {showTagline && <small lang="te">{BRAND.tagline}</small>}
       </span>
     </>
   );
