@@ -13,6 +13,7 @@ import { startNotificationWorker } from './commerce-api/dist/src/notification-wo
 import { baseSecurityHeaders } from './commerce-api/dist/src/http-security.js';
 import { serveStorefront } from './server/storefront.mjs';
 import { authorizeCommerceProxy } from './server/commerce-proxy.mjs';
+import { canonicalWwwRedirect } from './server/canonical-origin.mjs';
 
 const origin = new URL(process.env.APP_URL || 'http://localhost:5180').origin;
 process.env.CORS_ORIGINS ||= origin;
@@ -29,6 +30,14 @@ const initialized = new Promise(resolve => { markReady = resolve; });
 const privatePath = /^\/(admin|account|cart|checkout|login|track|transaction|api|webhooks)(\/|$)/;
 const server = createServer(async (req, res) => {
   for (const [name, value] of Object.entries(baseSecurityHeaders(process.env.NODE_ENV === 'production'))) res.setHeader(name, value);
+  const canonical = canonicalWwwRedirect({ origin, authority: req.headers.host, url: req.url });
+  if (canonical) {
+    // Canonical navigation must work even while the database is still starting.
+    // 308 preserves methods and bodies for checkout/API requests.
+    res.writeHead(308, { Location: canonical, 'Cache-Control': 'no-store' });
+    res.end();
+    return;
+  }
   const path = new URL(req.url || '/', origin).pathname;
   if (!['/health', '/ready'].includes(path) && !authorizeCommerceProxy(req, res, { secret: process.env.AVARUCHI_PROXY_SECRET, origin })) return;
   if (!ready && path !== '/ready' && path !== '/health') {
