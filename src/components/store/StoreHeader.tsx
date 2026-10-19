@@ -75,7 +75,7 @@ export function StoreHeader() {
             to="/"
             aria-label="Aavaruchi home"
           >
-            <BrandMark showTagline={false} />
+            <BrandMark />
           </Link>
           <nav aria-label="Main navigation">
             <Link className={location.pathname === "/" ? "current" : ""} to="/">
