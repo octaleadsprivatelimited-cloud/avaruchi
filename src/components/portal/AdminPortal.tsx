@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { PortalShell } from "./PortalShell";
 import { AdminCouponsWorkspace } from "./AdminCouponsWorkspace";
+import { AdminCombosWorkspace } from "./AdminCombosWorkspace";
 import { money } from "@/data/commerce";
 import { CommerceApiError, commerceApi, sessionExpiredEvent } from "@/lib/commerce-api";
 import {
@@ -55,6 +56,7 @@ import {
 const navDefinitions: Array<[string, React.ReactNode, string[]]> = [
   ["Overview", <LayoutDashboard />, []],
   ["Products", <Package />, ["products:read", "products:create", "products:update"]],
+  ["Combos", <Package />, ["products:read"]],
   ["Orders", <ShoppingCart />, ["orders:read", "orders:update"]],
   ["Customers", <Users />, ["customers:read", "customers:update"]],
   ["Returns", <RotateCcw />, ["returns:read", "returns:update"]],
@@ -596,6 +598,8 @@ export function AdminPortal() {
       >
         {active === "Products" ? (
           <AdminProductsWorkspace />
+        ) : active === "Combos" ? (
+          <AdminCombosWorkspace canCreate={can("products:create")} canUpdate={can("products:update")} />
         ) : active === "Integrations" ? (
           <AdminIntegrationsWorkspace />
         ) : active === "Overview" ? (

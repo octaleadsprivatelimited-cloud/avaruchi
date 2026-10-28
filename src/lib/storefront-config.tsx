@@ -23,8 +23,8 @@ export const defaultStorefrontConfig: StorefrontConfig = {
   currency: "INR", locale: "en-IN", supportEmail: BRAND.email, supportPhone: "",
   freeShippingThreshold: 0, manualDeliveryEnabled: false, deliveryCharge: 0, deliveryMinDays: 4, deliveryMaxDays: 5, deliveryEstimateBasis: "ORDER", announcement: "",
   codEnabled: true, onlinePaymentDiscountEnabled: false, onlinePaymentDiscountType: "PERCENTAGE", onlinePaymentDiscountValue: 0,
-  footerTagline: "A little taste of home, in every jar.",
-  seoTitle: "Aavaruchi | The taste of home, in every jar.",
+  footerTagline: "Amma’s Andhra taste, delivered to your door.",
+  seoTitle: "Aavaruchi | Homemade Pickles, Powders & Fryums",
   seoDescription: "Explore mango, gongura, tomato and more Andhra pickles from Aavaruchi.",
   primaryDomain: "",
 };

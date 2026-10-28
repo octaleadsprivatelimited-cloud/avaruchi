@@ -1004,7 +1004,7 @@ export function seedStore(store: CommerceStore) {
       name: p.name,
       slug: p.slug,
       description: `${p.name} for everyday Indian cooking. Demonstration product: prices, packaging and availability are illustrative and must be confirmed before launch.`,
-      brand: "Avaruchi",
+      brand: "Aavaruchi",
       category: p.category,
       status: "ACTIVE",
       taxRate: 5,

@@ -18,7 +18,6 @@ function StoryContent({ onShop }: { onShop: () => void }) {
         <h1>The warmth of home.<br /><em>The taste of Aavaruchi.</em></h1>
         <p className="lead">Food, memories, and Amma chethi ruchi.</p>
         <p className="story-business-line">{BRAND.legalName} · {BRAND.address}</p>
-        <p className="business-tagline" lang="te">{BRAND.tagline}</p>
       </div>
       <Reveal as="figure" className="story-wide-photo">
         <img src="/images/hero.png" alt="Aavaruchi mango pickle with raw mango and traditional spices" />
@@ -26,7 +25,6 @@ function StoryContent({ onShop }: { onShop: () => void }) {
       </Reveal>
       <div className="story-chapters">
         <Reveal as="article">
-          <span className="eyebrow">OUR STORY</span>
           <h2>From Amma’s kitchen<br />to your family table.</h2>
           <div>{aboutAavaruchi.map(paragraph => <p key={paragraph}>{paragraph}</p>)}
             <a className="link-button" href={`mailto:${BRAND.email}`}>Share a recipe or feedback ↗</a>

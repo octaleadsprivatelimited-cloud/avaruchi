@@ -19,6 +19,16 @@ import {
 export function EcommerceHome() {
   const store = useStorefrontConfig();
   const products = useStoreProducts(useInitialCatalog());
+  const featuredPickles = ["classic-mango-pickle", "menti-avakaya", "gongura-pickle", "pulihora-avakaya"];
+  const collectionProducts = (category: string) => {
+    const items = products.filter(product => matchesCategory(product, category));
+    if (category !== "Pickles") return items;
+    const priority = (slug?: string) => {
+      const index = featuredPickles.indexOf(slug || "");
+      return index < 0 ? featuredPickles.length : index;
+    };
+    return items.sort((a, b) => priority(a.slug) - priority(b.slug));
+  };
   useCommerceImpression(
     "view_item_list",
     analyticsItemsForProducts(products),
@@ -46,8 +56,17 @@ export function EcommerceHome() {
             )}
           </div>
         </Reveal>
-        {catalogCategoryTree(products).map(category => <CollectionRow key={category.path} title={category.name} category={category.path} products={products.filter(product => matchesCategory(product, category.path))} />)}
+        {catalogCategoryTree(products).map(category => <CollectionRow key={category.path} title={category.name} category={category.path} products={collectionProducts(category.path)} />)}
         {!products.length && <CollectionRow title="The collection" category="All products" products={[]} />}
+        <Reveal as="section" className="why-aavaruchi wrap" aria-labelledby="why-aavaruchi-title">
+          <h2 id="why-aavaruchi-title">Why Aavaruchi?</h2>
+          <div className="why-aavaruchi-reasons">
+            <article><h3>Traditional Andhra recipes</h3><p>Family recipes passed down through generations, with the familiar flavours of home.</p></article>
+            <article><h3>Prepared in small batches</h3><p>Homemade preparation with carefully selected ingredients and care in every batch.</p></article>
+            <article><h3>A pack that suits your table</h3><p>See the available pack sizes, prices and stock on each product before you choose.</p></article>
+            <article><h3>From Hyderabad, across India</h3><p>{store.manualDeliveryEnabled ? `${deliveryAnnouncement(store)}. ` : ""}Dispatch generally takes around 3 days, with delivery typically 4–5 days from your order.</p></article>
+          </div>
+        </Reveal>
         <Reveal as="section" className="reference-story wrap">
           <div>
             <span className="eyebrow">ESTABLISHED {BRAND.established}</span>

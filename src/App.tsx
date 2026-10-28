@@ -10,6 +10,7 @@ import { PromotionsProvider } from "./lib/promotions";
 import { AnalyticsConsent } from "./components/store/AnalyticsConsent";
 import { EcommerceHome } from "./components/store/EcommerceHome";
 import { ShopPage } from "./components/store/ShopPage";
+import { CombosPage } from "./components/store/CombosPage";
 import { ProductDetailPage } from "./components/store/ProductDetailPage";
 import {
   CartPage,
@@ -142,13 +143,14 @@ export default function App({
             <Suspense
               fallback={
                 <div className="app-loading" role="status">
-                  Opening Avaruchi…
+                  Opening Aavaruchi…
                 </div>
               }
             >
               <Routes>
                 <Route path="/" element={<EcommerceHome />} />
                 <Route path="/shop" element={<ShopPage />} />
+                <Route path="/combos" element={<CombosPage />} />
                 <Route path="/shop/:slug" element={<ProductDetailPage />} />
                 <Route
                   path="/product/:productId"

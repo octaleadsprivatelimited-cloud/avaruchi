@@ -3,13 +3,14 @@ import type { Product } from "../data/commerce";
 import { productPath } from "./product-url";
 import { productSeo, storeOrigin } from "./seo";
 
-const publicRoutes = new Set(["/", "/shop", "/cart", "/checkout", "/login", "/track", "/account", "/contact", "/privacy", "/terms", "/shipping", "/returns", "/shipping-returns", "/journal", "/our-story", "/wishlist"]);
+const publicRoutes = new Set(["/", "/shop", "/combos", "/cart", "/checkout", "/login", "/track", "/account", "/contact", "/privacy", "/terms", "/shipping", "/returns", "/shipping-returns", "/journal", "/our-story", "/wishlist"]);
 
 export function pageMetadata(path: string, store?: Partial<StorefrontConfig>) {
   const name = store?.storeName || "Aavaruchi";
   const titles: Record<string, string> = {
-    "/": "The taste of home, in every jar.",
+    "/": "Amma’s Andhra taste, delivered to your door",
     "/shop": "Pickles, powders & fryums",
+    "/combos": "Combo packages",
     "/wishlist": "Your saved flavours",
     "/our-story": "About us",
     "/journal": "Pairing notes",

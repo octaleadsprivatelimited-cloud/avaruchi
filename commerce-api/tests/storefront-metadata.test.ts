@@ -9,7 +9,7 @@ const product = { id: "p-1", slug: "tomato-pickle", name: "Tomato Pickle", categ
 describe("storefront route metadata", () => {
   it("uses published home SEO settings and includes the editorial routes", () => {
     expect(storefrontMetadata("/", [], store, origin)).toMatchObject({ title: store.seoTitle, description: store.seoDescription, known: true, canonical: `${origin}/` });
-    for (const path of ["/our-story", "/journal"]) expect(storefrontMetadata(path, [], store, origin)).toMatchObject({ known: true, robots: "index, follow" });
+    for (const path of ["/our-story", "/journal", "/combos"]) expect(storefrontMetadata(path, [], store, origin)).toMatchObject({ known: true, robots: "index, follow" });
   });
   it("keeps all private pages and unknown routes out of search", () => {
     for (const path of ["/wishlist", "/account", "/admin/products", "/cart", "/checkout", "/login", "/track", "/transaction/AVA123"]) expect(storefrontMetadata(path, [], store, origin).robots).toBe("noindex, nofollow");

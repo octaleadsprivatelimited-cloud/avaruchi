@@ -15,6 +15,7 @@ import { couponBenefit } from "./coupon-policy.js";
 import { loadConfig, type AppConfig } from "./config.js";
 import { googleAccountRole, isStoreAdminEmail } from "./auth-policy.js";
 import { AppError, errorHandler, notFound } from "./errors.js";
+import { registerComboRoutes } from "./combo-routes.js";
 import {
   authenticate,
   authorize,
@@ -2158,12 +2159,14 @@ export async function createApp(overrides?: {
     res.setHeader("x-cart-token", token);
     return `guest:${token}`;
   };
+  registerComboRoutes({ app, store, persistence, auth, optionalAuth, authorize, hostname: requestHostname, cartKey });
   app.get(
     "/api/v1/cart",
     optionalAuth,
     async (req, res) => {
-      const key = cartKey(req, res),
-        items = store.carts.get(key) || new Map<string, number>();
+      const key = cartKey(req, res);
+      if (persistence) store.carts.set(key, new Map((await persistence.readCartItems(key)).map(item => [item.variantId, item.quantity])));
+      const items = store.carts.get(key) || new Map<string, number>();
       return ok(
         res,
         [...items].flatMap(([variantId, quantity]) => {
@@ -2185,11 +2188,11 @@ export async function createApp(overrides?: {
     optionalAuth,
     validate(cartItemSchema),
     async (req, res) => {
-      const key = cartKey(req, res),
-        items = store.carts.get(key) || new Map<string, number>();
+      const key = cartKey(req, res);
       if (req.body.quantity === 0) {
         await persistence?.saveCartItem(key, req.body.variantId, 0);
-        items.delete(req.body.variantId); store.carts.set(key, items);
+        const latest = new Map(store.carts.get(key) || []);
+        latest.delete(req.body.variantId); store.carts.set(key, latest);
         return ok(res, { variantId: req.body.variantId, quantity: 0 }, "Cart updated");
       }
       const { product, variant } = store.getVariant(req.body.variantId);
@@ -2208,14 +2211,14 @@ export async function createApp(overrides?: {
           "INSUFFICIENT_STOCK",
           `Insufficient stock for ${variant.sku}`,
         );
-      if (req.body.quantity === 0) items.delete(req.body.variantId);
-      else items.set(req.body.variantId, req.body.quantity);
-      store.carts.set(key, items);
       await persistence?.saveCartItem(
         key,
         req.body.variantId,
         req.body.quantity,
       );
+      const latest = new Map(store.carts.get(key) || []);
+      latest.set(req.body.variantId, req.body.quantity);
+      store.carts.set(key, latest);
       return ok(
         res,
         { variantId: req.body.variantId, quantity: req.body.quantity },

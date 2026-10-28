@@ -96,7 +96,7 @@ export function ReferenceProductCard({
   };
   const add = () => {
     if (!variant || !cart.add(product.id, variant.id))
-      return toast.error("This jar is currently unavailable.");
+      return toast.error("This item is currently unavailable.");
     toast.success(`${product.name} added to your bag`);
   };
   const path = productRouteKey(product);
@@ -159,6 +159,7 @@ export function ReferenceProductCard({
               {item.title ||
                 Object.values(item.options).join(" / ") ||
                 "Standard pack"}
+              {` · ${money(priceIncludingTax(item.price, product.taxRate))}`}
               {item.stock < 1 ? " · Sold out" : ""}
             </option>
           ))}
@@ -179,8 +180,8 @@ export function ReferenceProductCard({
 const heroSlides = [
   {
     id: "mango",
-    title: "The taste of home, in every jar.",
-    copy: "Classic mango. Familiar tang. A place at your table.",
+    title: "Amma’s Andhra Taste, Delivered to Your Door.",
+    copy: "Discover traditional pickles, podis and fryums made for the flavours you grew up with.",
     name: "classic mango",
     image: 0,
   },
@@ -245,7 +246,15 @@ export function ReferenceHero({ products }: { products: Product[] }) {
           <div className="reference-hero-copy">
             <h1>{item.title}</h1>
             <p>{item.copy}</p>
-            {product ? (
+            {slide === 0 ? (
+              <div className="hero-shopping-actions">
+                <Link className="hero-shop-link hero-primary-link" to="/shop" search={{ category: "Pickles" }}>Shop Pickles</Link>
+                <div className="hero-secondary-links">
+                  <Link to="/shop" search={{ category: "Powders" }}>Shop Powders <span aria-hidden="true">↗</span></Link>
+                  <Link to="/shop" search={{ category: "Fryums" }}>Shop Fryums <span aria-hidden="true">↗</span></Link>
+                </div>
+              </div>
+            ) : product ? (
               <Link
                 className="hero-shop-link"
                 to="/product/$productId"
@@ -334,7 +343,7 @@ export function CollectionRow({
           </svg>
         </h2>
         <Link className="collection-view" to="/shop" search={{ category }}>
-          View all
+          View all {title.toLowerCase()}
         </Link>
       </div>
       {products.length ? (
@@ -582,7 +591,7 @@ export function BrandMark() {
         alt=""
       />
       <span className="brand-name">
-        {store.storeName === "Aavaruchi" ? "aavaruchi" : store.storeName}
+        {store.storeName}
       </span>
     </>
   );

@@ -10,7 +10,7 @@ export function CatalogCsvImport({ onComplete }: { onComplete: () => void }) {
   const importing = useRef(false);
   const [updateExisting, setUpdateExisting] = useState(false);
   const template = () => {
-    const row = ["Mango Pickle", "mango-pickle", "A tangy mango pickle for the everyday table.", "All pickles", "Avaruchi", "DRAFT", "0", "250 g", "AVA-MANGO-250", "199", "199", "0", "250", "", ""];
+    const row = ["Mango Pickle", "mango-pickle", "A tangy mango pickle for the everyday table.", "Pickles", "Aavaruchi", "DRAFT", "0", "250 g", "AVA-MANGO-250", "199", "199", "0", "250", "", ""];
     const url = URL.createObjectURL(new Blob([catalogCsvHeaders.join(",") + "\n" + row.join(",") + "\n"], { type: "text/csv" }));
     const link = document.createElement("a"); link.href = url; link.download = "avaruchi-product-template.csv"; link.click(); URL.revokeObjectURL(url);
   };

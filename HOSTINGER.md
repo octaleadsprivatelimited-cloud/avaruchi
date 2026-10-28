@@ -1,6 +1,6 @@
-# Avaruchi Node.js deployment
+# Aavaruchi Node.js deployment
 
-Create a new Node.js 24 app for Avaruchi with this project root as its app directory. Use [Avaruchi's source repository](https://github.com/octaleadsprivatelimited-cloud/avaruchi) and Avaruchi's own hosting resources. Vite builds the React UI and server-rendering entry; the existing Express backend runs alongside it.
+Create a new Node.js 24 app for Aavaruchi with this project root as its app directory. Use [Aavaruchi's source repository](https://github.com/octaleadsprivatelimited-cloud/avaruchi) and Aavaruchi's own hosting resources. Vite builds the React UI and server-rendering entry; the existing Express backend runs alongside it.
 
 The deployed storefront is [aavaruchi.in](https://aavaruchi.in). Its frontend and API share this origin, and `/ready` verifies MySQL persistence. Hostinger's GitHub connection deploys `main`; GitHub Actions runs the checks in `.github/workflows/ci.yml` independently of deployment. The custom domain replaces the original temporary hostname. Keep the existing absolute `UPLOAD_DIR` unchanged when renaming a site, so media stays in the same persistent directory.
 
@@ -22,7 +22,7 @@ Hostinger serves the frontend, API, uploads and background worker together. Set 
 
 Use `.env.production.example` as the template. Enter live values in hosting settings and keep credentials out of shared source:
 
-- `NODE_ENV=production`, `USE_DATABASE=true`, and `APP_URL=https://<Avaruchi-domain>`.
+- `NODE_ENV=production`, `USE_DATABASE=true`, and `APP_URL=https://<Aavaruchi-domain>`.
 - All four `DATABASE_HOST`, `DATABASE_USER`, `DATABASE_PASSWORD`, `DATABASE_NAME`; `DATABASE_PORT` defaults to 3306. Enter the password unchanged in its dedicated field. These fields take precedence over `DATABASE_URL` and must be supplied together.
 - Alternatively use `DATABASE_URL=mysql://USER:URL_ENCODED_PASSWORD@HOST:3306/DATABASE` and omit all four discrete fields.
 - Unique random `JWT_SECRET` and `JWT_REFRESH_SECRET`, at least 32 characters each, and a separate random `INTEGRATION_ENCRYPTION_KEY`. Keep the encryption key stable across releases so saved provider credentials remain readable.
@@ -33,11 +33,11 @@ Uploads must remain writable and persistent across deployments. The default prod
 
 The entry point opens its port promptly, then applies committed MySQL migrations before serving customer requests. `/health` and `/ready` return uncached `503 SERVICE_STARTING` until initialization finishes. Customer requests wait briefly during startup. Migration failures stop startup with sanitized diagnostics; the process never resets the database or falls back to memory storage.
 
-Keep `SEED_CATALOG=false` for an empty new store. For an intentional sample preview, optionally set `SEED_CATALOG=true` once, then remove it. It initializes the sample catalog and role permissions only when no products or orders exist. Replace sample products with approved Avaruchi products before launch.
+Keep `SEED_CATALOG=false` for an empty new store. For an intentional sample preview, optionally set `SEED_CATALOG=true` once, then remove it. It initializes the sample catalog and role permissions only when no products or orders exist. Replace sample products with approved Aavaruchi products before launch.
 
 ## Authentication and providers
 
-Firebase defaults are empty. Supply Avaruchi's `FIREBASE_PROJECT_ID`, `FIREBASE_API_KEY`, `FIREBASE_AUTH_DOMAIN` and `FIREBASE_APP_ID` together. Enable Google in Firebase and authorize the storefront hostname. Set `STORE_ADMIN_EMAIL` to Avaruchi's verified admin Google account. `/api/v1/auth/providers` reports the public configuration and enabled state. Sign-in remains disabled until configured; no local login bypass exists.
+Firebase defaults are empty. Supply Aavaruchi's `FIREBASE_PROJECT_ID`, `FIREBASE_API_KEY`, `FIREBASE_AUTH_DOMAIN` and `FIREBASE_APP_ID` together. Enable Google in Firebase and authorize the storefront hostname. Set `STORE_ADMIN_EMAIL` to Aavaruchi's verified admin Google account. `/api/v1/auth/providers` reports the public configuration and enabled state. Sign-in remains disabled until configured; no local login bypass exists.
 
 After verified admin sign-in, use Admin → Products → Pickle jars to edit jar labels, prices, MRP, stock and shipping weight in grams. New gram/kg jar labels suggest a weight; each variant's weight remains editable. Products stay draft until the merchant publishes them.
 
@@ -45,7 +45,7 @@ Configure Razorpay in Admin → Integrations as PAYMENT / razorpay / LIVE with c
 
 Use Store settings for manual delivery charges, free-shipping threshold, delivery days and COD availability, or configure a shipping provider. Set accurate business identity and support details before accepting orders. Analytics are optional and require provider IDs and customer consent.
 
-For Resend, verify `aavaruchi.in` in the Resend dashboard using its exact DKIM/SPF records, then save an EMAIL / resend / LIVE integration with credential `apiKey` and public settings `fromEmail` (for example `orders@aavaruchi.in`) and `fromName` (`Avaruchi`). Do not invent DNS values or place the API key in frontend settings. Add the domain's exact DNS records only after Resend supplies them.
+For Resend, verify `aavaruchi.in` in the Resend dashboard using its exact DKIM/SPF records, then save an EMAIL / resend / LIVE integration with credential `apiKey` and public settings `fromEmail` (for example `orders@aavaruchi.in`) and `fromName` (`Aavaruchi`). Do not invent DNS values or place the API key in frontend settings. Add the domain's exact DNS records only after Resend supplies them.
 
 The production notification worker sends persisted customer confirmations and merchant new-order alerts after an accepted COD order or verified online payment. Merchant alerts go to `STORE_ORDER_ALERT_EMAIL`, falling back to `STORE_ADMIN_EMAIL`. Each recipient gets a separate durable, deduplicated outbox entry. Missing email configuration defers delivery. Verify real delivery in the email provider; a queued notification is not evidence that a message arrived.
 

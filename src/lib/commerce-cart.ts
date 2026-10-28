@@ -7,6 +7,8 @@ import {
 import { commerceApi } from "@/lib/commerce-api";
 import { trackCommerceEvent } from "@/lib/analytics";
 import { commerceAmount, productAnalyticsItem } from "@/lib/commerce-analytics";
+import type { ComboCartResponse } from "@/lib/combo-packages";
+import { CartSynchronization, type SyncedCartEntry } from "@/lib/cart-synchronization";
 
 export type CartEntry = {
   productId: string;
@@ -29,51 +31,34 @@ const read = (): CartEntry[] => {
 const countEntries = (entries: CartEntry[]) =>
   entries.reduce((sum, entry) => sum + entry.quantity, 0);
 
+const writeLocalCart = (entries: SyncedCartEntry[]) => {
+  localStorage.setItem(key, JSON.stringify(entries));
+  window.dispatchEvent(new Event("avaruchi-commerce-cart"));
+};
+const cartSynchronization = new CartSynchronization({
+  read,
+  write: writeLocalCart,
+  remote: () => commerceApi("/api/v1/cart"),
+  put: (variantId, quantity) => commerceApi("/api/v1/cart/items", { method: "PUT", body: JSON.stringify({ variantId, quantity }) }),
+  changed: () => { if (typeof window !== "undefined") window.dispatchEvent(new Event("avaruchi-commerce-cart-state")); },
+});
+
 export function useCommerceCartCount() {
   const [count, setCount] = useState(0);
-
   useEffect(() => {
     const sync = () => setCount(countEntries(read()));
-    const hydrate = async () => {
-      try {
-        const remote = await commerceApi<Array<{
-          product: { id: string };
-          variantId: string;
-          quantity: number;
-        }>>("/api/v1/cart");
-        const merged = new Map<string, CartEntry>();
-        for (const item of remote)
-          merged.set(item.variantId, {
-            productId: item.product.id,
-            variantId: item.variantId,
-            quantity: item.quantity,
-          });
-        for (const item of read())
-          if (item.variantId) {
-            const existing = merged.get(item.variantId);
-            merged.set(item.variantId, {
-              ...item,
-              quantity: Math.max(item.quantity, existing?.quantity || 0),
-            });
-          }
-        localStorage.setItem(key, JSON.stringify([...merged.values()]));
-        window.dispatchEvent(new Event("avaruchi-commerce-cart"));
-      } catch {
-        sync();
-      }
-    };
-    sync();
-    void hydrate();
+    const hydrate = () => { void cartSynchronization.hydrate().catch(() => undefined); };
+    const authenticate = () => { void cartSynchronization.hydrate(true).catch(() => undefined); };
+    sync(); hydrate();
     window.addEventListener("avaruchi-commerce-cart", sync);
     window.addEventListener("storage", sync);
-    window.addEventListener("avaruchi-commerce-auth", hydrate);
+    window.addEventListener("avaruchi-commerce-auth", authenticate);
     return () => {
       window.removeEventListener("avaruchi-commerce-cart", sync);
       window.removeEventListener("storage", sync);
-      window.removeEventListener("avaruchi-commerce-auth", hydrate);
+      window.removeEventListener("avaruchi-commerce-auth", authenticate);
     };
   }, []);
-
   return count;
 }
 const sameOptions = (
@@ -103,88 +88,32 @@ const unavailableProduct = (productId: string): Product => ({
 export function useCommerceCart() {
   const products = useStoreProducts();
   const [items, setItems] = useState<CartEntry[]>([]);
-  const syncRemote = useCallback((next: CartEntry[], previous: CartEntry[]) => {
-    const nextByVariant = new Map(
-      next.filter((item) => item.variantId).map((item) => [item.variantId!, item.quantity]),
-    );
-    const previousVariants = previous.map((item) => item.variantId).filter(Boolean) as string[];
-    for (const [variantId, quantity] of nextByVariant)
-      void commerceApi("/api/v1/cart/items", {
-        method: "PUT",
-        body: JSON.stringify({ variantId, quantity }),
-      }).catch(() => undefined);
-    for (const variantId of previousVariants)
-      if (!nextByVariant.has(variantId))
-        void commerceApi("/api/v1/cart/items", {
-          method: "PUT",
-          body: JSON.stringify({ variantId, quantity: 0 }),
-        }).catch(() => undefined);
-  }, []);
+  const [syncState, setSyncState] = useState(() => cartSynchronization.snapshot());
   const save = useCallback((next: CartEntry[], sync = true) => {
+    if (!cartSynchronization.canMutate()) return;
     const previous = read();
     setItems(next);
-    localStorage.setItem(key, JSON.stringify(next));
-    window.dispatchEvent(new Event("avaruchi-commerce-cart"));
-    if (sync) syncRemote(next, previous);
-  }, [syncRemote]);
+    writeLocalCart(next);
+    if (sync) void cartSynchronization.sync(next, previous).catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     const sync = () => setItems(read());
-    sync();
+    const state = () => setSyncState(cartSynchronization.snapshot());
+    const hydrate = () => { void cartSynchronization.hydrate().catch(() => undefined); };
+    const authenticate = () => { void cartSynchronization.hydrate(true).catch(() => undefined); };
+    sync(); state(); hydrate();
     window.addEventListener("avaruchi-commerce-cart", sync);
+    window.addEventListener("avaruchi-commerce-cart-state", state);
     window.addEventListener("storage", sync);
+    window.addEventListener("avaruchi-commerce-auth", authenticate);
     return () => {
       window.removeEventListener("avaruchi-commerce-cart", sync);
+      window.removeEventListener("avaruchi-commerce-cart-state", state);
       window.removeEventListener("storage", sync);
+      window.removeEventListener("avaruchi-commerce-auth", authenticate);
     };
-  }, [save]);
-
-  useEffect(() => {
-    let active = true;
-    const hydrate = async () => {
-      try {
-        const remote = await commerceApi<Array<{
-          product: { id: string };
-          variantId: string;
-          quantity: number;
-        }>>("/api/v1/cart");
-        if (!active) return;
-        const merged = new Map<string, CartEntry>();
-        for (const item of remote)
-          merged.set(item.variantId, {
-            productId: item.product.id,
-            variantId: item.variantId,
-            quantity: item.quantity,
-          });
-        for (const item of read()) {
-          if (!item.variantId) continue;
-          const existing = merged.get(item.variantId);
-          merged.set(item.variantId, {
-            ...item,
-            quantity: Math.max(item.quantity, existing?.quantity || 0),
-          });
-        }
-        const next = [...merged.values()];
-        save(next, false);
-        syncRemote(
-          next,
-          remote.map((item) => ({
-            productId: item.product.id,
-            variantId: item.variantId,
-            quantity: item.quantity,
-          })),
-        );
-      } catch {
-        // Local cart remains usable while the API is unavailable.
-      }
-    };
-    void hydrate();
-    window.addEventListener("avaruchi-commerce-auth", hydrate);
-    return () => {
-      active = false;
-      window.removeEventListener("avaruchi-commerce-auth", hydrate);
-    };
-  }, [save, syncRemote]);
+  }, []);
 
   useEffect(() => {
     const current = read();
@@ -235,7 +164,7 @@ export function useCommerceCart() {
   );
 
   const add = (productId: string, variantId: string, quantity = 1) => {
-    if (!Number.isInteger(quantity) || quantity < 1) return false;
+    if (!cartSynchronization.canMutate() || !Number.isInteger(quantity) || quantity < 1) return false;
     const product = getStoreProductsSnapshot().find(
       (item) => item.id === productId,
     );
@@ -271,7 +200,7 @@ export function useCommerceCart() {
   };
 
   const update = (index: number, quantity: number) => {
-    if (!Number.isInteger(quantity)) return;
+    if (!cartSynchronization.canMutate() || !Number.isInteger(quantity)) return;
     const current = read();
     const previous = current[index];
     if (!previous) return;
@@ -295,6 +224,22 @@ export function useCommerceCart() {
     });
   };
   const clear = () => save([]);
+  const addCombo = async (comboId: string) => {
+    const result = await cartSynchronization.addCombo(current => commerceApi<ComboCartResponse>(`/api/v1/cart/combos/${encodeURIComponent(comboId)}`, {
+      method: "PUT",
+      body: JSON.stringify({ lines: current.map(item => ({ variantId: item.variantId, quantity: item.quantity })) }),
+    }));
+    if (result.combo.couponOffer) sessionStorage.setItem("avaruchi_commerce_coupon", result.combo.couponOffer.code);
+    const catalog = getStoreProductsSnapshot();
+    const analyticsItems = result.combo.components.flatMap(component => {
+      const product = catalog.find(item => item.id === component.productId);
+      const variant = product?.variants?.find(item => item.id === component.variantId);
+      const item = product && variant && productAnalyticsItem(product, variant, component.quantity);
+      return item ? [item] : [];
+    });
+    if (analyticsItems.length) trackCommerceEvent("add_to_cart", { items: analyticsItems, currency: "INR", value: commerceAmount(analyticsItems.reduce((sum, item) => sum + item.price * item.quantity, 0)) });
+    return result;
+  };
   const subtotal = lines.reduce(
     (sum, line) => sum + line.unitPrice * line.entry.quantity,
     0,
@@ -306,6 +251,11 @@ export function useCommerceCart() {
     count: countEntries(items),
     subtotal,
     add,
+    addCombo,
+    hydrated: syncState.hydrated,
+    busy: syncState.busy,
+    syncError: syncState.error,
+    retryHydration: () => cartSynchronization.hydrate(true),
     update,
     clear,
   };

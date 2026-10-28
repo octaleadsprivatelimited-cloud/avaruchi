@@ -1,4 +1,4 @@
-# Avaruchi backend architecture
+# Aavaruchi backend architecture
 
 The React storefront lives in `src/`; the Express API and Prisma/MySQL persistence live in `commerce-api/`. Local development uses separate storefront and API processes. Production `hostinger.mjs` serves both in one Node.js 24 process and supplies direct catalog/settings readers to server rendering.
 

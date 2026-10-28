@@ -1,4 +1,4 @@
-# Avaruchi
+# Aavaruchi
 
 A cold-pressed oils storefront. Client preview with sample products and illustrative prices.
 

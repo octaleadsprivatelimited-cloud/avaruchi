@@ -53,7 +53,7 @@ export const defaultStorefrontConfig: StorefrontConfig = {
   supportPhone: "", freeShippingThreshold: 0, manualDeliveryEnabled: false, deliveryCharge: 0, deliveryMinDays: 4, deliveryMaxDays: 5, deliveryEstimateBasis: "ORDER", announcement: "",
   codEnabled: true, onlinePaymentDiscountEnabled: false, onlinePaymentDiscountType: "PERCENTAGE", onlinePaymentDiscountValue: 0,
   footerTagline: "Traditional Andhra pickles, made with love.", seoTitle: "Aavaruchi | Authentic Andhra Pickles",
-  seoDescription: "Discover traditional Andhra pickles from Aavaruchi. Choose your favourite flavours and jar sizes.", primaryDomain: "",
+  seoDescription: "Discover traditional Andhra pickles, powders and fryums from Aavaruchi. Choose your favourite flavours and available pack sizes.", primaryDomain: "",
 };
 
 export function normalizeHostname(value: string | undefined) {

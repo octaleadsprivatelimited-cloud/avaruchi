@@ -32,8 +32,8 @@ const request = path => new Promise((resolve, reject) => {
 
 try {
   const nonces = new Set();
-  const pages = ['/', '/shop', '/cart', '/checkout', '/login', '/track', '/account', '/privacy', '/terms', '/shipping-returns', '/contact', '/our-story', '/journal', '/wishlist', '/shipping', '/returns',
-    ...['overview', 'products', 'orders', 'customers', 'returns', 'support', 'inventory', 'payments', 'shipping', 'marketing', 'analytics', 'integrations', 'settings'].map(section => `/admin/${section}`)];
+  const pages = ['/', '/shop', '/combos', '/cart', '/checkout', '/login', '/track', '/account', '/privacy', '/terms', '/shipping-returns', '/contact', '/our-story', '/journal', '/wishlist', '/shipping', '/returns',
+    ...['overview', 'products', 'combos', 'orders', 'customers', 'returns', 'support', 'inventory', 'payments', 'shipping', 'marketing', 'analytics', 'integrations', 'settings'].map(section => `/admin/${section}`)];
   for (const path of pages) {
     const response = await request(path);
     assert.equal(response.status, 200, `${path} must render without loopback API access`);
@@ -55,12 +55,14 @@ try {
   }
   const home = await request('/');
   assert.ok(home.body.includes('reference-hero'), 'render the reference pickle hero');
-  assert.ok(home.body.includes('The taste of home, in every jar.'), 'render the reference heading');
+  assert.ok(home.body.includes('Amma’s Andhra Taste, Delivered to Your Door.'), 'render the approved homepage heading');
+  for (const category of ['Pickles', 'Powders', 'Fryums']) assert.ok(home.body.includes(`Shop ${category}`), 'provide category shopping actions');
   assert.ok(home.body.includes('/images/hero.png') && home.body.includes('/brand/avaruchi-logo-small.webp'), 'use the reference photography and brand artwork');
   assert.ok(home.body.includes('reference-story'), 'render the reference brand story');
   assert.ok(!home.body.includes('class="announcement"'), 'the top announcement bar is removed');
   assert.ok(home.body.includes('contact@aavaruchi.in') && !home.body.includes('tel:') && !home.body.includes('wa.me/'), 'public contact uses email without phone links');
   assert.ok((await request('/our-story')).body.includes('PRODUCT INFORMATION'), 'publish the supplied product information with the brand story');
+  assert.ok(!(await request('/our-story')).body.includes('OUR STORY'), 'remove the old eyebrow without removing the story');
   assert.ok(home.body.includes('Our collection is coming together.'), 'an empty backend must stay empty in the new UI');
   assert.ok(home.body.includes('₹62 delivery') && home.body.includes('₹800'), 'SSR must use saved delivery prices before hydration');
   storefrontSettings = { ...storefrontSettings, heroImageUrl: '/uploads/admin-hero.png', heroImageAlt: 'Pickles selected by the store administrator' };

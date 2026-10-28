@@ -8,6 +8,7 @@ import {
   type UserRole,
 } from "@prisma/client";
 import { AppError } from "./errors.js";
+import { assertComboCartBaseline } from "./combo-packages.js";
 import { couponBenefit } from "./coupon-policy.js";
 import { googleAccountRole, isStoreAdminEmail } from "./auth-policy.js";
 import type {
@@ -2172,24 +2173,53 @@ export class PrismaPersistence {
     });
   }
 
+  async readCartItems(key: string) {
+    const userId = key.startsWith("user:") ? key.slice(5) : undefined;
+    const guestToken = key.startsWith("guest:") ? key.slice(6) : undefined;
+    const cart = await this.db.cart.findFirst({
+      where: userId ? { userId } : { guestToken },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      include: { items: { select: { variantId: true, quantity: true } } },
+    });
+    return cart?.items || [];
+  }
+
+  private async lockedCart(tx: Prisma.TransactionClient, key: string) {
+    const userId = key.startsWith("user:") ? key.slice(5) : undefined;
+    const guestToken = key.startsWith("guest:") ? key.slice(6) : undefined;
+    if (!userId && !guestToken) throw new AppError(400, "CART_OWNER_INVALID", "Invalid cart owner");
+    // All cart writers take the same row/range lock, including first creation.
+    // The indexed lookup also protects the empty-owner range in MySQL.
+    const carts = userId
+      ? await tx.$queryRaw<Array<{ id: string }>>`SELECT id FROM Cart WHERE userId = ${userId} ORDER BY createdAt, id LIMIT 1 FOR UPDATE`
+      : await tx.$queryRaw<Array<{ id: string }>>`SELECT id FROM Cart WHERE guestToken = ${guestToken!} LIMIT 1 FOR UPDATE`;
+    return carts[0] || await tx.cart.create({ data: { userId, guestToken, expiresAt: guestToken ? new Date(Date.now() + 30 * 86_400_000) : undefined } });
+  }
+
+  private async cartTransaction<T>(work: (tx: Prisma.TransactionClient) => Promise<T>) {
+    for (let attempt = 0; ; attempt++) {
+      try { return await this.db.$transaction(work); }
+      catch (error) {
+        if (attempt >= 2 || !(error instanceof Prisma.PrismaClientKnownRequestError) || !["P2034", "P2002"].includes(error.code)) throw error;
+      }
+    }
+  }
+
+  async replaceCartItems(key: string, lines: Array<{ variantId: string; quantity: number }>, baseline: Array<{ variantId: string; quantity: number }>) {
+    await this.cartTransaction(async (tx) => {
+      const cart = await this.lockedCart(tx, key);
+      const current = await tx.cartItem.findMany({ where: { cartId: cart.id }, select: { variantId: true, quantity: true } });
+      const { replayed } = assertComboCartBaseline(current, baseline, lines);
+      if (!replayed) {
+        await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
+        if (lines.length) await tx.cartItem.createMany({ data: lines.map(line => ({ cartId: cart.id, variantId: line.variantId, quantity: line.quantity })) });
+      }
+    });
+  }
+
   async saveCartItem(key: string, variantId: string, quantity: number) {
-    await this.db.$transaction(async (tx) => {
-      const userId = key.startsWith("user:") ? key.slice(5) : undefined;
-      const guestToken = key.startsWith("guest:") ? key.slice(6) : undefined;
-      let cart = userId
-        ? await tx.cart.findFirst({ where: { userId } })
-        : guestToken
-          ? await tx.cart.findUnique({ where: { guestToken } })
-          : null;
-      cart ||= await tx.cart.create({
-        data: {
-          userId,
-          guestToken,
-          expiresAt: guestToken
-            ? new Date(Date.now() + 30 * 86_400_000)
-            : undefined,
-        },
-      });
+    await this.cartTransaction(async (tx) => {
+      const cart = await this.lockedCart(tx, key);
       if (quantity === 0)
         await tx.cartItem.deleteMany({ where: { cartId: cart.id, variantId } });
       else

@@ -1,8 +1,8 @@
-# Avaruchi configuration
+# Aavaruchi configuration
 
-Brand: **Avaruchi**. Category: **cold-pressed edible oils**.
+Brand: **Aavaruchi**. Category: **cold-pressed edible oils**.
 
-| Resource | Avaruchi configuration |
+| Resource | Aavaruchi configuration |
 | --- | --- |
 | Storefront | http://localhost:5180 |
 | API | http://localhost:4010 |
@@ -10,11 +10,11 @@ Brand: **Avaruchi**. Category: **cold-pressed edible oils**.
 | Redis, optional | localhost:6390 |
 | Docker project | avaruchi |
 | Docker volumes | avaruchi_mysql / avaruchi_redis, project scoped |
-| Browser storage and sessions | Avaruchi namespaces and token issuers |
+| Browser storage and sessions | Aavaruchi namespaces and token issuers |
 | Production uploads | ~/.local/share/avaruchi/<domain>/uploads, or explicit UPLOAD_DIR |
 | Source repository | https://github.com/octaleadsprivatelimited-cloud/avaruchi |
 | Version control | Destination repository history retained; clone history removed; no GitHub workflows |
-| Client integrations | Pending Avaruchi provider configuration |
+| Client integrations | Pending Aavaruchi provider configuration |
 
 Run `pnpm setup:local` for dependency installation, a private local environment, migrations and role permissions. A fresh setup has an empty catalog, with no inherited customers, orders, sessions, coupons or integrations. Sample catalog code is retained and loads only with `SEED_CATALOG=true`. No customer or administrator account is seeded; `STORE_ADMIN_EMAIL` grants administrator access only after that Google identity is verified.
 

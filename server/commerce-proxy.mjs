@@ -59,7 +59,7 @@ export function authorizeCommerceProxy(req, res, { secret, origin }) {
   const valid = secretBytes.length >= 32 && suppliedBytes.length === secretBytes.length && timingSafeEqual(suppliedBytes, secretBytes);
   if (!valid) {
     res.writeHead(403, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
-    res.end(JSON.stringify({ success: false, error: { code: 'STOREFRONT_PROXY_REQUIRED', message: 'Use the Avaruchi storefront to access this service.' } }));
+    res.end(JSON.stringify({ success: false, error: { code: 'STOREFRONT_PROXY_REQUIRED', message: 'Use the Aavaruchi storefront to access this service.' } }));
     return false;
   }
   const clientIp = req.headers['x-avaruchi-client-ip'];

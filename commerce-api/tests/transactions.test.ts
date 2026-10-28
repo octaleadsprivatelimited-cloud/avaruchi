@@ -25,7 +25,8 @@ it("counts only successful refunds and keeps pending refunds separate", () => {
   expect(settledRefundAmount(record)).toBe(30);
   expect(settledRefundAmount({ ...payment("CAPTURED"), refundedAmount: 50 })).toBe(0);
 });
-it("returns Google sign-in only to an internal transaction page", () => {
+it("returns Google sign-in only to checkout or an internal transaction page", () => {
+  expect(loginReturnPath("?returnTo=%2Fcheckout")).toBe("/checkout");
   expect(loginReturnPath("?returnTo=%2Ftransaction%2FAVA-123")).toBe("/transaction/AVA-123");
-  for (const value of ["//evil.test", "https://evil.test", "/login", "/transaction/one?email=secret", "/transaction/one#secret"]) expect(loginReturnPath(`?returnTo=${encodeURIComponent(value)}`)).toBeNull();
+  for (const value of ["//evil.test", "https://evil.test", "/login", "/checkout?email=secret", "/checkout#secret", "/checkout/../login", "/transaction/one?email=secret", "/transaction/one#secret"]) expect(loginReturnPath(`?returnTo=${encodeURIComponent(value)}`)).toBeNull();
 });

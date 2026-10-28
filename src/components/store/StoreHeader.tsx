@@ -116,7 +116,7 @@ export function StoreHeader() {
                 Products <span aria-hidden="true">⌄</span>
               </summary>
               <div className="products-dropdown category-mega-menu">
-                <div className="category-menu-intro"><span>THE AVARUCHI PANTRY</span><Link to="/shop" onClick={() => menu.current?.removeAttribute("open")}>Shop all products <span aria-hidden="true">↗</span></Link></div>
+                <div className="category-menu-intro"><span>THE AAVARUCHI PANTRY</span><Link to="/shop" onClick={() => menu.current?.removeAttribute("open")}>Shop all products <span aria-hidden="true">↗</span></Link></div>
                 <div className="category-menu-columns">
                   {categories.map((category, index) => (
                     <section className="category-menu-group" key={category.path}>
@@ -133,6 +133,9 @@ export function StoreHeader() {
                 </div>
               </div>
             </details>
+            <Link className={location.pathname === "/combos" ? "current" : ""} to="/combos">
+              Combos
+            </Link>
             <Link
               className={location.pathname === "/our-story" ? "current" : ""}
               to="/our-story"
@@ -154,14 +157,15 @@ export function StoreHeader() {
             <button
               type="button"
               className="bag-button"
-              aria-label={`Open bag, ${cart.count} jars`}
+              aria-label={`Open bag, ${cart.count} ${cart.count === 1 ? "item" : "items"}`}
               onClick={() => setBagOpen(true)}
             >
               <ReferenceIcon name="bag" />
               <span className="bag-count">{cart.count}</span>
             </button>
-            <AccountLink className="icon-button" ariaLabel="Your account">
+            <AccountLink className="account-access" ariaLabel="Your account or sign in">
               <ReferenceIcon name="user" />
+              <span>Account</span>
             </AccountLink>
           </div>
         </header>
@@ -225,14 +229,14 @@ export function StoreHeader() {
           >
             {!cart.lines.length ? (
               <div className="empty-state">
-                <h3>A jar would look good here.</h3>
+                <h3>Your next favourite belongs here.</h3>
                 <p>Find a flavour you love and add it to your bag.</p>
                 <Link
                   className="button"
                   to="/shop"
                   onClick={() => setBagOpen(false)}
                 >
-                  Browse pickles
+                  Browse products
                 </Link>
               </div>
             ) : (
@@ -352,6 +356,7 @@ export function StoreFooter() {
           <Link to="/our-story">About us</Link>
           <a href="/our-story#product-information">Product information</a>
           <Link to="/shop">Shop all products</Link>
+          <Link to="/combos">Shop combos</Link>
           <Link to="/journal">Pairing notes</Link>
           <Link to="/wishlist">Saved flavours</Link>
         </div>

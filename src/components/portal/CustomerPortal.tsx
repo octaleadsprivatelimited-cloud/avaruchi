@@ -672,7 +672,7 @@ function Overview() {
     <>
       <div className="customer-hero">
         <div>
-          <p className="portal-eyebrow">Avaruchi rewards</p>
+          <p className="portal-eyebrow">Aavaruchi rewards</p>
           <h2>Your account, in one place</h2>
           <p>
             Orders, returns, saved favourites and support stay synchronized

@@ -874,6 +874,7 @@ export function CheckoutPage() {
             <div className="checkout-form">
               <p className="eyebrow">Step 1 of 3</p>
               <h1>Where should we send it?</h1>
+              {savedDetailsStatus === "guest" && <p className="guest-checkout-note">You can check out as a guest. <Link to="/login" search={{ returnTo: "/checkout" }}>Sign in</Link> to use saved addresses and view orders in your account.</p>}
               {savedDetailsStatus === "loading" ? <p role="status">Loading your saved details… You can also enter them below.</p> : null}
               {savedDetailsStatus === "error" ? <p role="status">Your saved details could not be loaded. Enter them below or <button type="button" onClick={() => setSavedDetailsAttempt((attempt) => attempt + 1)}>try again</button>.</p> : null}
               {savedAddresses.length ? <label>
@@ -1235,13 +1236,14 @@ export function LoginPage() {
         <section>
           <p className="eyebrow">Welcome to Aavaruchi</p>
           <h1>Sign in or sign up.</h1>
-          <p>Use your Google account for orders, returns and saved favourites. New accounts are created automatically.</p>
+          <p>Sign in with Google to view your orders and invoices, track deliveries, manage saved addresses and sync your favourites. New accounts are created automatically.</p>
           <CustomerQuickLogin />
+          <p className="guest-shopping-note">An account is optional. You can <Link to="/shop">continue shopping</Link> and check out as a guest.</p>
         </section>
         <aside>
           <span>“</span>
           <blockquote>
-            Familiar tang, bold spice and a little taste of home in every jar.
+            Familiar tang, bold spice and a little taste of home at your table.
           </blockquote>
           <p>Aavaruchi promise</p>
         </aside>

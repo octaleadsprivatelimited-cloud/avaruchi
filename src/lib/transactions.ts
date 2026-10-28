@@ -34,5 +34,5 @@ export function confirmedOrLatestPayment(payments: CustomerPayment[]) {
 }
 export function loginReturnPath(search: string) {
   const value = new URLSearchParams(search).get("returnTo");
-  return value && /^\/transaction\/[^/?#]+$/.test(value) ? value : null;
+  return value && (value === "/checkout" || /^\/transaction\/[^/?#]+$/.test(value)) ? value : null;
 }

@@ -1,6 +1,6 @@
 import type { StoredProduct, StoredVariant } from "./store.js";
 
-const publicPages = ["/", "/shop", "/our-story", "/journal", "/contact", "/shipping-returns", "/privacy", "/terms"];
+const publicPages = ["/", "/shop", "/combos", "/our-story", "/journal", "/contact", "/shipping-returns", "/privacy", "/terms"];
 const sitemapPageSize = 10000;
 const escapeXml = (value: unknown) => String(value).replace(/[<>&"']/g, (character) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&apos;" })[character]!);
 const plainText = (value: string) => value.replace(/<[^>]*>/g, " ").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
@@ -53,7 +53,7 @@ export type MerchantReport = {
 };
 
 /** No fake products, fallback imagery, invented identifiers, or private fields enter this feed. */
-export function buildMerchantFeed(products: Iterable<StoredProduct>, origin: string, storeName = "Avaruchi") {
+export function buildMerchantFeed(products: Iterable<StoredProduct>, origin: string, storeName = "Aavaruchi") {
   const report: MerchantReport = { activeProducts: 0, eligibleItems: 0, excludedItems: 0, issues: [] };
   const items: string[] = [];
   for (const product of products) {

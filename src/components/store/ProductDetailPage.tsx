@@ -109,8 +109,8 @@ export function ProductDetailPage() {
     const variant = product.variants?.find((candidate) => Object.keys(candidate.options).length === Object.keys(next).length && Object.entries(next).every(([key, selectedValue]) => candidate.options[key] === selectedValue));
     if (variant) void navigate({ to: "/product/$productId", params: { productId: productRouteKey(product) }, search: { variant: variant.id }, replace: true, resetScroll: false });
   };
-  const optionAvailable = (name: string, value: string) =>
-    product.variants?.some(
+  const matchingOptionVariants = (name: string, value: string) =>
+    (product.variants || []).filter(
       (variant) =>
         variant.options[name] === value &&
         Object.entries(selected).every(
@@ -184,8 +184,8 @@ export function ProductDetailPage() {
           <div className="buy-panel">
             <p className="eyebrow">{product.category}</p>
             <h1>{product.name}</h1>
-            <div className="detail-price">
-              {money(price)} {baseMrp > basePrice && <s>{money(mrp)}</s>}
+            <div className="detail-price" aria-live="polite" aria-atomic="true">
+              {selectionPending ? "From " : ""}{money(price)} {baseMrp > basePrice && <s>{money(mrp)}</s>}
               {baseMrp > basePrice && mrp > price && (
                 <span>{Math.round((1 - price / mrp) * 100)}% off</span>
               )}
@@ -204,17 +204,26 @@ export function ProductDetailPage() {
                   {opt.name.toLowerCase() === "size" && <button type="button">Size guide</button>}
                 </div>
                 <div>
-                  {opt.values.map((v) => (
-                    <button
-                      onClick={() => chooseOption(opt.name, v)}
-                      className={selected[opt.name] === v ? "active" : ""}
-                      aria-pressed={selected[opt.name] === v}
-                      disabled={!optionAvailable(opt.name, v)}
-                      key={v}
-                    >
-                      {v}
-                    </button>
-                  ))}
+                  {opt.values.map((v) => {
+                    const matches = matchingOptionVariants(opt.name, v);
+                    const prices = matches.map(variant => priceIncludingTax(variant.price, product.taxRate));
+                    const lowest = Math.min(...prices);
+                    const highest = Math.max(...prices);
+                    const available = matches.some(variant => variant.stock > 0);
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => chooseOption(opt.name, v)}
+                        className={selected[opt.name] === v ? "active" : ""}
+                        aria-pressed={selected[opt.name] === v}
+                        disabled={!matches.length}
+                        key={v}
+                      >
+                        <span>{v}</span>
+                        {matches.length > 0 && <small>{money(lowest)}{highest > lowest ? `–${money(highest)}` : ""}{available ? "" : " · Sold out"}</small>}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             ))}

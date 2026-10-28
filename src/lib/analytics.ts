@@ -186,7 +186,7 @@ function startProviders() {
       win.gtag("consent", "default", { analytics_storage: "granted", ad_storage: "denied", ad_user_data: "denied", ad_personalization: "denied" });
       win.gtag("js", new Date());
       win.gtag("set", { allow_google_signals: false, allow_ad_personalization_signals: false, ads_data_redaction: true, url_passthrough: false });
-      win.gtag("config", config.ga4MeasurementId, { send_page_view: false, page_location: safeUrl(), page_referrer: "", page_title: "Avaruchi", allow_google_signals: false, allow_ad_personalization_signals: false });
+      win.gtag("config", config.ga4MeasurementId, { send_page_view: false, page_location: safeUrl(), page_referrer: "", page_title: "Aavaruchi", allow_google_signals: false, allow_ad_personalization_signals: false });
       addScript("avaruchi-ga4", `https://www.googletagmanager.com/gtag/js?id=${config.ga4MeasurementId}`);
       gaReady = true;
     }
@@ -225,7 +225,7 @@ function syncPage() {
   if (!consent || !page) { lastPage = ""; previousPage = ""; return; }
   const pageKey = `${page}:${Boolean(consent.analytics && gaReady)}:${Boolean(consent.advertising && metaReady && metaAllowed())}`;
   if (lastPage === pageKey) return;
-  if (consent.analytics && gaReady) browser().gtag?.("event", "page_view", { page_location: page, page_referrer: previousPage, page_title: `Avaruchi | ${analyticsPath(window.location.pathname)}`, send_to: config.ga4MeasurementId });
+  if (consent.analytics && gaReady) browser().gtag?.("event", "page_view", { page_location: page, page_referrer: previousPage, page_title: `Aavaruchi | ${analyticsPath(window.location.pathname)}`, send_to: config.ga4MeasurementId });
   if (consent.advertising && metaReady && metaAllowed()) browser().fbq?.("trackSingle", config.metaPixelId, "PageView");
   lastPage = pageKey;
   previousPage = page;
@@ -281,7 +281,7 @@ function dispatchCommerceEvent(name: string, input: AnalyticsPayload, options?: 
   if (consent.analytics && gaReady) {
     const key = `ga4:${config.ga4MeasurementId}:${name}:${dedupe}`;
     if (!dedupe || !alreadySent(key, persistent)) {
-      browser().gtag?.("event", name, { ...payload, page_location: safeUrl(), page_referrer: "", page_title: "Avaruchi", send_to: config.ga4MeasurementId });
+      browser().gtag?.("event", name, { ...payload, page_location: safeUrl(), page_referrer: "", page_title: "Aavaruchi", send_to: config.ga4MeasurementId });
       if (dedupe) rememberSent(key, persistent);
       sent = true;
     }
