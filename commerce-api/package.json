@@ -26,13 +26,13 @@
     "firebase-admin": "^14.5.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
-    "multer": "^2.4.0",
+    "multer": "^2.5.0",
     "pdfkit": "^0.19.1",
     "pino": "^9.9.4",
     "pino-http": "^10.5.0",
     "prisma": "^6.16.2",
     "sharp": "^0.35.5",
-    "zod": "^3.25.76"
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
@@ -43,6 +43,6 @@
     "@types/pdfkit": "^0.17.6",
     "tsx": "^4.20.6",
     "typescript": "^5.9.2",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.12"
   }
 }

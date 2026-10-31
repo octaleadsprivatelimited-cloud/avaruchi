@@ -1,6 +1,7 @@
 # Runtime Firebase configuration is supplied by the API; no dependency build hooks are needed.
 overrides:
   '@grpc/grpc-js@<1.13.6': 1.14.6
+  're2js@<2.8.7': 2.8.7
 allowBuilds:
   '@firebase/util': false
   protobufjs: false

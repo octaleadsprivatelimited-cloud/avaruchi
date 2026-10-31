@@ -1,9 +1,9 @@
 import { z } from "zod";
 
-export const mobileNumber = z.string({ required_error: "Mobile number is required" }).trim().transform(value => /^\d{10}$/.test(value) ? `+91${value}` : value).pipe(z.string().regex(/^\+91[6-9]\d{9}$/, "Enter a valid 10-digit Indian mobile number"));
+export const mobileNumber = z.string({ error: issue => issue.input === undefined ? "Mobile number is required" : undefined }).trim().transform(value => /^\d{10}$/.test(value) ? `+91${value}` : value).pipe(z.string().regex(/^\+91[6-9]\d{9}$/, "Enter a valid 10-digit Indian mobile number"));
 export const mobileOtpRequestSchema = z.object({ mobile: mobileNumber });
 export const mobileOtpVerifySchema = mobileOtpRequestSchema.extend({
-  code: z.string({ required_error: "Verification code is required" }).trim().regex(/^\d{6}$/, "Verification code must contain 6 digits"),
+  code: z.string({ error: issue => issue.input === undefined ? "Verification code is required" : undefined }).trim().regex(/^\d{6}$/, "Verification code must contain 6 digits"),
   name: z.string().trim().min(2, "Name must be at least 2 characters").max(100, "Name must be 100 characters or fewer").optional(),
 });
 export const googleLoginSchema = z.object({
@@ -19,7 +19,7 @@ const variant = z
     mrp: z.number().positive().max(100000000),
     stock: z.number().int().min(0).max(1000000),
     reserved: z.number().int().min(0).default(0),
-    attributes: z.record(z.string().max(100)),
+    attributes: z.record(z.string(), z.string().max(100)),
     weightGrams: z.number().int().positive().max(100000),
   })
   .refine((x) => x.mrp >= x.price, {
@@ -38,7 +38,7 @@ export const productSchema = z.object({
     .string()
     .regex(/^\d{4,8}$/)
     .optional(),
-  specifications: z.record(z.string().max(500)).default({}),
+  specifications: z.record(z.string(), z.string().max(500)).default({}),
   seoTitle: z.string().trim().max(70).optional(),
   seoDescription: z.string().trim().max(170).optional(),
   media: z.array(z.object({
@@ -131,13 +131,13 @@ export const integrationSchema = z.object({
   priority: z.number().int().min(1).max(1000),
   environment: z.enum(["TEST", "LIVE"]),
   credentials: z
-    .record(z.string().max(2000))
+    .record(z.string(), z.string().max(2000))
     .refine((value) => Object.keys(value).length <= 20, {
       message: "Too many credential fields",
     })
     .optional(),
   publicConfig: z
-    .record(z.unknown())
+    .record(z.string(), z.unknown())
     .refine((value) => Object.keys(value).length <= 50, {
       message: "Too many public configuration fields",
     })
