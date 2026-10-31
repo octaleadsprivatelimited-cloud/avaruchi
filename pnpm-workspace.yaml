@@ -2,6 +2,7 @@
 overrides:
   '@grpc/grpc-js@<1.13.6': 1.14.6
   're2js@<2.8.7': 2.8.7
+  'minimatch@>=10.0.0 <11.0.1': 11.0.3
 allowBuilds:
   '@firebase/util': false
   protobufjs: false

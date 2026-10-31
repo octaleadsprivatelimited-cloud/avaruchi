@@ -1,9 +1,21 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { DecodedIdToken } from "firebase-admin/auth";
+import { deleteApp, initializeApp } from "firebase-admin/app";
+import { getAuth, type DecodedIdToken } from "firebase-admin/auth";
 import { createFirebaseGoogleVerifier } from "../src/firebase-auth.js";
 const claims = { sub: "firebase-uid", uid: "firebase-uid", aud: "test-commerce", iss: "https://securetoken.google.com/test-commerce", exp: 9999999999, iat: 1, auth_time: 1, email: "User@Gmail.com", email_verified: true, firebase: { identities: { "google.com": ["original-google-subject"] }, sign_in_provider: "google.com" } } as DecodedIdToken;
 afterEach(() => vi.unstubAllEnvs());
 describe("Firebase Google verification", () => {
+  it("initializes the real Auth SDK without the optional Firestore package", async () => {
+    const app = initializeApp({ projectId: "test-commerce" }, "optional-sdk-regression");
+    try {
+      const auth = getAuth(app);
+      expect(auth.app).toBe(app);
+      // Invalid JWT decoding happens locally, without credentials or network calls.
+      await expect(auth.verifyIdToken("not-a-token")).rejects.toMatchObject({ code: "auth/argument-error" });
+    } finally {
+      await deleteApp(app);
+    }
+  });
   it("uses verified Google provider subject rather than Firebase uid", async () => {
     const verify = vi.fn(async () => claims);
     const result = await createFirebaseGoogleVerifier(verify)("firebase-token", "test-commerce");
