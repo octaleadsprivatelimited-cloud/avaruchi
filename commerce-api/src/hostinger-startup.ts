@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { PrismaClient } from "@prisma/client";
 import { resolveDatabaseUrl } from "./database-env.js";
+import { migrationFailureCode } from "./startup-diagnostics.js";
 
 const execute = promisify(execFile);
 const require = createRequire(import.meta.url);
@@ -17,9 +18,8 @@ export async function prepareHostingerDatabase() {
       cwd: directory, env: process.env, timeout: 120_000, maxBuffer: 1024 * 1024,
     });
   } catch (error) {
-    // CLI output can include connection details. Report only a known Prisma code.
-    const output = String((error as { stderr?: string }).stderr || "") + String((error as { stdout?: string }).stdout || "");
-    const code = output.match(/\bP\d{4}\b/)?.[0];
+    // CLI output can include credentials. Report only allowlisted diagnostic codes.
+    const code = migrationFailureCode(error);
     const hint = code === "P1000" ? "Database credentials were rejected. Check the database user's password and connection settings."
       : code === "P1001" ? "Database server is unreachable. Check DATABASE_HOST and hosting database access."
       : "Review database permissions and migration state; no reset was attempted.";

@@ -5,7 +5,7 @@ import { createFirebaseGoogleVerifier } from "../src/firebase-auth.js";
 const claims = { sub: "firebase-uid", uid: "firebase-uid", aud: "test-commerce", iss: "https://securetoken.google.com/test-commerce", exp: 9999999999, iat: 1, auth_time: 1, email: "User@Gmail.com", email_verified: true, firebase: { identities: { "google.com": ["original-google-subject"] }, sign_in_provider: "google.com" } } as DecodedIdToken;
 afterEach(() => vi.unstubAllEnvs());
 describe("Firebase Google verification", () => {
-  it("initializes the real Auth SDK without the optional Firestore package", async () => {
+  it("initializes the real Auth SDK and rejects malformed tokens locally", async () => {
     const app = initializeApp({ projectId: "test-commerce" }, "optional-sdk-regression");
     try {
       const auth = getAuth(app);
