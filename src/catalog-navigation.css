@@ -1,4 +1,5 @@
-.avaruchi-ui .products-dropdown.category-mega-menu { width: min(740px, calc(100vw - 40px)); left: 50%; transform: translateX(-50%); padding: 22px 26px; border-top: 3px solid var(--green); border-radius: 4px 4px 16px 16px; }
+/* The panel meets the header edge, so pointer travel stays within one hover area. */
+.avaruchi-ui .products-dropdown.category-mega-menu { top: 100%; width: min(740px, calc(100vw - 40px)); left: 50%; transform: translateX(-50%); padding: 22px 26px; max-height: calc(100dvh - 100px); overflow-y: auto; overscroll-behavior: contain; border-top: 3px solid var(--green); border-radius: 4px 4px 16px 16px; }
 .avaruchi-ui .category-menu-intro { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding-bottom: 18px; margin-bottom: 20px; border-bottom: 1px solid var(--rule); }
 .avaruchi-ui .category-menu-intro > span { font-size: 10px; letter-spacing: .16em; color: var(--green); }
 .avaruchi-ui.reference-store .category-menu-intro a { font-size: 12px; gap: 14px; color: var(--green); }
@@ -18,7 +19,7 @@
 .avaruchi-ui .subcategory-row small { margin-left: 6px; opacity: .7; }
 .avaruchi-ui .product-image-disclosure { font-size: 11px; line-height: 1.6; color: #66715e; margin: 10px 0; }
 @media (max-width: 760px) {
-  .avaruchi-ui .products-dropdown.category-mega-menu { position: fixed; top: auto; left: 16px; right: 16px; width: auto; transform: none; padding: 18px; max-height: 70dvh; overflow-y: auto; overscroll-behavior: contain; }
+  .avaruchi-ui .products-dropdown.category-mega-menu { position: absolute; top: 100%; left: 0; right: 0; width: auto; transform: none; padding: 18px; max-height: min(70dvh, calc(100dvh - 150px)); overflow-y: auto; overscroll-behavior: contain; }
   .avaruchi-ui .category-menu-columns { grid-template-columns: 1fr; gap: 0; }
   .avaruchi-ui .category-menu-intro { margin-bottom: 4px; gap: 12px; flex-wrap: wrap; }
   .avaruchi-ui .category-menu-group { padding: 15px 0; border-bottom: 1px solid var(--rule); }

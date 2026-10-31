@@ -69,7 +69,15 @@ export function StoreHeader() {
         Skip to content
       </a>
       <div className="header-shell">
-        <header className="site-header wrap">
+        <header
+          className="site-header wrap"
+          onPointerLeave={event => {
+            const dropdown = menu.current;
+            if (event.pointerType === "mouse" && dropdown &&
+              (!dropdown.contains(document.activeElement) || document.activeElement === dropdown.querySelector("summary")))
+              dropdown.open = false;
+          }}
+        >
           <Link
             className="wordmark reference-brand"
             to="/"
@@ -87,10 +95,6 @@ export function StoreHeader() {
               onPointerEnter={event => {
                 menuPointer.current = event.pointerType;
                 if (event.pointerType === "mouse") event.currentTarget.open = true;
-              }}
-              onPointerLeave={event => {
-                if (event.pointerType === "mouse" && (!event.currentTarget.contains(document.activeElement) || document.activeElement === event.currentTarget.querySelector("summary")))
-                  event.currentTarget.open = false;
               }}
               onBlur={event => {
                 if (!event.currentTarget.contains(event.relatedTarget as Node | null))
@@ -344,7 +348,6 @@ export function StoreFooter() {
             <BrandMark />
           </Link>
           <p className="business-footer">
-            <Link className="merchant-brand-button" to="/our-story">{store.legalName || BRAND.legalName}</Link>
             <span>{store.businessAddress || BRAND.address}</span>
             <span>Established {BRAND.established}</span>
             {store.fssaiLicense && <span>FSSAI Reg. No. {store.fssaiLicense}</span>}
