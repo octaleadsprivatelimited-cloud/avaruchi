@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { defaultStorefrontConfig } from "./storefront-config.js";
+import { invoiceInputFromOrder, type InvoiceInput } from "./invoice.js";
 const object = (value: unknown): Record<string, any> => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
 export function orderConfirmationId(orderId: string) {
   const hash = crypto.createHash("sha256").update(`order-confirmation:${orderId}`).digest("hex");
@@ -17,7 +18,17 @@ export async function queueOrderConfirmation(tx: Prisma.TransactionClient, order
   const snapshot = object(order.addressSnapshot), contact = object(snapshot.contact), shipping = object(snapshot.shipping);
   const destination = typeof contact.email === "string" ? contact.email.trim() : "";
   if (!destination) return;
-  const business = { ...defaultStorefrontConfig, ...object(snapshot.notificationBusiness) };
+  const fallback = { ...defaultStorefrontConfig, ...object(snapshot.notificationBusiness) };
+  const invoice = invoiceInputFromOrder({
+    number: order.number, createdAt: order.createdAt.toISOString(), status: order.status,
+    subtotal: Number(order.subtotal), tax: Number(order.tax), shipping: Number(order.shipping),
+    discount: Number(order.discount), total: Number(order.total),
+    paymentStatus: snapshot.paymentMethod === "cod" ? "Pending" : "Paid",
+    lines: order.items.map(item => ({ variantId: item.variantId, name: item.name, sku: item.sku, quantity: item.quantity, unitPrice: Number(item.unitPrice), tax: Number(item.tax) })),
+    snapshot: snapshot as InvoiceInput["order"]["snapshot"],
+  }, { name: String(fallback.storeName), legalName: String(fallback.legalName || fallback.storeName), gstin: String(fallback.businessGstin || ""), address: String(fallback.businessAddress || ""), email: String(fallback.supportEmail || ""), phone: String(fallback.supportPhone || "") });
+  const business = { storeName: invoice.store.name, legalName: invoice.store.legalName || invoice.store.name, businessAddress: invoice.store.address || "", businessGstin: invoice.store.gstin || "", supportEmail: invoice.store.email || "", supportPhone: invoice.store.phone || "" };
+  const invoicePayload = JSON.parse(JSON.stringify(invoice)) as Prisma.InputJsonValue;
   await tx.notification.upsert({
     where: { id: orderConfirmationId(orderId) }, update: {},
     create: {
@@ -27,7 +38,8 @@ export async function queueOrderConfirmation(tx: Prisma.TransactionClient, order
         customer: { name: String(contact.name || ""), email: destination, phone: String(contact.phone || "") },
         address: [shipping.line1, shipping.line2, shipping.city, shipping.state, shipping.postalCode, shipping.country].filter(Boolean).join(", "),
         paymentLabel: snapshot.paymentMethod === "cod" ? "Cash on delivery — payable on delivery" : "Paid online",
-        items: order.items.map(item => ({ name: item.name, sku: item.sku, quantity: item.quantity, unitPrice: Number(item.unitPrice) })),
+        items: invoice.order.lines.map(item => ({ name: item.name, sku: item.sku, pack: item.pack || "", quantity: item.quantity, unitPrice: item.unitPrice, tax: item.tax })),
+        invoice: invoicePayload,
         charges: { subtotal: Number(order.subtotal), discount: Number(order.discount), couponDiscount: object(snapshot.discounts).coupon ?? Number(order.discount), onlinePaymentDiscount: object(snapshot.discounts).onlinePayment ?? 0, shipping: Number(order.shipping), tax: Number(order.tax), total: Number(order.total) },
         business: { legalName: business.legalName || business.storeName, address: business.businessAddress, gstin: business.businessGstin, email: business.supportEmail, phone: business.supportPhone },
       },
@@ -36,9 +48,15 @@ export async function queueOrderConfirmation(tx: Prisma.TransactionClient, order
   const merchantEmail = (process.env.STORE_ORDER_ALERT_EMAIL || process.env.STORE_ADMIN_EMAIL || "").trim().toLowerCase();
   if (/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(merchantEmail)) {
     const confirmation = await tx.notification.findUnique({ where: { id: orderConfirmationId(orderId) } });
-    if (confirmation) await tx.notification.upsert({
-      where: { id: orderAlertId(orderId) }, update: {},
-      create: { id: orderAlertId(orderId), channel: "EMAIL", template: "order.received", destination: merchantEmail, status: "QUEUED", payload: confirmation.payload as Prisma.InputJsonValue },
-    });
+    if (confirmation) {
+      // Customer delivery envelopes contain their recipient and PDF. A later
+      // merchant alert must build and freeze its own independent envelope.
+      const merchantPayload = { ...object(confirmation.payload) };
+      delete merchantPayload._emailDelivery;
+      await tx.notification.upsert({
+        where: { id: orderAlertId(orderId) }, update: {},
+        create: { id: orderAlertId(orderId), channel: "EMAIL", template: "order.received", destination: merchantEmail, status: "QUEUED", payload: merchantPayload as Prisma.InputJsonValue },
+      });
+    }
   }
 }

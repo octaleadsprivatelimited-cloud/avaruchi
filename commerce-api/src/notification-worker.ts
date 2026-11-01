@@ -1,10 +1,12 @@
-import { type PrismaClient, type ProviderKind } from "@prisma/client";
+import { type PrismaClient, type ProviderKind, type Prisma } from "@prisma/client";
 import type { AppConfig } from "./config.js";
 import {
   renderEmailNotification,
 } from "./notification-content.js";
 import { SecretVault } from "./security.js";
-import { EmailConfigurationError, sendResendEmail } from "./resend-email.js";
+import { EmailConfigurationError, prepareResendEmail, readPreparedEmailDelivery, sendResendEmail, type EmailAttachment, type PreparedEmailDelivery } from "./resend-email.js";
+import { renderLegacyOrderEmail } from "./legacy-order-email.js";
+import { generateInvoicePdf, invoiceInputFromNotificationPayload } from "./invoice.js";
 
 class DeliveryNotConfigured extends EmailConfigurationError {}
 class DeliveryWindowExpired extends Error {}
@@ -50,14 +52,45 @@ async function sendEmail(notification: {
       "EMAIL",
       "resend",
     );
-  const content = renderEmailNotification(
-      notification.template,
-      publicRecord(notification.payload),
-    ),
-    firstAttemptAt = notification.firstAttemptAt || new Date();
+  const payload = publicRecord(notification.payload);
+  const firstAttemptAt = notification.firstAttemptAt || new Date();
   if (Date.now() - firstAttemptAt.getTime() >= 23 * 60 * 60_000) throw new DeliveryWindowExpired("Automatic delivery stopped after the safe idempotency window; verify provider delivery before retrying manually");
-  if (!notification.firstAttemptAt) await db.notification.update({ where: { id: notification.id }, data: { firstAttemptAt } });
-  return sendResendEmail({ credentials, publicConfig, destination: notification.destination, content, idempotencyKey: notification.id, request });
+  let delivery: PreparedEmailDelivery;
+  if (payload._emailDelivery !== undefined) {
+    const frozen = publicRecord(payload._emailDelivery);
+    if (frozen.version !== 1 || frozen.template !== notification.template || typeof frozen.body !== "string" || frozen.body.length > 18 * 1024 * 1024 || !notification.firstAttemptAt)
+      throw new DeliveryNotConfigured("Stored email delivery snapshot requires review before retrying");
+    let body: unknown;
+    try { body = JSON.parse(frozen.body); }
+    catch { throw new DeliveryNotConfigured("Stored email delivery snapshot requires review before retrying"); }
+    delivery = readPreparedEmailDelivery(body, notification.destination);
+  } else {
+    // Pre-release uncertain sends must retain the exact pre-invoice template.
+    // An already-attempted invoice without a frozen body cannot safely be recreated.
+    if (notification.firstAttemptAt && payload.invoice)
+      throw new DeliveryNotConfigured("Stored invoice delivery snapshot is missing; verify provider delivery before retrying manually");
+    const legacy = Boolean(notification.firstAttemptAt);
+    let attachments: EmailAttachment[] | undefined;
+    if (!legacy && notification.template === "order.confirmed") {
+      const invoice = invoiceInputFromNotificationPayload(payload);
+      if (invoice) {
+        const pdf = await generateInvoicePdf(invoice);
+        const number = invoice.order.number.replace(/[^A-Za-z0-9_-]/g, "").slice(0, 80) || "order";
+        attachments = [{ filename: `invoice-${number}.pdf`, content: pdf.toString("base64"), content_type: "application/pdf" }];
+      }
+    }
+    const content = legacy
+      ? renderLegacyOrderEmail(notification.template as "order.confirmed" | "order.received", payload)
+      : { ...renderEmailNotification(notification.template, payload, { invoiceAttached: Boolean(attachments?.length) }), ...(attachments ? { attachments } : {}) };
+    delivery = prepareResendEmail({ publicConfig, destination: notification.destination, content });
+    // Keep the provider JSON as a string: MySQL JSON objects may reorder keys.
+    // This atomic write happens before POST, including for pre-release retries.
+    const frozen = { version: 1, template: notification.template, body: JSON.stringify(delivery) };
+    await db.notification.update({ where: { id: notification.id }, data: {
+      firstAttemptAt, payload: JSON.parse(JSON.stringify({ ...payload, _emailDelivery: frozen })) as Prisma.InputJsonValue,
+    } });
+  }
+  return sendResendEmail({ credentials, publicConfig, destination: notification.destination, content: delivery, delivery, idempotencyKey: notification.id, request });
 }
 
   const batch = await db.$transaction(async (tx) => {

@@ -98,7 +98,7 @@ import {
   productImageUpload,
   removeConvertedProductImage,
 } from "./image-upload.js";
-import { generateInvoicePdf } from "./invoice.js";
+import { generateInvoicePdf, invoiceInputFromOrder } from "./invoice.js";
 import { EmailConfigurationError, sendResendEmail } from "./resend-email.js";
 import { renderEmailNotification } from "./notification-content.js";
 import { assertBrandingAssetsExist, brandingFields, brandingFileName, convertBrandingAsset, removeBrandingAsset, unusedBrandingAssets, type BrandingKind } from "./branding-assets.js";
@@ -2575,6 +2575,15 @@ export async function createApp(overrides?: {
           ...selectedShipping,
           quotedAt: new Date().toISOString(),
         };
+        const invoiceDetails = {
+          seller: { name: storefront.storeName, legalName: storefront.legalName, gstin: storefront.businessGstin,
+            address: storefront.businessAddress, email: storefront.supportEmail, phone: storefront.supportPhone },
+          billing: req.body.billingAddress || { ...req.body.shippingAddress, postalCode: req.body.postalCode },
+          lines: lines.map(line => {
+            const { product, variant } = store.getVariant(line.variantId);
+            return { variantId: line.variantId, pack: variant.title, hsnCode: product.hsnCode || "", taxRate: product.taxRate };
+          }),
+        };
         store.reserveMany(req.body.lines);
         reserved = true;
         const isCod = req.body.paymentProvider.toLowerCase() === "cod";
@@ -2599,6 +2608,8 @@ export async function createApp(overrides?: {
             )
             .digest("hex"),
           invoiceSnapshot: {
+            invoiceDetails,
+            billing: invoiceDetails.billing,
             contact: req.body.contact,
             shipping: {
               ...req.body.shippingAddress,
@@ -2686,6 +2697,7 @@ export async function createApp(overrides?: {
         await persistence?.saveOrderAndReservations(
           order,
           {
+            invoiceDetails,
             contact: req.body.contact,
             shipping: {
               ...req.body.shippingAddress,
@@ -3079,32 +3091,15 @@ export async function createApp(overrides?: {
         !req.principal!.permissions.includes("orders:read"))
     )
       throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
-    const storefront = await readStorefront(requestHostname(req)),
-      pdf = await generateInvoicePdf({
-        store: {
-          name: storefront.storeName,
-          legalName: storefront.legalName,
-          gstin: storefront.businessGstin,
-          address: storefront.businessAddress,
-          email: storefront.supportEmail,
-          phone: storefront.supportPhone,
-        },
-        order: {
-          number: order.number,
-          createdAt: order.createdAt,
-          status: order.status,
-          subtotal: order.subtotal,
-          tax: order.tax,
-          shipping: order.shipping,
-          discount: order.discount,
-          total: order.total,
-          paymentStatus:
-            order.payment?.status ||
-            (order.payment ? "PENDING" : "CASH_ON_DELIVERY"),
-          lines: order.lines,
-          snapshot: order.invoiceSnapshot,
-        },
-      });
+    const storefront = await readStorefront(requestHostname(req));
+    const pdf = await generateInvoicePdf(invoiceInputFromOrder({
+      number: order.number, createdAt: order.createdAt, status: order.status,
+      subtotal: order.subtotal, tax: order.tax, shipping: order.shipping,
+      discount: order.discount, total: order.total,
+      paymentStatus: order.payment?.status || (order.payment ? "PENDING" : "CASH_ON_DELIVERY"),
+      lines: order.lines, snapshot: order.invoiceSnapshot,
+    }, { name: storefront.storeName, legalName: storefront.legalName, gstin: storefront.businessGstin,
+      address: storefront.businessAddress, email: storefront.supportEmail, phone: storefront.supportPhone }));
     res.setHeader("content-type", "application/pdf");
     res.setHeader(
       "content-disposition",

@@ -54,3 +54,39 @@ describe("order confirmation email", () => {
     expect(content.html).not.toContain("<Buyer");
   });
 });
+
+it("renders a fluid branded order layout and only promises a PDF when one is attached", () => {
+  const payload = {
+    storeName: "Aavaruchi", orderNumber: "AVA-000042", placedAt: "2026-11-01T04:30:00.000Z",
+    customer: { name: "Meera <Family>", email: "meera@example.com" },
+    paymentLabel: "Cash on delivery — payable on delivery", address: "Hyderabad, Telangana",
+    items: [{ name: "Mango Avakaya", sku: "AVA-MANGO-500", pack: "500 g", quantity: 2, unitPrice: 475 }],
+    charges: { subtotal: 950, discount: 0, shipping: 0, tax: 0, total: 950 },
+  };
+  const without = renderEmailNotification("order.confirmed", payload);
+  expect(without.html).toContain('max-width:640px');
+  expect(without.html).toContain('width="100%"');
+  expect(without.html).toContain("background:#355b2c");
+  expect(without.html).toContain("Meera &lt;Family&gt;");
+  expect(without.html).toContain("500 g");
+  expect(without.html).toContain("01 Nov 2026");
+  expect(without.html).not.toContain("Your invoice is attached");
+  const attached = renderEmailNotification("order.confirmed", payload, { invoiceAttached: true });
+  expect(attached.html).toContain("Your invoice is attached");
+  expect(attached.text).toContain("Your PDF invoice is attached");
+  expect(attached.text).toContain("payable on delivery");
+  expect(attached.text).not.toContain("Paid online");
+  const merchant = renderEmailNotification("order.received", payload, { invoiceAttached: true });
+  expect(merchant.html).not.toContain("Your invoice is attached");
+});
+
+it("shows coupon and online-payment discounts separately without changing the total", () => {
+  const content = renderEmailNotification("order.confirmed", {
+    charges: { subtotal: 1000, discount: 150, couponDiscount: 100, onlinePaymentDiscount: 50, shipping: 0, tax: 50, total: 900 },
+    business: { legalName: '<script>alert("x")</script>' },
+  });
+  expect(content.text).toContain("Coupon discount: -INR 100.00");
+  expect(content.text).toContain("Online-payment discount: -INR 50.00");
+  expect(content.text).toContain("Grand total: INR 900.00");
+  expect(content.html).not.toContain("<script>");
+});

@@ -1,3 +1,4 @@
+import type { InvoiceAddress, InvoiceDetails } from "./invoice.js";
 import crypto from "node:crypto";
 import { AppError } from "./errors.js";
 import { assertOrderTransition } from "./order-state.js";
@@ -129,6 +130,9 @@ export type StoredOrder = {
       postalCode?: string;
       country?: string;
     };
+    billing?: InvoiceAddress;
+    invoiceDetails?: InvoiceDetails;
+    notificationBusiness?: { storeName?: string; legalName?: string; businessGstin?: string; businessAddress?: string; supportEmail?: string; supportPhone?: string };
     gstin?: string;
     paymentMethod?: string;
     discounts?: { coupon: number; couponFreeShipping?: boolean; onlinePayment: number; onlineOffer?: { type: "PERCENTAGE" | "FIXED_AMOUNT"; value: number } };

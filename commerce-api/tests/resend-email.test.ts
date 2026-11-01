@@ -16,6 +16,23 @@ describe("Resend server sender", () => {
     expect(init.headers).toMatchObject({ "idempotency-key": "unique-notification" });
     expect(JSON.parse(String(init.body))).toMatchObject({ from: '"Avaruchi Store" <orders@store.test>', reply_to: "support@store.test", to: "owner@store.test" });
   });
+  it("sends one PDF invoice as base64 and rejects remote, malformed or unsafe attachments", async () => {
+    const pdf = Buffer.from("%PDF-1.7\nfixture invoice\n%%EOF");
+    const attachment = { filename: "invoice-AVA-000042.pdf", content: pdf.toString("base64"), content_type: "application/pdf" as const };
+    const request = vi.fn(async () => new Response(JSON.stringify({ id: "invoice-message" }), { status: 200 }));
+    await sendResendEmail({ ...email, content: { ...email.content, attachments: [attachment] }, request });
+    const [, init] = request.mock.calls[0] as unknown as [string, RequestInit];
+    const body = JSON.parse(String(init.body));
+    expect(body.attachments).toEqual([attachment]);
+    expect(Buffer.from(body.attachments[0].content, "base64")).toEqual(pdf);
+    for (const invalid of [
+      { ...attachment, filename: "../invoice.pdf" },
+      { ...attachment, filename: "invoice.pdf\r\nBcc: other@example.com" },
+      { ...attachment, content: "https://untrusted.example/invoice.pdf" },
+      { ...attachment, content: Buffer.from("not a PDF").toString("base64") },
+    ]) await expect(sendResendEmail({ ...email, content: { ...email.content, attachments: [invalid] }, request })).rejects.toThrow("attachment is invalid");
+    expect(request).toHaveBeenCalledTimes(1);
+  });
   it("does not send with an invalid sender, reply-to or recipient", async () => {
     const request = vi.fn();
     for (const override of [{ publicConfig: { fromEmail: "bad" } }, { publicConfig: { ...email.publicConfig, replyTo: "bad\r\nBcc: secret@store.test" } }, { destination: "bad\r\nBcc: secret@store.test" }])
