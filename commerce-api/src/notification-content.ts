@@ -65,7 +65,7 @@ export function renderEmailNotification(
       ["Shipping charges", money(charges.shipping)], ["GST", money(charges.tax)], ["Grand total", money(charges.total)],
     ];
     const businessRows: Array<[string, string]> = [["Business", legalName]];
-    for (const [label, key] of [["Business address", "address"], ["GSTIN", "gstin"], ["Support email", "email"], ["Support phone", "phone"]]) {
+    for (const [label, key] of [["Business address", "address"], ["GSTIN", "gstin"], ["FSSAI Reg. No.", "fssaiLicense"], ["Support email", "email"], ["Support phone", "phone"]]) {
       if (business[key!]) businessRows.push([label!, text(business[key!], "", 500)]);
     }
     const lines = Array.isArray(payload.items) ? payload.items.slice(0, 100).map(object) : [];

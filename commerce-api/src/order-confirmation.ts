@@ -26,8 +26,8 @@ export async function queueOrderConfirmation(tx: Prisma.TransactionClient, order
     paymentStatus: snapshot.paymentMethod === "cod" ? "Pending" : "Paid",
     lines: order.items.map(item => ({ variantId: item.variantId, name: item.name, sku: item.sku, quantity: item.quantity, unitPrice: Number(item.unitPrice), tax: Number(item.tax) })),
     snapshot: snapshot as InvoiceInput["order"]["snapshot"],
-  }, { name: String(fallback.storeName), legalName: String(fallback.legalName || fallback.storeName), gstin: String(fallback.businessGstin || ""), address: String(fallback.businessAddress || ""), email: String(fallback.supportEmail || ""), phone: String(fallback.supportPhone || "") });
-  const business = { storeName: invoice.store.name, legalName: invoice.store.legalName || invoice.store.name, businessAddress: invoice.store.address || "", businessGstin: invoice.store.gstin || "", supportEmail: invoice.store.email || "", supportPhone: invoice.store.phone || "" };
+  }, { name: String(fallback.storeName), legalName: String(fallback.legalName || fallback.storeName), gstin: String(fallback.businessGstin || ""), address: String(fallback.businessAddress || ""), email: String(fallback.supportEmail || ""), phone: String(fallback.supportPhone || ""), fssaiLicense: String(fallback.fssaiLicense || "") });
+  const business = { storeName: invoice.store.name, legalName: invoice.store.legalName || invoice.store.name, businessAddress: invoice.store.address || "", businessGstin: invoice.store.gstin || "", supportEmail: invoice.store.email || "", supportPhone: invoice.store.phone || "", fssaiLicense: invoice.store.fssaiLicense || "" };
   const invoicePayload = JSON.parse(JSON.stringify(invoice)) as Prisma.InputJsonValue;
   await tx.notification.upsert({
     where: { id: orderConfirmationId(orderId) }, update: {},
@@ -41,7 +41,7 @@ export async function queueOrderConfirmation(tx: Prisma.TransactionClient, order
         items: invoice.order.lines.map(item => ({ name: item.name, sku: item.sku, pack: item.pack || "", quantity: item.quantity, unitPrice: item.unitPrice, tax: item.tax })),
         invoice: invoicePayload,
         charges: { subtotal: Number(order.subtotal), discount: Number(order.discount), couponDiscount: object(snapshot.discounts).coupon ?? Number(order.discount), onlinePaymentDiscount: object(snapshot.discounts).onlinePayment ?? 0, shipping: Number(order.shipping), tax: Number(order.tax), total: Number(order.total) },
-        business: { legalName: business.legalName || business.storeName, address: business.businessAddress, gstin: business.businessGstin, email: business.supportEmail, phone: business.supportPhone },
+        business: { legalName: business.legalName || business.storeName, address: business.businessAddress, gstin: business.businessGstin, email: business.supportEmail, phone: business.supportPhone, fssaiLicense: business.fssaiLicense },
       },
     },
   });

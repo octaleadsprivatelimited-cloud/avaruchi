@@ -2376,6 +2376,9 @@ export async function createApp(overrides?: {
         quantity: line.quantity,
         unitPrice: variant.price,
         tax: lineTax,
+        pack: variant.title,
+        hsnCode: product.hsnCode || "",
+        taxRate: product.taxRate,
       };
     });
 
@@ -2577,12 +2580,9 @@ export async function createApp(overrides?: {
         };
         const invoiceDetails = {
           seller: { name: storefront.storeName, legalName: storefront.legalName, gstin: storefront.businessGstin,
-            address: storefront.businessAddress, email: storefront.supportEmail, phone: storefront.supportPhone },
+            address: storefront.businessAddress, email: storefront.supportEmail, phone: storefront.supportPhone, fssaiLicense: storefront.fssaiLicense },
           billing: req.body.billingAddress || { ...req.body.shippingAddress, postalCode: req.body.postalCode },
-          lines: lines.map(line => {
-            const { product, variant } = store.getVariant(line.variantId);
-            return { variantId: line.variantId, pack: variant.title, hsnCode: product.hsnCode || "", taxRate: product.taxRate };
-          }),
+          lines: lines.map(line => ({ variantId: line.variantId, pack: line.pack, hsnCode: line.hsnCode, taxRate: line.taxRate })),
         };
         store.reserveMany(req.body.lines);
         reserved = true;
@@ -3099,7 +3099,7 @@ export async function createApp(overrides?: {
       paymentStatus: order.payment?.status || (order.payment ? "PENDING" : "CASH_ON_DELIVERY"),
       lines: order.lines, snapshot: order.invoiceSnapshot,
     }, { name: storefront.storeName, legalName: storefront.legalName, gstin: storefront.businessGstin,
-      address: storefront.businessAddress, email: storefront.supportEmail, phone: storefront.supportPhone }));
+      address: storefront.businessAddress, email: storefront.supportEmail, phone: storefront.supportPhone, fssaiLicense: storefront.fssaiLicense }));
     res.setHeader("content-type", "application/pdf");
     res.setHeader(
       "content-disposition",

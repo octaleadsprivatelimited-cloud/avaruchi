@@ -2,7 +2,7 @@ import { expect, it } from "vitest";
 import { generateInvoicePdf, invoiceInputFromNotificationPayload, invoiceInputFromOrder, invoiceTaxSummary, type InvoiceInput } from "../src/invoice.js";
 
 export const invoiceFixture = (): InvoiceInput => {
-  const seller = { name: "Aavaruchi", legalName: "LAKSHMI'S TAPASI TREATS", gstin: "36ABCDE1234F1Z5", address: "Hyderabad, Telangana, India", email: "contact@aavaruchi.in" };
+  const seller = { name: "Aavaruchi", legalName: "LAKSHMI'S TAPASI TREATS", gstin: "36ABCDE1234F1Z5", address: "Hyderabad, Telangana, India", email: "contact@aavaruchi.in", fssaiLicense: "23625031002378" };
   return { store: seller, order: { number: "AVA-EXAMPLE-001", createdAt: "2026-11-01T06:00:00.000Z", status: "PAID", paymentStatus: "CAPTURED", subtotal: 1000, tax: 50, shipping: 0, discount: 0, total: 1050,
     lines: [{ variantId: "sample-variant", name: "Mango Avakaya", sku: "DEMO-MANGO-500", quantity: 2, unitPrice: 500, tax: 50 }], snapshot: {
       contact: { name: "Sample Customer", email: "customer@example.com", phone: "+919000000000" },

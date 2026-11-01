@@ -3,14 +3,14 @@ import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 export type InvoiceAddress = { line1?: string; line2?: string; city?: string; state?: string; postalCode?: string; country?: string };
-export type InvoiceSeller = { name: string; legalName?: string; gstin?: string; address?: string; email?: string; phone?: string };
+export type InvoiceSeller = { name: string; legalName?: string; gstin?: string; address?: string; email?: string; phone?: string; fssaiLicense?: string };
 export type InvoiceDetails = { seller: InvoiceSeller; billing?: InvoiceAddress; lines: Array<{ variantId: string; pack?: string; hsnCode?: string; taxRate?: number }> };
 export type InvoiceInput = { store: InvoiceSeller; order: {
   number: string; createdAt: string; status: string; subtotal: number; tax: number; shipping: number; discount: number; total: number; paymentStatus?: string;
   lines: Array<{ variantId?: string; name: string; sku: string; quantity: number; unitPrice: number; tax: number; pack?: string; hsnCode?: string; taxRate?: number }>;
   snapshot?: { contact?: { name?: string; email?: string; phone?: string }; shipping?: InvoiceAddress; billing?: InvoiceAddress; gstin?: string; paymentMethod?: string;
     discounts?: { coupon: number; onlinePayment: number }; invoiceDetails?: InvoiceDetails;
-    notificationBusiness?: { storeName?: string; legalName?: string; businessGstin?: string; businessAddress?: string; supportEmail?: string; supportPhone?: string };
+    notificationBusiness?: { storeName?: string; legalName?: string; businessGstin?: string; businessAddress?: string; supportEmail?: string; supportPhone?: string; fssaiLicense?: string };
   };
 } };
 const object = (value: unknown): Record<string, unknown> => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
@@ -24,7 +24,7 @@ export function invoiceInputFromOrder(order: InvoiceInput["order"], fallbackStor
   const snapshot = order.snapshot || {}, historical = snapshot.notificationBusiness;
   const store = snapshot.invoiceDetails?.seller || (historical ? {
     name: historical.storeName || fallbackStore.name, legalName: historical.legalName, gstin: historical.businessGstin,
-    address: historical.businessAddress, email: historical.supportEmail, phone: historical.supportPhone,
+    address: historical.businessAddress, email: historical.supportEmail, phone: historical.supportPhone, fssaiLicense: historical.fssaiLicense,
   } : { ...fallbackStore, gstin: undefined });
   return { store: { ...store }, order: { ...order, snapshot, lines: order.lines.map(line => {
     const detail = snapshot.invoiceDetails?.lines.find(item => item.variantId === line.variantId);
@@ -40,7 +40,7 @@ export function invoiceInputFromNotificationPayload(payload: Record<string, unkn
   else {
     const charges = object(payload.charges), business = object(payload.business), customer = object(payload.customer);
     if (!Array.isArray(payload.items) || !payload.items.length || !payload.placedAt) return undefined;
-    input = { store: { name: clean(payload.storeName) || "Aavaruchi", legalName: clean(business.legalName), gstin: clean(business.gstin), address: clean(business.address, 500), email: clean(business.email, 254), phone: clean(business.phone, 30) }, order: {
+    input = { store: { name: clean(payload.storeName) || "Aavaruchi", legalName: clean(business.legalName), gstin: clean(business.gstin), address: clean(business.address, 500), email: clean(business.email, 254), phone: clean(business.phone, 30), fssaiLicense: clean(business.fssaiLicense, 14) }, order: {
       number: clean(payload.orderNumber, 80), createdAt: clean(payload.placedAt, 80), status: "CONFIRMED", paymentStatus: clean(payload.paymentLabel, 100),
       subtotal: charges.subtotal as number, tax: charges.tax as number, shipping: charges.shipping as number, discount: charges.discount as number, total: charges.total as number,
       lines: payload.items.map(value => { const line = object(value); return { name: clean(line.name), sku: clean(line.sku, 100), quantity: line.quantity as number, unitPrice: line.unitPrice as number, tax: line.tax as number, pack: clean(line.pack, 100), hsnCode: clean(line.hsnCode, 8), taxRate: line.taxRate as number }; }),
@@ -101,7 +101,7 @@ export async function generateInvoicePdf(raw: InvoiceInput): Promise<Buffer> {
     put(clean(order.number, 80), 375, 56, 178, 16, true, "#ffffff", "right");
     put(date.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", timeZone: "Asia/Kolkata" }), 375, 81, 178, 9, false, "#e1e9d6", "right");
     y = 143;
-    const seller = [clean(store.legalName || store.name), clean(store.address, 500), ...(store.gstin ? [`GSTIN: ${clean(store.gstin, 30)}`] : []), clean(store.email, 254)].filter(Boolean).join("\n");
+    const seller = [clean(store.legalName || store.name), clean(store.address, 500), ...(store.fssaiLicense && /^\d{14}$/.test(store.fssaiLicense) ? [`FSSAI Reg. No. ${store.fssaiLicense}`] : []), ...(store.gstin ? [`GSTIN: ${clean(store.gstin, 30)}`] : []), clean(store.email, 254)].filter(Boolean).join("\n");
     const sellerBottom = put(seller, left, y, 310, 9);
     const paymentStatus = clean(order.paymentStatus || (snapshot.paymentMethod === "cod" ? "Cash on delivery" : "Pending"), 100).replaceAll("_", " ");
     const badge = snapshot.paymentMethod === "cod" || paymentStatus.toUpperCase().includes("CASH") ? "PAYABLE ON DELIVERY" : /PAID|SUCCEEDED|CAPTURED/i.test(paymentStatus) && !/UNPAID|REFUND/i.test(paymentStatus) ? "PAID ONLINE" : paymentStatus.toUpperCase();
