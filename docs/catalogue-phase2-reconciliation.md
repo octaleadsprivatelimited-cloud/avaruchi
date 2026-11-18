@@ -2,6 +2,8 @@
 
 The owner supplied **Aavaruchi Feedback phase 2.docx** and **Price list Master to post in website.xlsx** on 18 November 2026. The master workbook is the price source for this revision. The merchant confirmed that Non-Veg Pickles column B is the final customer 1 kg price and that all new packs should start with zero stock. The checked source rows, URL handles and pack prices are recorded in `catalogue-phase2-master.json`.
 
+**Implementation status:** the changes are committed and pushed to GitHub `main` in `53287ef6f831f4ba4cb03cb027c6edbb3bb0d656`. The isolated MySQL migration, commerce tests, lint, type checks and production build passed in both the review-branch and main CI runs. On 18 November 2026 the owner deferred deployment. No publication date or live-cache refresh is claimed here; the catalogue migration takes effect when the release is deployed to the target database.
+
 ## Price and catalogue corrections
 
 The 55 existing pack options covered by the master already matched its amounts when checked against the public catalogue. The migration reapplies those approved amounts once, with MRP equal to selling price. It matches product handle, pack title and weight; it does not retire other packs or change tax rates, stock, reservations, images or variant identities. Order snapshots remain unchanged.
@@ -41,9 +43,9 @@ Sixteen non-vegetarian products are also added with **1 kg packs only**, using t
 
 The non-vegetarian range uses separate Chicken, Fish, Prawn, Mutton and Boti subcategories and an explicit Non-vegetarian diet specification. The import therefore covers **52 unique master products and 85 pack prices**, including **23 new products and 30 new packs**. With retained Minapa, the expected live catalogue has **53 active products** after Green Chilli is archived.
 
-These are active catalogue entries with zero inventory. They cannot be purchased until the administrator records actual stock. They have no supplied product photo, so no unrelated image is assigned. Existing product images remain unchanged.
+The migration creates these as active catalogue entries with zero inventory. They cannot be purchased until the administrator records actual stock. They have no supplied product photo, so no unrelated image is assigned. Existing product images remain unchanged.
 
-**Green Chilli Pickle** is archived reversibly, removing the unapproved ₹1.18 offer from sale. Its compare-at prices are reset to its saved selling prices. Product, variant, stock and order records are retained for admin correction and history.
+The migration archives **Green Chilli Pickle** reversibly, removing the unapproved ₹1.18 offer from sale. It resets compare-at prices to saved selling prices. Product, variant, stock and order records are retained for admin correction and history.
 
 Allam Avakaya retains its existing `/product/ginger-pickle` handle and ₹475/₹950 prices. The separate ₹450/₹900 Ginger Pickle gets `/product/traditional-ginger-pickle`; the older product is not repurposed.
 
@@ -64,7 +66,7 @@ This is a normal, once-only Prisma migration, not a startup seed or a frontend p
 
 ## Validation and limits
 
-The migration regression test uses transaction-scoped, isolated product/category/brand fixtures. It checks approved prices, distinct pack handling, archive state, preserved stock/media/tax/variant IDs, zero-stock new products, duplicate-safe inserts and subsequent admin price edits. Its MySQL execution requires `RUN_DB_TESTS=1`; a skipped local test is not evidence of a successful database run.
+The migration regression test uses transaction-scoped, isolated product/category/brand fixtures. It checks approved prices, distinct pack handling, archive state, preserved stock/media/tax/variant IDs, zero-stock new products, duplicate-safe inserts and subsequent admin price edits. Its MySQL execution passed in [review CI](https://github.com/octaleadsprivatelimited-cloud/avaruchi/actions/runs/44351472515) and [main CI](https://github.com/octaleadsprivatelimited-cloud/avaruchi/actions/runs/44351816523). Both runs also passed the commerce suite, production build and SSR/startup/proxy checks. An independent comparison of all 85 manifest prices with their workbook cells found no mismatches.
 
 The feedback's launch checklist also requires merchant-confirmed stock, actual packaging accuracy and real successful/failed payment plus email checks. Code and isolated tests cannot certify a real charge, monitored support inbox or dispatch promise. No live payment or customer email should be generated merely to complete this catalogue migration.
 
@@ -77,8 +79,23 @@ The feedback's launch checklist also requires merchant-confirmed stock, actual p
 | Actual stock | Existing stock preserved; all new packs deliberately start at zero. Merchant quantities remain required before availability can change. |
 | About Us banner and label | Already absent in source and live page when reviewed; the main family story is retained. |
 | Descriptions and SEO | Store pages share the database catalogue. Existing saved product-specific descriptions feed refreshed SEO; new entries have specific descriptions. |
-| Desktop/mobile navigation and variants | Parent release checks must record results; category paths derive from the catalogue, including separate non-vegetarian subcategories. |
-| Payment, duplicate handling and emails | Automated regression checks can cover these flows. No new real payment or customer-email delivery is claimed by this catalogue change. |
-| Cache and live consistency | Parent release verification pending; append published version and live URLs after deployment. |
+| Desktop/mobile navigation and variants | Category tests pass for ordering, nested filters and separation of vegetarian/non-vegetarian products. Existing responsive menu controls are retained. SSR and variant-price checks pass. A fresh interactive mobile check of the deployed catalogue remains deferred with deployment. |
+| Payment, duplicate handling and emails | Commerce CI passed, including payment failure/cancellation, inventory release, duplicate handling and order-email/PDF regressions. No new real payment or customer-email delivery is claimed by this catalogue change. |
+| Cache and live consistency | Deferred by the owner. No production cache clear or completed live release is claimed. |
+
+## Pages to verify after deployment
+
+| Area | Intended public URL |
+| --- | --- |
+| Homepage and category navigation | https://aavaruchi.in/ |
+| Catalogue and pack selection | https://aavaruchi.in/shop |
+| Family story and removed labels | https://aavaruchi.in/our-story |
+| Existing Mango prices | https://aavaruchi.in/product/classic-mango-pickle |
+| Separate Ginger Pickle | https://aavaruchi.in/product/traditional-ginger-pickle |
+| Non-veg 1 kg offer | https://aavaruchi.in/product/chicken-with-bone-pickle |
+| Shipping and genuine-issue remedies | https://aavaruchi.in/shipping-returns |
+| Public contact details | https://aavaruchi.in/contact |
+
+These URLs identify the verification targets; they are not evidence that the deferred release is already live.
 
 This is a correction record, not final launch sign-off. Merchant stock, approved real photography and operational checks remain separate acceptance inputs.
