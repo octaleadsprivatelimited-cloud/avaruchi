@@ -1,0 +1,1079 @@
+{
+  "source": "Price list Master to post in website.xlsx",
+  "date": "2026-11-18",
+  "currency": "INR",
+  "pricesAreFinal": true,
+  "notes": [
+    "Podis row12 Kakarayakaya and row17 Kakarakaya are the same existing product at identical prices.",
+    "Minapa Vadiyalu is retained with existing price and stock; not in this workbook.",
+    "Merchant confirmed Non-Veg Pickles column B as the final customer 1 kg price; no 500 g packs inferred.",
+    "Pesara Avakaya is absent from this master; do not invent a price."
+  ],
+  "products": [
+    {
+      "sourceSheet": "Veg Pickles",
+      "sourceRow": 2,
+      "sourceName": "Mango ( Avakaya)",
+      "slug": "classic-mango-pickle",
+      "name": "Mango Avakaya",
+      "category": "Pickles > Avakaya",
+      "description": "Mango Avakaya brings the familiar tang of mango to a traditional Andhra pickle. Enjoy a small serving with warm rice, dal or curd rice.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 950
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 475
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Veg Pickles",
+      "sourceRow": 3,
+      "sourceName": "Menti Avakaya",
+      "slug": "menti-avakaya",
+      "name": "Menti Avakaya",
+      "category": "Pickles > Avakaya",
+      "description": "Menti Avakaya has the distinctive character of a fenugreek-style Andhra pickle. Pair it with warm rice or a simple dal for a full-flavoured meal.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 980
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 490
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Veg Pickles",
+      "sourceRow": 4,
+      "sourceName": "Pulihora Avakaya",
+      "slug": "pulihora-avakaya",
+      "name": "Pulihora Avakaya",
+      "category": "Pickles > Avakaya",
+      "description": "Pulihora Avakaya is a bold mango pickle variation for the Andhra table. Serve it alongside rice or your favourite everyday meal for a tangy accompaniment.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 1000
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 500
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Veg Pickles",
+      "sourceRow": 5,
+      "sourceName": "Bellam Avakaya",
+      "slug": "bellam-avakaya",
+      "name": "Bellam Avakaya",
+      "category": "Pickles > Avakaya",
+      "description": "Bellam Avakaya pairs the character of mango pickle with a sweet-and-tangy finish. Try it with steamed rice, a comforting dal or a simple family meal.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 950
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 475
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Veg Pickles",
+      "sourceRow": 6,
+      "sourceName": "Red Chilli ( Pandumirapakaya)",
+      "slug": "red-chilli-pickle",
+      "name": "Red Chilli Pickle (Pandumirapakaya)",
+      "category": "Pickles > Traditional pickles",
+      "description": "Pandumirapakaya is a red chilli pickle for those who enjoy a lively, spicy accompaniment. A small serving adds heat to rice, curd rice or a savoury breakfast.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 1000
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 500
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Veg Pickles",
+      "sourceRow": 7,
+      "sourceName": "Amla ( usirikaya)",
+      "slug": "amla-pickle",
+      "name": "Amla Pickle (Usirikaya)",
+      "category": "Pickles > Traditional pickles",
+      "description": "Usirikaya pickle brings the distinctive tang of amla to your plate. Serve a little alongside rice and dal, or add it to a traditional Andhra meal.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 950
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 475
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Veg Pickles",
+      "sourceRow": 8,
+      "sourceName": "Lemon",
+      "slug": "lemon-pickle",
+      "name": "Lemon Pickle",
+      "category": "Pickles > Traditional pickles",
+      "description": "Lemon Pickle has a bright, tangy character that pairs naturally with curd rice and dal. Keep a small serving at the table for a familiar citrus accompaniment.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 900
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 450
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Veg Pickles",
+      "sourceRow": 9,
+      "sourceName": "Tomato",
+      "slug": "tomato-pickle",
+      "name": "Tomato Pickle",
+      "category": "Pickles > Traditional pickles",
+      "description": "Tomato Pickle is a tangy accompaniment for rice, dosa or idli. Its familiar tomato flavour makes it an easy addition to everyday home-cooked meals.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 900
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 450
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Veg Pickles",
+      "sourceRow": 10,
+      "sourceName": "Chintakaya",
+      "slug": "chintakaya-pickle",
+      "name": "Chintakaya Pickle",
+      "category": "Pickles > Traditional pickles",
+      "description": "Chintakaya Pickle brings a distinct tamarind tang to a traditional Andhra meal. Enjoy a small portion with steamed rice, dal or a simple vegetable dish.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 900
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 450
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Veg Pickles",
+      "sourceRow": 11,
+      "sourceName": "Garlic Avakaya",
+      "slug": "garlic-pickle",
+      "name": "Garlic Avakaya",
+      "category": "Pickles > Avakaya",
+      "description": "Garlic Avakaya offers a bold garlic character in a traditional mango-pickle style. Pair it with warm rice or dal when you want a stronger savoury accompaniment.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 1000
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 500
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Veg Pickles",
+      "sourceRow": 12,
+      "sourceName": "Allam ( ginger) Avakaya",
+      "slug": "ginger-pickle",
+      "name": "Allam Avakaya (Ginger)",
+      "category": "Pickles > Avakaya",
+      "description": "Allam Avakaya brings the warming character of ginger to an Andhra pickle. Enjoy it in small servings with rice, dosa or your favourite savoury breakfast.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 950
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 475
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Veg Pickles",
+      "sourceRow": 13,
+      "sourceName": "Gongura",
+      "slug": "gongura-pickle",
+      "name": "Gongura Pickle",
+      "category": "Pickles > Traditional pickles",
+      "description": "Gongura Pickle celebrates the distinctive leafy tang of an Andhra favourite. Serve it with warm rice, dal or a traditional family meal.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 800
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 400
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Veg Pickles",
+      "sourceRow": 14,
+      "sourceName": "Mamidillam Avakaya",
+      "slug": "mamidillam-avakaya",
+      "name": "Mamidillam Avakaya",
+      "category": "Pickles > Avakaya",
+      "description": "Mamidillam Avakaya is another way to enjoy the familiar character of an Andhra Avakaya. Choose it as an accompaniment to warm rice and everyday home cooking.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 1000
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 500
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Veg Pickles",
+      "sourceRow": 15,
+      "sourceName": "Kakarakaya (Karela)",
+      "slug": "kakarakaya-pickle",
+      "name": "Kakarakaya Pickle (Karela)",
+      "category": "Pickles > Traditional pickles",
+      "description": "Kakarakaya Pickle brings the distinctive bitter-gourd character of karela to the table. Enjoy a small serving alongside warm rice, dal or a home-cooked meal.",
+      "newProduct": true,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 900
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 450
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Veg Pickles",
+      "sourceRow": 16,
+      "sourceName": "Dry Mango (Sookha Aam)",
+      "slug": "dry-mango-pickle",
+      "name": "Dry Mango Pickle (Sookha Aam)",
+      "category": "Pickles > Traditional pickles",
+      "description": "Dry Mango Pickle offers a dry-mango variation for the pickle shelf. Pair a little with rice, dal or a simple meal for a tangy accompaniment.",
+      "newProduct": true,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 900
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 450
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Veg Pickles",
+      "sourceRow": 17,
+      "sourceName": "Ginger Pickle",
+      "slug": "traditional-ginger-pickle",
+      "name": "Ginger Pickle",
+      "category": "Pickles > Traditional pickles",
+      "description": "Ginger Pickle brings a warming ginger character to rice, idli or dosa. Serve a small spoonful alongside a comforting home-cooked meal.",
+      "newProduct": true,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 900
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 450
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Veg Pickles",
+      "sourceRow": 18,
+      "sourceName": "Mixed Veg Pickle",
+      "slug": "mixed-veg-pickle",
+      "name": "Mixed Veg Pickle",
+      "category": "Pickles > Traditional pickles",
+      "description": "Mixed Veg Pickle brings a mixed-vegetable character to an everyday pickle accompaniment. Serve a little with warm rice, dal or a family meal.",
+      "newProduct": true,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 900
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 450
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Veg Pickles",
+      "sourceRow": 19,
+      "sourceName": "Mango Ginger",
+      "slug": "mango-ginger-pickle",
+      "name": "Mango Ginger Pickle",
+      "category": "Pickles > Traditional pickles",
+      "description": "Mango Ginger Pickle offers the distinctive character of mango ginger as a meal accompaniment. Enjoy a little alongside warm rice, dal or a savoury breakfast.",
+      "newProduct": true,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 900
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 450
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Podis",
+      "sourceRow": 2,
+      "sourceName": "Palli Karam Podi",
+      "slug": "palli-karam-podi",
+      "name": "Palli Karam Podi",
+      "category": "Powders > Karam podis",
+      "description": "Palli Karam Podi brings a nutty peanut character to a Telugu pantry favourite. Enjoy it as an accompaniment to idli or dosa, or mix a little into warm rice.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 750
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 375
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Podis",
+      "sourceRow": 3,
+      "sourceName": "Kandi Karam Podi",
+      "slug": "kandi-karam-podi",
+      "name": "Kandi Karam Podi",
+      "category": "Powders > Karam podis",
+      "description": "Kandi Karam Podi is a familiar accompaniment for warm rice and a simple Andhra meal. Serve a small portion at the table and adjust the amount to your taste.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 750
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 375
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Podis",
+      "sourceRow": 4,
+      "sourceName": "Karivepaku karam podi",
+      "slug": "karivepaku-karam-podi",
+      "name": "Karivepaku Karam Podi",
+      "category": "Powders > Karam podis",
+      "description": "Karivepaku Karam Podi brings the aromatic character of curry leaves to the table. Pair it with idli, dosa or warm rice for an everyday Telugu accompaniment.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 750
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 375
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Podis",
+      "sourceRow": 5,
+      "sourceName": "Munagaku Karam Podi",
+      "slug": "munagaku-karam-podi",
+      "name": "Munagaku Karam Podi",
+      "category": "Powders > Karam podis",
+      "description": "Munagaku Karam Podi is a Telugu-style podi with the distinctive character of drumstick leaves. Enjoy a little with rice or a savoury breakfast.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 750
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 375
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Podis",
+      "sourceRow": 6,
+      "sourceName": "Kobbari Karam Podi",
+      "slug": "kobbari-karam-podi",
+      "name": "Kobbari Karam Podi",
+      "category": "Powders > Karam podis",
+      "description": "Kobbari Karam Podi brings a coconut-style savoury accompaniment to your pantry. Serve it with idli or dosa, or add a small amount to warm rice.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 750
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 375
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Podis",
+      "sourceRow": 7,
+      "sourceName": "Nuvvula Karm Podi",
+      "slug": "nuvvula-karam-podi",
+      "name": "Nuvvula Karam Podi",
+      "category": "Powders > Karam podis",
+      "description": "Nuvvula Karam Podi has the familiar nutty character of sesame. Pair it with rice, idli or dosa as part of an everyday Andhra meal.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 750
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 375
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Podis",
+      "sourceRow": 8,
+      "sourceName": "Idli Karam Podi",
+      "slug": "idli-karam-podi",
+      "name": "Idli Karam Podi",
+      "category": "Powders > Karam podis",
+      "description": "Idli Karam Podi is made for a familiar South Indian breakfast pairing. Serve it alongside idli or dosa and use the amount that suits your taste.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 750
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 375
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Podis",
+      "sourceRow": 9,
+      "sourceName": "Nalla Karam podi",
+      "slug": "nalla-karam-podi",
+      "name": "Nalla Karam Podi",
+      "category": "Powders > Karam podis",
+      "description": "Nalla Karam Podi is a bold Telugu pantry accompaniment for rice and savoury breakfasts. Add a small serving to your plate for a full-flavoured finish.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 750
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 375
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Podis",
+      "sourceRow": 10,
+      "sourceName": "Garlic Karam Podi",
+      "slug": "garlic-karam-podi",
+      "name": "Garlic Karam Podi",
+      "category": "Powders > Karam podis",
+      "description": "Garlic Karam Podi brings a strong savoury garlic character to the table. Pair it with warm rice, idli or dosa for an easy everyday accompaniment.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 750
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 375
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Podis",
+      "sourceRow": 11,
+      "sourceName": "Usiri Karam Podi",
+      "slug": "usiri-karam-podi",
+      "name": "Usiri Karam Podi",
+      "category": "Powders > Karam podis",
+      "description": "Usiri Karam Podi offers the tangy character of amla in a Telugu-style podi. Try a small serving alongside rice or your favourite savoury breakfast.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 750
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 375
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Podis",
+      "sourceRow": 12,
+      "sourceName": "Kakarayakaya Karam Podi",
+      "slug": "kakarakaya-karam-podi",
+      "name": "Kakarakaya Karam Podi",
+      "category": "Powders > Karam podis",
+      "description": "Kakarakaya Karam Podi brings the distinctive character of bitter gourd to a Telugu accompaniment. Pair a little with warm rice and a simple dal.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 750
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 375
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Podis",
+      "sourceRow": 13,
+      "sourceName": "Sambar Podi",
+      "slug": "sambar-podi",
+      "name": "Sambar Podi",
+      "category": "Powders > Cooking powders",
+      "description": "Sambar Podi is a pantry blend for preparing a comforting bowl of sambar. Follow the directions on your pack and adjust the amount for your recipe.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 800
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 400
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Podis",
+      "sourceRow": 14,
+      "sourceName": "Kura podi",
+      "slug": "kura-podi",
+      "name": "Kura Podi",
+      "category": "Powders > Cooking powders",
+      "description": "Kura Podi is a savoury pantry blend for vegetable dishes and everyday cooking. Use it according to your pack directions and adjust the amount to your taste.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 700
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 350
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Podis",
+      "sourceRow": 15,
+      "sourceName": "Flax Seed Karam Podi",
+      "slug": "flax-seed-karam-podi",
+      "name": "Flax Seed Karam Podi",
+      "category": "Powders > Karam podis",
+      "description": "Flax Seed Karam Podi brings a flax-seed character to a savoury Telugu-style accompaniment. Serve with warm rice or alongside idli and dosa.",
+      "newProduct": true,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 750
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 375
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Podis",
+      "sourceRow": 16,
+      "sourceName": "Kura Karam Podi",
+      "slug": "kura-karam-podi",
+      "name": "Kura Karam Podi",
+      "category": "Powders > Karam podis",
+      "description": "Kura Karam Podi is a savoury selection for vegetable dishes and everyday meals. Follow your pack directions and adjust the amount to suit your recipe.",
+      "newProduct": true,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 750
+        },
+        {
+          "weightGrams": 500,
+          "title": "500 g",
+          "price": 375
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Fryums",
+      "sourceRow": 3,
+      "sourceName": "Gummadi Vdiyalu",
+      "slug": "gummadi-vadiyalu",
+      "name": "Gummadi Vadiyalu",
+      "category": "Fryums > Vadiyalu",
+      "description": "Gummadi Vadiyalu are a traditional Andhra accompaniment to prepare and serve with rice and dal. Follow the cooking and storage directions on your pack.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 1200
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Fryums",
+      "sourceRow": 4,
+      "sourceName": "Saggu Biyam Vadiyalu",
+      "slug": "saggubiyyam-vadiyalu",
+      "name": "Saggubiyyam Vadiyalu",
+      "category": "Fryums > Vadiyalu",
+      "description": "Saggubiyyam Vadiyalu bring a familiar crisp accompaniment to a home-cooked meal. Prepare them according to the pack directions and serve alongside rice or dal.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 1100
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Fryums",
+      "sourceRow": 5,
+      "sourceName": "Majjiga Vadiyalu",
+      "slug": "majjiga-vadiyalu",
+      "name": "Majjiga Vadiyalu",
+      "category": "Fryums > Vadiyalu",
+      "description": "Majjiga Vadiyalu are a traditional accompaniment for the everyday Andhra table. Prepare them as directed on your pack and enjoy with rice and a comforting dal.",
+      "newProduct": false,
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 1200
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Non-Veg Pickles",
+      "sourceRow": 2,
+      "sourceName": "Chicken with Bone",
+      "slug": "chicken-with-bone-pickle",
+      "name": "Chicken with Bone Pickle",
+      "category": "Non-veg pickles > Chicken pickles",
+      "description": "Chicken with Bone Pickle is a bone-in chicken selection for the Aavaruchi pickle range. Serve a small portion alongside rice or a home-cooked meal.",
+      "newProduct": true,
+      "dietType": "Non-vegetarian",
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 1190
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Non-Veg Pickles",
+      "sourceRow": 3,
+      "sourceName": "Chicken Boneless",
+      "slug": "chicken-boneless-pickle",
+      "name": "Chicken Boneless Pickle",
+      "category": "Non-veg pickles > Chicken pickles",
+      "description": "Chicken Boneless Pickle offers a boneless chicken pickle selection for the table. Enjoy a little with warm rice or your everyday meal.",
+      "newProduct": true,
+      "dietType": "Non-vegetarian",
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 1650
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Non-Veg Pickles",
+      "sourceRow": 4,
+      "sourceName": "Gongura Chicken",
+      "slug": "gongura-chicken-pickle",
+      "name": "Gongura Chicken Pickle",
+      "category": "Non-veg pickles > Chicken pickles",
+      "description": "Gongura Chicken Pickle pairs a chicken pickle selection with the distinctive character of gongura. Serve a small portion alongside warm rice.",
+      "newProduct": true,
+      "dietType": "Non-vegetarian",
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 1725
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Non-Veg Pickles",
+      "sourceRow": 5,
+      "sourceName": "Chicken Keema Pickle",
+      "slug": "chicken-keema-pickle",
+      "name": "Chicken Keema Pickle",
+      "category": "Non-veg pickles > Chicken pickles",
+      "description": "Chicken Keema Pickle brings a chicken-keema variation to the pickle shelf. Enjoy a small serving alongside rice or a simple family meal.",
+      "newProduct": true,
+      "dietType": "Non-vegetarian",
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 1650
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Non-Veg Pickles",
+      "sourceRow": 6,
+      "sourceName": "Desi Chicken Bone",
+      "slug": "desi-chicken-bone-pickle",
+      "name": "Desi Chicken with Bone Pickle",
+      "category": "Non-veg pickles > Chicken pickles",
+      "description": "Desi Chicken with Bone Pickle is a bone-in desi chicken selection. Serve a little alongside warm rice or a home-cooked meal.",
+      "newProduct": true,
+      "dietType": "Non-vegetarian",
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 1800
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Non-Veg Pickles",
+      "sourceRow": 7,
+      "sourceName": "Desi Chicken Boneless",
+      "slug": "desi-chicken-boneless-pickle",
+      "name": "Desi Chicken Boneless Pickle",
+      "category": "Non-veg pickles > Chicken pickles",
+      "description": "Desi Chicken Boneless Pickle offers a boneless desi chicken variation for the table. Enjoy a small portion with rice or an everyday meal.",
+      "newProduct": true,
+      "dietType": "Non-vegetarian",
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 2100
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Non-Veg Pickles",
+      "sourceRow": 8,
+      "sourceName": "Apollo Fish Boneless",
+      "slug": "apollo-fish-boneless-pickle",
+      "name": "Apollo Fish Boneless Pickle",
+      "category": "Non-veg pickles > Fish pickles",
+      "description": "Apollo Fish Boneless Pickle is a boneless fish selection in the Aavaruchi range. Serve a small portion alongside warm rice or a family meal.",
+      "newProduct": true,
+      "dietType": "Non-vegetarian",
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 1650
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Non-Veg Pickles",
+      "sourceRow": 9,
+      "sourceName": "Bocchi/Ravva Bone Less",
+      "slug": "bocchi-ravva-boneless-pickle",
+      "name": "Bocchi/Ravva Boneless Pickle",
+      "category": "Non-veg pickles > Fish pickles",
+      "description": "Bocchi/Ravva Boneless Pickle offers a boneless fish variation for the pickle shelf. Enjoy a small serving alongside rice or your everyday meal.",
+      "newProduct": true,
+      "dietType": "Non-vegetarian",
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 1800
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Non-Veg Pickles",
+      "sourceRow": 10,
+      "sourceName": "Koramenu Fish",
+      "slug": "koramenu-fish-pickle",
+      "name": "Koramenu Fish Pickle",
+      "category": "Non-veg pickles > Fish pickles",
+      "description": "Koramenu Fish Pickle brings a Koramenu fish selection to the table. Serve a little alongside warm rice or a home-cooked meal.",
+      "newProduct": true,
+      "dietType": "Non-vegetarian",
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 1950
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Non-Veg Pickles",
+      "sourceRow": 11,
+      "sourceName": "Fresh Prawns",
+      "slug": "fresh-prawns-pickle",
+      "name": "Fresh Prawns Pickle",
+      "category": "Non-veg pickles > Prawn pickles",
+      "description": "Fresh Prawns Pickle is the prawns selection in the Aavaruchi range. Enjoy a small serving alongside warm rice or a simple meal.",
+      "newProduct": true,
+      "dietType": "Non-vegetarian",
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 2100
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Non-Veg Pickles",
+      "sourceRow": 12,
+      "sourceName": "Gongura Prawns",
+      "slug": "gongura-prawns-pickle",
+      "name": "Gongura Prawns Pickle",
+      "category": "Non-veg pickles > Prawn pickles",
+      "description": "Gongura Prawns Pickle pairs prawns with the distinctive character of gongura. Serve a little alongside rice or a home-cooked meal.",
+      "newProduct": true,
+      "dietType": "Non-vegetarian",
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 2100
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Non-Veg Pickles",
+      "sourceRow": 13,
+      "sourceName": "Mutton Boneless",
+      "slug": "mutton-boneless-pickle",
+      "name": "Mutton Boneless Pickle",
+      "category": "Non-veg pickles > Mutton pickles",
+      "description": "Mutton Boneless Pickle is a boneless mutton selection for the pickle shelf. Enjoy a small portion with rice or a family meal.",
+      "newProduct": true,
+      "dietType": "Non-vegetarian",
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 2700
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Non-Veg Pickles",
+      "sourceRow": 14,
+      "sourceName": "Mutton with Bone",
+      "slug": "mutton-with-bone-pickle",
+      "name": "Mutton with Bone Pickle",
+      "category": "Non-veg pickles > Mutton pickles",
+      "description": "Mutton with Bone Pickle offers a bone-in mutton variation for the table. Serve a small portion alongside rice or a home-cooked meal.",
+      "newProduct": true,
+      "dietType": "Non-vegetarian",
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 2400
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Non-Veg Pickles",
+      "sourceRow": 15,
+      "sourceName": "Gongura Mutton",
+      "slug": "gongura-mutton-pickle",
+      "name": "Gongura Mutton Pickle",
+      "category": "Non-veg pickles > Mutton pickles",
+      "description": "Gongura Mutton Pickle pairs a mutton selection with the distinctive character of gongura. Enjoy a little alongside warm rice.",
+      "newProduct": true,
+      "dietType": "Non-vegetarian",
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 2700
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Non-Veg Pickles",
+      "sourceRow": 16,
+      "sourceName": "Boti Pickle",
+      "slug": "boti-pickle",
+      "name": "Boti Pickle",
+      "category": "Non-veg pickles > Boti pickles",
+      "description": "Boti Pickle is a distinct non-vegetarian selection in the Aavaruchi range. Serve a small portion alongside warm rice or an everyday meal.",
+      "newProduct": true,
+      "dietType": "Non-vegetarian",
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 1800
+        }
+      ]
+    },
+    {
+      "sourceSheet": "Non-Veg Pickles",
+      "sourceRow": 17,
+      "sourceName": "Gongura Boti Pickle",
+      "slug": "gongura-boti-pickle",
+      "name": "Gongura Boti Pickle",
+      "category": "Non-veg pickles > Boti pickles",
+      "description": "Gongura Boti Pickle brings a gongura variation to the Boti pickle selection. Enjoy a little alongside rice or a home-cooked meal.",
+      "newProduct": true,
+      "dietType": "Non-vegetarian",
+      "prices": [
+        {
+          "weightGrams": 1000,
+          "title": "1 kg",
+          "price": 1800
+        }
+      ]
+    }
+  ]
+}

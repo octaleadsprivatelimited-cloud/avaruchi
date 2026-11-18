@@ -31,7 +31,7 @@ export function catalogCategoryTree(products: ReadonlyArray<CategorizedProduct>)
       siblings = entry.children;
     }
   }
-  const order = ["pickles", "powders", "fryums"];
+  const order = ["pickles", "non-veg pickles", "powders", "fryums"];
   roots.sort((a, b) => (order.indexOf(a.name.toLowerCase()) + 1 || 100) - (order.indexOf(b.name.toLowerCase()) + 1 || 100) || a.name.localeCompare(b.name));
   return roots;
 }
