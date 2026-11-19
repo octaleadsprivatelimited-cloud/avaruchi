@@ -113,6 +113,32 @@ try {
   assert.equal(category.status, 200);
   assert.ok(category.body.includes('Smoke test groundnut oil') && category.body.includes('Cooking oils'), 'category routes render matching products');
   assert.ok(!category.body.includes('>Bold flavours</a>'), 'navigation must not send customers to hard-coded empty categories');
+  const dietFixture = (id, name, category) => ({
+    ...catalog[0], id, slug: id, name, category, specifications: {},
+    variants: [{ ...catalog[0].variants[0], id: `${id}-500`, sku: `${id}-500` }],
+  });
+  const originalCatalog = catalog;
+  catalog = [
+    dietFixture('diet-mango', 'Diet fixture mango', 'Pickles > Avakaya'),
+    dietFixture('diet-podi', 'Diet fixture podi', 'Powders > Karam podis'),
+    dietFixture('diet-chicken', 'Diet fixture chicken', 'Non-veg pickles > Chicken pickles'),
+    dietFixture('diet-unknown', 'Diet fixture unknown', 'Other foods'),
+  ];
+  // Inspect rendered cards only: bootstrap data intentionally retains the full
+  // catalogue so another selection can be made without a page reload.
+  const grid = response => response.body.match(/<div class="product-grid">([\s\S]*?)<\/section>/)?.[1] || '';
+  const veg = await request('/shop?diet=veg');
+  assert.ok(grid(veg).includes('Diet fixture mango') && grid(veg).includes('Diet fixture podi'), 'Veg includes approved vegetarian categories');
+  assert.ok(!grid(veg).includes('Diet fixture chicken') && !grid(veg).includes('Diet fixture unknown'), 'Veg excludes non-veg and unclassified food');
+  const nonVeg = await request('/shop?diet=non-veg');
+  assert.ok(grid(nonVeg).includes('Diet fixture chicken') && !grid(nonVeg).includes('Diet fixture mango'), 'Non-Veg is separate on direct links');
+  const dietCategory = await request('/shop?diet=veg&category=Powders');
+  assert.ok(grid(dietCategory).includes('Diet fixture podi') && !grid(dietCategory).includes('Diet fixture mango'), 'diet and category filters compose');
+  const dietSearch = await request('/shop?diet=veg&q=chicken');
+  assert.ok(dietSearch.body.includes('No products found.') && !grid(dietSearch), 'search cannot bypass the diet filter');
+  const invalidDiet = await request('/shop?diet=unrecognised');
+  assert.ok(grid(invalidDiet).includes('Diet fixture chicken') && grid(invalidDiet).includes('Diet fixture unknown'), 'unknown diet parameters safely show all');
+  catalog = originalCatalog;
   const untrustedText = '</script><script>alert("storefront-xss")</script>';
   catalog[0].description = untrustedText;
   storefrontSettings = { ...storefrontSettings, storeName: `Avaruchi ${untrustedText}` };

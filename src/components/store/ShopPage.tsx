@@ -10,6 +10,8 @@ import { ReferenceIcon, ReferenceProductCard } from "./ReferencePrimitives";
 import { StorePage } from "./StoreHeader";
 import { ALL_PRODUCTS, catalogCategories, catalogCategoryTree, categoryParts, matchesCategory } from "@/lib/catalog-categories";
 import { matchesProductSearch } from "@/lib/product-search";
+import { matchesDiet, normalizeDietFilter, type DietFilter } from "@/lib/catalog-diet";
+import "@/catalog-diet.css";
 
 export function ShopPage() {
   const products = useStoreProducts(useInitialCatalog());
@@ -23,20 +25,28 @@ export function ShopPage() {
     params.get("q") || params.get("search") || "",
   );
   const [sort, setSort] = useState("featured");
+  const [diet, setDiet] = useState<DietFilter>(normalizeDietFilter(params.get("diet")));
   useEffect(() => {
     const params = new URLSearchParams(location.searchStr);
     setCategory(categoryParts(params.get("category") || ALL_PRODUCTS).join(" > "));
     setQuery(params.get("q") || params.get("search") || "");
+    setDiet(normalizeDietFilter(params.get("diet")));
   }, [location.searchStr]);
-  const categories = catalogCategories(products);
-  const subcategories = catalogCategoryTree(products).find(root => matchesCategory({ category }, root.path))?.children || [];
+  const dietProducts = useMemo(() => products.filter(product => matchesDiet(product, diet)), [products, diet]);
+  const categories = catalogCategories(dietProducts);
+  const subcategories = catalogCategoryTree(dietProducts).find(root => matchesCategory({ category }, root.path))?.children || [];
   const chooseCategory = (value: string) => {
     setCategory(value);
-    void navigate({ to: "/shop", search: { category: value, q: query }, resetScroll: false });
+    void navigate({ to: "/shop", search: { category: value, q: query, diet: diet === "all" ? undefined : diet }, resetScroll: false });
+  };
+  const chooseDiet = (value: DietFilter) => {
+    setDiet(value);
+    setCategory(ALL_PRODUCTS);
+    void navigate({ to: "/shop", search: { diet: value === "all" ? undefined : value, q: query }, resetScroll: false });
   };
   const shown = useMemo(
     () =>
-      products
+      dietProducts
         .filter(
           (product) =>
             matchesCategory(product, category) &&
@@ -51,7 +61,7 @@ export function ShopPage() {
                 priceIncludingTax(a.price, a.taxRate)
               : 0,
         ),
-    [products, category, query, sort],
+    [dietProducts, category, query, sort],
   );
   useCommerceImpression(
     "view_item_list",
@@ -74,6 +84,15 @@ export function ShopPage() {
                 <br className="desktop" /> Find a little taste of home.
               </p>
             </div>
+          </div>
+          <div className="catalog-diet-filter" role="group" aria-label="Filter by diet">
+            <span>Food preference</span>
+            {([{ value: "all", label: "All" }, { value: "veg", label: "Veg" }, { value: "non-veg", label: "Non-Veg" }] as const).map(item => (
+              <button type="button" key={item.value} aria-pressed={diet === item.value} onClick={() => chooseDiet(item.value)}>
+                {item.value !== "all" && <i className={`diet-marker ${item.value}`} aria-hidden="true" />}
+                {item.label}
+              </button>
+            ))}
           </div>
           <div className="catalog-tools">
             <div className="search-field">
@@ -130,16 +149,18 @@ export function ShopPage() {
               <h3>No products found.</h3>
               <p>
                 {products.length
-                  ? "Try another flavour, ingredient, or category."
+                  ? "Try another flavour, ingredient, food preference, or category."
                   : "Our collection is coming together. Check back for fresh flavours."}
               </p>
-              {(query || category !== ALL_PRODUCTS) && (
+              {(query || category !== ALL_PRODUCTS || diet !== "all") && (
                 <button
                   type="button"
                   className="button"
                   onClick={() => {
                     setQuery("");
                     setCategory(ALL_PRODUCTS);
+                    setDiet("all");
+                    setSort("featured");
                     void navigate({ to: "/shop", resetScroll: false });
                   }}
                 >

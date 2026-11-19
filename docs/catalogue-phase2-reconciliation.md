@@ -99,3 +99,13 @@ The feedback's launch checklist also requires merchant-confirmed stock, actual p
 These URLs identify the verification targets; they are not evidence that the deferred release is already live.
 
 This is a correction record, not final launch sign-off. Merchant stock, approved real photography and operational checks remain separate acceptance inputs.
+
+## Food preference filter follow-up on 19 November 2026
+
+The shop now has a dedicated **All / Veg / Non-Veg** filter, alongside the category controls. It works with search and sorting, scopes category choices to the selected diet, and restores the selection through browser history and shareable `diet=veg` / `diet=non-veg` URLs. Selecting a different diet resets the category while retaining the search text and sort order.
+
+An explicit **Diet type** specification in Admin takes precedence over category defaults. The approved Pickles, Powders and Fryums branches are vegetarian; Non-veg pickles is separate. Unknown categories or an unrecognised explicit diet classification appear only under All until classified.
+
+Six diet/category unit tests, frontend TypeScript, lint, the production frontend build and SSR filter checks passed. A read-only local browser preview verified 37 vegetarian and 16 non-vegetarian entries from the prepared catalogue, category/search/sort combinations and browser back navigation. At a 320-pixel viewport, all three controls have 44-pixel touch targets with no horizontal overflow. The temporary preview server was stopped after checking.
+
+This follow-up is local and has not been pushed or deployed; deployment remains deferred by the owner.
