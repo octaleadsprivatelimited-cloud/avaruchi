@@ -111,16 +111,24 @@ describe.skipIf(process.env.RUN_DB_TESTS !== "1")(
     it("reconciles verified captures once and commits reserved stock atomically", async () => {
       const p = new PrismaPersistence(),
         store = new CommerceStore();
+      const fixture = crypto.randomUUID(), productId = crypto.randomUUID(),
+        categoryId = crypto.randomUUID(), brandId = crypto.randomUUID(), variantId = crypto.randomUUID();
       let userId = "";
-      let orderId = "",
-        variantId = "",
-        original: { onHand: number; reserved: number } | undefined;
+      let orderId = "";
       try {
+        // Own the stock under test; catalogue ordering and merchant availability
+        // must not affect payment reconciliation or another parallel test.
+        await p.db.product.create({ data: {
+          id: productId, name: "Capture reconciliation fixture", slug: `capture-${fixture}`,
+          description: "Isolated payment reconciliation test product", status: "ACTIVE", taxRate: 0,
+          category: { create: { id: categoryId, name: "Capture fixture", slug: `capture-category-${fixture}` } },
+          brand: { create: { id: brandId, name: "Capture fixture", slug: `capture-brand-${fixture}` } },
+          variants: { create: { id: variantId, sku: `CAPTURE-${fixture}`, title: "1 kg", price: 100, mrp: 100,
+            weightGrams: 1000, attributes: {}, inventory: { create: { onHand: 10, reserved: 0 } } } },
+        } });
         await p.hydrate(store);
-        const product = store.listProducts().at(-1)!,
-          variant = product.variants[0]!;
-        variantId = variant.id;
-        original = await p.db.inventory.findUniqueOrThrow({
+        const { product, variant } = store.getVariant(variantId);
+        const original = await p.db.inventory.findUniqueOrThrow({
           where: { variantId },
         });
         const customer = await p.db.user.create({ data: { email: `mysql-test-${crypto.randomUUID()}@example.com`, name: "Database test customer" } });
@@ -145,6 +153,7 @@ describe.skipIf(process.env.RUN_DB_TESTS !== "1")(
           total: variant.price - 1,
           idempotencyKey: `mysql-verify-${crypto.randomUUID()}`,
         });
+        order.number = `CAPTURE-${fixture}`;
         orderId = order.id;
         await p.saveOrderAndReservations(order, { contact: { name: "Test Buyer", email: customer.email, phone: "+919876543210" }, shipping: { line1: "Test Road", city: "Hyderabad", postalCode: "500081" }, paymentMethod: "cashfree", discounts: { coupon: 0, onlinePayment: 1, onlineOffer: { type: "FIXED_AMOUNT", value: 1 } } }, "cashfree");
         expect(await p.db.notification.count({ where: { id: orderConfirmationId(order.id) } })).toBe(0);
@@ -225,21 +234,20 @@ describe.skipIf(process.env.RUN_DB_TESTS !== "1")(
         });
         expect(stale.status).toBe("CAPTURED");
       } finally {
-        if (orderId) {
-          await p.db.notification.deleteMany({ where: { id: { in: [orderConfirmationId(orderId), orderAlertId(orderId)] } } });
-          await p.db.paymentTransaction.deleteMany({
-            where: { payment: { orderId } },
-          });
-          await p.db.payment.deleteMany({ where: { orderId } });
-          await p.db.order.deleteMany({ where: { id: orderId } });
-        }
-        if (userId) await p.db.user.delete({ where: { id: userId } });
-        if (original)
-          await p.db.inventory.update({
-            where: { variantId },
-            data: { onHand: original.onHand, reserved: original.reserved },
-          });
-        await p.disconnect();
+        try {
+          if (orderId) {
+            await p.db.notification.deleteMany({ where: { id: { in: [orderConfirmationId(orderId), orderAlertId(orderId)] } } });
+            await p.db.paymentTransaction.deleteMany({ where: { payment: { orderId } } });
+            await p.db.payment.deleteMany({ where: { orderId } });
+            await p.db.auditLog.deleteMany({ where: { resource: "order", resourceId: orderId } });
+            await p.db.order.deleteMany({ where: { id: orderId } });
+          }
+          if (userId) await p.db.user.deleteMany({ where: { id: userId } });
+          await p.db.inventoryMovement.deleteMany({ where: { inventory: { variantId } } });
+          await p.db.product.deleteMany({ where: { id: productId } });
+          await p.db.category.deleteMany({ where: { id: categoryId } });
+          await p.db.brand.deleteMany({ where: { id: brandId } });
+        } finally { await p.disconnect(); }
       }
     });
   },

@@ -34,6 +34,8 @@ The tests exchange bytes through in-memory streams. They do not open a listening
 
 Local validation passed 406 tests; 16 database-only tests were skipped locally and require the isolated MySQL CI job. Lint, frontend/API TypeScript, the production build, public-secret scan, SSR rendering, Hostinger startup and commerce proxy checks also passed.
 
+The first CI run exposed an existing test-data assumption: a payment test selected an arbitrary catalogue product, which could now be an intentionally zero-stock item. The payment, final-unit reservation and coupon persistence tests now create their own products with known stock and unique order numbers. Cleanup is scoped to their own records. Their financial assertions and production inventory rules are unchanged.
+
 On 19 November 2026, npm audit did not yet report these newly published driver advisories. Audit results alone therefore do not establish this fix; installed resolutions and parser behavior were checked directly. The root audit reported zero findings. The API audit retained two moderate and one low finding in separate optional Firestore/Storage dependency paths; those were not changed by this targeted patch.
 
 ## Release scope
