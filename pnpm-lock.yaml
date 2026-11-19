@@ -8,6 +8,7 @@ overrides:
   '@grpc/grpc-js@<1.13.6': 1.14.6
   re2js@<2.8.7: 2.8.7
   minimatch@>=10.0.0 <11.0.1: 11.0.3
+  websocket-driver@<0.8.0: 0.8.0
 
 importers:
 
@@ -2751,13 +2752,13 @@ packages:
   web-vitals@4.2.4:
     resolution: {integrity: sha512-r4DIlprAGwJ7YM11VZp4R884m0Vmgr6EAKe3P+kO0PPj3Unqyvv59rczf6UiGcb9Z8QxZVcqKNwv/g0WNdWwsw==}
 
-  websocket-driver@0.7.5:
-    resolution: {integrity: sha512-ZL2+3c7kMBdIRCMz6l8jQMHyGVxj+UL+xVk74Ombiciboca8rHa15L86B19E5oh1pL9Ii/uj54gtsIrZGMo6zA==}
-    engines: {node: '>=0.8.0'}
+  websocket-driver@0.8.0:
+    resolution: {integrity: sha512-upjjWCo/1ZysdZ3rMvXXUDk9PmbYne+wSD1t78HAvIvjmR+avda0MsLWhtkn5PW8Ht34EXhhWF6OseWJ8nTGlg==}
+    engines: {node: '>=0.10.0'}
 
-  websocket-extensions@0.1.4:
-    resolution: {integrity: sha512-OqedPIGOfsDlo31UNwYbCFMSaO9m9G/0faIHj5/dZFDMFqPTcx6UwqyOy3COEaEOg/9VsGIpdqn62W5KhoKSpg==}
-    engines: {node: '>=0.8.0'}
+  websocket-extensions@0.2.0:
+    resolution: {integrity: sha512-vQaTTgDDgwlrreIJAprknlnvEtZMMxfLqoxyQYnWO8dgcz2qIzQNysCpwOekz8kqLvzrZ0dcaL9hejZ+2AszCA==}
+    engines: {node: '>=0.10.0'}
 
   which@2.0.2:
     resolution: {integrity: sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==}
@@ -4648,7 +4649,7 @@ snapshots:
 
   faye-websocket@0.11.4:
     dependencies:
-      websocket-driver: 0.7.5
+      websocket-driver: 0.8.0
 
   fdir@6.5.0(picomatch@4.0.5):
     optionalDependencies:
@@ -5290,13 +5291,13 @@ snapshots:
 
   web-vitals@4.2.4: {}
 
-  websocket-driver@0.7.5:
+  websocket-driver@0.8.0:
     dependencies:
       http-parser-js: 0.5.10
       safe-buffer: 5.2.1
-      websocket-extensions: 0.1.4
+      websocket-extensions: 0.2.0
 
-  websocket-extensions@0.1.4: {}
+  websocket-extensions@0.2.0: {}
 
   which@2.0.2:
     dependencies:
