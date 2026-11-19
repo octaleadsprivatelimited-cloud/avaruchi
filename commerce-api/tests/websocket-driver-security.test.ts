@@ -18,7 +18,8 @@ for (const [name, database] of owners) describe(`${name} websocket dependency`, 
   const handshake = (headers: string[] = [], body = "") => Buffer.from([
     "GET / HTTP/1.1", "Host: fixture.invalid", "Connection: upgrade", "Upgrade: websocket", ...headers, "", body,
   ].join("\r\n"));
-  const draft76 = ["Sec-WebSocket-Key1: 858 993 4592", "Sec-WebSocket-Key2: 1 1"];
+  const draft76 = ["Sec-WebSocket-Key1: 12 34", "Sec-WebSocket-Key2: 56 78"];
+  const overflowingDraft76 = ["Sec-WebSocket-Key1: 858 993 4592", "Sec-WebSocket-Key2: 1 1"];
   const server = (options = {}) => {
     const socket = driver.server(options);
     const messages: string[] = [], chunks: Buffer[] = [];
@@ -51,7 +52,7 @@ for (const [name, database] of owners) describe(`${name} websocket dependency`, 
 
   it("rejects overflowing draft76 key values even with explicit legacy opt-in", () => {
     const captured = server({ allowDrafts: true });
-    expect(() => captured.socket.io.write(handshake(draft76, "12345678"))).not.toThrow();
+    expect(() => captured.socket.io.write(handshake(overflowingDraft76, "12345678"))).not.toThrow();
     expect(captured.response()).toMatch(/^HTTP\/1\.1 400 Bad Request/);
     expect(captured.messages).toEqual([]);
   });
