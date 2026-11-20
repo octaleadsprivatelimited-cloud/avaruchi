@@ -23,14 +23,9 @@ Both `pnpm-workspace.yaml` files contain a scoped override from driver versions 
 
 ## Verification
 
-`commerce-api/tests/websocket-driver-security.test.ts` resolves the real Firebase/Faye dependency chain independently in each install. Twelve checks cover:
+`commerce-api/tests/websocket-driver-security.test.ts` resolves the Firebase/Faye dependency chain in each install. The checks cover the patched dependency version, rejection of valid draft75 and draft76 handshakes by default, and modern handshakes, messages and ping callbacks.
 
-- Default rejection of draft75 and draft76 handshakes.
-- Correct legacy parser recovery without duplicate messages, tested with explicit opt-in only inside isolated tests.
-- Rejection of overflowing draft76 keys even under that test-only opt-in.
-- Modern client/server handshakes, bidirectional messages, ping callbacks and unsolicited pong handling.
-
-The tests exchange bytes through in-memory streams. They do not open a listening port, connect to a remote host, use credentials or send attack traffic to production. Independent review verified Faye's client API, extensions option validation and Firebase Auth imports against the installed packages.
+The compatibility tests exchange bytes through in-memory streams. Independent review verified Faye's client API, extensions option validation and Firebase Auth imports against the installed packages.
 
 Local validation passed 406 tests; 16 database-only tests were skipped locally and require the isolated MySQL CI job. Lint, frontend/API TypeScript, the production build, public-secret scan, SSR rendering, Hostinger startup and commerce proxy checks also passed.
 

@@ -134,7 +134,10 @@ function refreshFromAnotherTab(event: StorageEvent) {
 export function notifyStoreCatalogChanged() {
   void loadCatalog();
   if (typeof window !== "undefined") {
-    localStorage.setItem(catalogChangeKey, String(Date.now()));
+    // Cross-tab notification is optional; blocked/full browser storage must not
+    // turn an already successful catalogue save into a reported failure.
+    try { localStorage.setItem(catalogChangeKey, String(Date.now())); }
+    catch { /* Other tabs still refresh on focus and the normal timer. */ }
   }
 }
 

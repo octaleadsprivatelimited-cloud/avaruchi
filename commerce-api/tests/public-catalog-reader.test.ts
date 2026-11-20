@@ -3,7 +3,7 @@ import { afterEach, expect, it, vi } from "vitest";
 const modulePath = "../../src/lib/public-catalog-reader.ts";
 const { readPublicCatalog, readPublicProduct } = await import(modulePath);
 const readerKey = Symbol.for("avaruchi.publicCatalogReader");
-const registry = globalThis as unknown as Record<symbol, (() => unknown[]) | undefined>;
+const registry = globalThis as unknown as Record<symbol, (() => unknown[] | Promise<unknown[]>) | undefined>;
 
 afterEach(() => {
   delete registry[readerKey];
@@ -22,7 +22,7 @@ it("renders the empty live catalog even when loopback HTTP is unavailable", asyn
 
 it("reads fresh public product snapshots without a stale server cache", async () => {
   let catalog = [{ id: "sesame-oil", name: "Sesame oil", status: "ACTIVE", variants: [] }];
-  registry[readerKey] = () => catalog;
+  registry[readerKey] = async () => catalog;
   expect((await readPublicProduct("sesame-oil"))?.name).toBe("Sesame oil");
   catalog = [];
   expect(await readPublicProduct("sesame-oil")).toBeNull();

@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { queueOrderConfirmation } from "./order-confirmation.js";
+import { orderAlertId, orderConfirmationId, queueOrderConfirmation } from "./order-confirmation.js";
 import type { StorefrontConfig } from "./storefront-config.js";
 import {
   Prisma,
@@ -371,6 +371,63 @@ export class PrismaPersistence {
       });
   }
 
+  // Refresh only the public catalogue; never reload customer/order/secret state.
+  // The caller invalidates publication if a local checkout changed inventory
+  // while this database read was in flight.
+  async refreshCatalog(store: CommerceStore, canPublish: () => boolean = () => true) {
+    const products = await this.db.product.findMany({
+      where: { deletedAt: null },
+      include: {
+        category: true, brand: true,
+        variants: { include: { inventory: true } },
+        media: { orderBy: { position: "asc" } },
+      },
+    });
+    const snapshot = new Map<string, StoredProduct>();
+    for (const product of products) {
+      snapshot.set(product.id, {
+        id: product.id,
+        name: product.name,
+        slug: product.slug,
+        description: product.description,
+        category: product.category.name,
+        brand: product.brand?.name,
+        status: product.status as StoredProduct["status"],
+        taxRate: number(product.taxRate),
+        hsnCode: product.hsnCode || undefined,
+        specifications: product.specifications as Record<string, string>,
+        seoTitle: product.seoTitle || undefined,
+        seoDescription: product.seoDescription || undefined,
+        media: product.media.map((item) => ({
+          id: item.id,
+          url: item.url,
+          alt: item.alt,
+          type: item.type as "IMAGE" | "VIDEO",
+          position: item.position,
+          variantId: item.variantId || undefined,
+        })),
+        createdAt: product.createdAt.toISOString(),
+        updatedAt: product.updatedAt.toISOString(),
+        variants: product.variants.map((variant) => ({
+          id: variant.id,
+          sku: variant.sku,
+          title: variant.title,
+          active: variant.active,
+          price: number(variant.price),
+          mrp: number(variant.mrp),
+          stock: variant.inventory?.onHand || 0,
+          reserved: variant.inventory?.reserved || 0,
+          attributes: variant.attributes as Record<string, string>,
+          weightGrams: variant.weightGrams,
+        })),
+      });
+    }
+    if (!canPublish()) return false;
+    // One synchronous pointer replacement publishes a complete snapshot.
+    store.products = snapshot;
+    return true;
+  }
+
   async saveUser(user: StoredUser) {
     try {
       await this.db.user.create({
@@ -626,6 +683,7 @@ export class PrismaPersistence {
         where: {
           OR: [
             { userId },
+            { id: { in: orders.flatMap(order => [orderConfirmationId(order.id), orderAlertId(order.id)]) } },
             {
               userId: null,
               destination: {
@@ -862,11 +920,13 @@ export class PrismaPersistence {
         }
         await tx.inventory.upsert({
           where: { variantId: variant.id },
-          update: { onHand: variant.stock, reserved: variant.reserved },
+          // Existing inventory is maintained by reservation/adjustment
+          // transactions, never by a potentially stale catalogue edit.
+          update: {},
           create: {
             variantId: variant.id,
-            onHand: variant.stock,
-            reserved: variant.reserved,
+            onHand: existingVariant ? 0 : variant.stock,
+            reserved: existingVariant ? 0 : variant.reserved,
           },
         });
       }
@@ -2519,6 +2579,7 @@ export class PrismaPersistence {
       "CAPTURED" | "FAILED" | "REFUNDED" | "AUTHORIZED" | "CANCELLED";
     externalPaymentId?: string;
     paymentAmount?: number;
+    paymentCurrency?: string;
     paymentErrorCode?: string;
     paymentErrorDescription?: string;
     shipmentId?: string;
@@ -2528,6 +2589,7 @@ export class PrismaPersistence {
     safePayload?: Prisma.InputJsonValue;
   }) {
     try {
+      let duplicate = false;
       await this.db.$transaction(async (tx) => {
         await tx.webhookEvent.create({
           data: {
@@ -2540,59 +2602,86 @@ export class PrismaPersistence {
             processedAt: new Date(),
           },
         });
-        if (input.orderId && input.from && input.to) {
+        // Match the lock order used by reconciliation/client events. A signed
+        // receipt can arrive after this worker read an earlier payment state.
+        if (input.orderId)
           await tx.$queryRaw`SELECT \`id\` FROM \`Order\` WHERE \`id\` = ${input.orderId} FOR UPDATE`;
+        if (input.paymentId && input.paymentStatus) {
+          await tx.$queryRaw`SELECT \`id\` FROM \`Payment\` WHERE \`id\` = ${input.paymentId} FOR UPDATE`;
+          const payment = await tx.payment.findUniqueOrThrow({ where: { id: input.paymentId } });
+          if (payment.orderId !== input.orderId || payment.provider.toLowerCase() !== input.provider.toLowerCase())
+            throw new AppError(422, "WEBHOOK_RESOURCE_MISMATCH", "Payment does not belong to the webhook order or provider");
+          const settled = ["CAPTURED", "PARTIALLY_REFUNDED", "REFUNDED"].includes(payment.status);
+          if (input.paymentStatus === "CAPTURED") {
+            if (!input.externalPaymentId || !Number.isFinite(input.paymentAmount) ||
+                Math.round(input.paymentAmount! * 100) !== Math.round(number(payment.amount) * 100) ||
+                (input.paymentCurrency || "").toUpperCase() !== payment.currency.toUpperCase())
+              throw new AppError(422, "PAYMENT_VALUE_MISMATCH", "Captured payment amount or currency does not match the order");
+            if (settled && payment.gatewayTransactionId && payment.gatewayTransactionId !== input.externalPaymentId)
+              throw new AppError(422, "PAYMENT_RESOURCE_MISMATCH", "Captured payment reference does not match the recorded payment");
+            if (settled) { duplicate = true; return; }
+          } else if (settled && ["FAILED", "AUTHORIZED", "CANCELLED"].includes(input.paymentStatus)) {
+            duplicate = true;
+            return;
+          }
+        }
+        if (input.orderId && input.from && input.to) {
           const current = await tx.order.findUniqueOrThrow({ where: { id: input.orderId }, select: { status: true } });
           const from = current.status;
-          if (from === input.to) return;
-          if (from !== input.from && !(from === "FAILED" && input.to === "PAID"))
-            throw new AppError(409, "STALE_ORDER_STATE", "Order state changed before webhook processing");
-          if (["PAID", "FAILED"].includes(input.to)) {
-            const items = await tx.orderItem.findMany({
-              where: { orderId: input.orderId },
-              select: { variantId: true, quantity: true, sku: true },
-            });
-            for (const item of items) {
-              const inventory = await tx.inventory.findUnique({ where: { variantId: item.variantId } });
-              if (!inventory)
-                throw new AppError(409, "INVENTORY_NOT_FOUND", `Inventory is missing for ${item.sku}`);
-              if (input.to === "PAID" && from === "FAILED") {
-                const reserved = await tx.$executeRaw`UPDATE \`Inventory\` SET \`reserved\` = \`reserved\` + ${item.quantity}, \`version\` = \`version\` + 1 WHERE \`variantId\` = ${item.variantId} AND \`onHand\` - \`reserved\` >= ${item.quantity}`;
-                if (reserved !== 1) throw new AppError(409, "INVENTORY_CONFLICT", "Payment was received after stock was released. Contact the store for fulfilment or a refund.");
-              }
-              const changed = input.to === "PAID"
-                ? await tx.$executeRaw`UPDATE \`Inventory\` SET \`onHand\` = \`onHand\` - ${item.quantity}, \`reserved\` = \`reserved\` - ${item.quantity}, \`version\` = \`version\` + 1 WHERE \`variantId\` = ${item.variantId} AND \`onHand\` >= ${item.quantity} AND \`reserved\` >= ${item.quantity}`
-                : await tx.$executeRaw`UPDATE \`Inventory\` SET \`reserved\` = \`reserved\` - ${item.quantity}, \`version\` = \`version\` + 1 WHERE \`variantId\` = ${item.variantId} AND \`reserved\` >= ${item.quantity}`;
-              if (changed !== 1)
-                throw new AppError(409, "INVENTORY_STATE_CONFLICT", `Inventory changed for ${item.sku}`);
-              await tx.inventoryMovement.create({
-                data: {
-                  inventoryId: inventory.id,
-                  quantity: input.to === "PAID" ? -item.quantity : 0,
-                  reason: input.to === "PAID" ? "ORDER_COMMITTED" : "ORDER_RESERVATION_RELEASED",
-                  referenceId: input.orderId,
-                },
+          // A same-state capture still needs its payment bookkeeping below.
+          // Its inventory/order transition has already been applied.
+          if (from !== input.to) {
+            if (from !== input.from && !(from === "FAILED" && input.to === "PAID"))
+              throw new AppError(409, "STALE_ORDER_STATE", "Order state changed before webhook processing");
+            if (input.to === "PAID" && !["PENDING", "PAYMENT_PENDING", "FAILED"].includes(from))
+              throw new AppError(409, "STALE_ORDER_STATE", "Order fulfilment already advanced before payment processing");
+            if (["PAID", "FAILED"].includes(input.to)) {
+              const items = await tx.orderItem.findMany({
+                where: { orderId: input.orderId },
+                select: { variantId: true, quantity: true, sku: true },
               });
+              for (const item of items) {
+                const inventory = await tx.inventory.findUnique({ where: { variantId: item.variantId } });
+                if (!inventory)
+                  throw new AppError(409, "INVENTORY_NOT_FOUND", `Inventory is missing for ${item.sku}`);
+                if (input.to === "PAID" && from === "FAILED") {
+                  const reserved = await tx.$executeRaw`UPDATE \`Inventory\` SET \`reserved\` = \`reserved\` + ${item.quantity}, \`version\` = \`version\` + 1 WHERE \`variantId\` = ${item.variantId} AND \`onHand\` - \`reserved\` >= ${item.quantity}`;
+                  if (reserved !== 1) throw new AppError(409, "INVENTORY_CONFLICT", "Payment was received after stock was released. Contact the store for fulfilment or a refund.");
+                }
+                const changed = input.to === "PAID"
+                  ? await tx.$executeRaw`UPDATE \`Inventory\` SET \`onHand\` = \`onHand\` - ${item.quantity}, \`reserved\` = \`reserved\` - ${item.quantity}, \`version\` = \`version\` + 1 WHERE \`variantId\` = ${item.variantId} AND \`onHand\` >= ${item.quantity} AND \`reserved\` >= ${item.quantity}`
+                  : await tx.$executeRaw`UPDATE \`Inventory\` SET \`reserved\` = \`reserved\` - ${item.quantity}, \`version\` = \`version\` + 1 WHERE \`variantId\` = ${item.variantId} AND \`reserved\` >= ${item.quantity}`;
+                if (changed !== 1)
+                  throw new AppError(409, "INVENTORY_STATE_CONFLICT", `Inventory changed for ${item.sku}`);
+                await tx.inventoryMovement.create({
+                  data: {
+                    inventoryId: inventory.id,
+                    quantity: input.to === "PAID" ? -item.quantity : 0,
+                    reason: input.to === "PAID" ? "ORDER_COMMITTED" : "ORDER_RESERVATION_RELEASED",
+                    referenceId: input.orderId,
+                  },
+                });
+              }
             }
+            const changed = await tx.order.updateMany({
+              where: { id: input.orderId, status: from },
+              data: { status: input.to as OrderStatus },
+            });
+            if (changed.count !== 1)
+              throw new AppError(
+                409,
+                "STALE_ORDER_STATE",
+                "Order state changed before webhook processing",
+              );
+            await tx.orderHistory.create({
+              data: {
+                orderId: input.orderId,
+                fromStatus: from,
+                toStatus: input.to as OrderStatus,
+                source: input.provider,
+              },
+            });
           }
-          const changed = await tx.order.updateMany({
-            where: { id: input.orderId, status: from },
-            data: { status: input.to as OrderStatus },
-          });
-          if (changed.count !== 1)
-            throw new AppError(
-              409,
-              "STALE_ORDER_STATE",
-              "Order state changed before webhook processing",
-            );
-          await tx.orderHistory.create({
-            data: {
-              orderId: input.orderId,
-              fromStatus: from,
-              toStatus: input.to as OrderStatus,
-              source: input.provider,
-            },
-          });
           if (input.to === "PAID") await queueOrderConfirmation(tx, input.orderId);
         }
         if (input.paymentId && input.paymentStatus) {
@@ -2601,6 +2690,7 @@ export class PrismaPersistence {
             data: {
               status: input.paymentStatus,
               gatewayTransactionId: input.externalPaymentId,
+              verifiedAt: input.paymentStatus === "CAPTURED" ? new Date() : undefined,
             },
           });
           if (input.externalPaymentId)
@@ -2632,8 +2722,8 @@ export class PrismaPersistence {
             },
           });
         }
-      });
-      return { duplicate: false };
+      }, { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted });
+      return { duplicate };
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -3618,6 +3708,35 @@ export class PrismaPersistence {
   ) {
     await this.db.$transaction(
       async (tx) => {
+        const variantIds = [...new Set(order.lines.map(line => line.variantId))].sort();
+        // A locking current read prevents another worker's catalogue edit from
+        // changing availability/pricing between this check and the reservation.
+        // LOCK IN SHARE MODE is supported by MySQL and MariaDB; unlike exclusive
+        // catalogue locks, it still permits concurrent purchases of other stock.
+        const variants = variantIds.length ? await tx.$queryRaw<Array<{
+          id: string; productId: string; active: boolean | number; price: Prisma.Decimal;
+          status: string; deletedAt: Date | null; taxRate: Prisma.Decimal;
+        }>>(Prisma.sql`
+          SELECT v.\`id\`, v.\`productId\`, v.\`active\`, v.\`price\`,
+                 p.\`status\`, p.\`deletedAt\`, p.\`taxRate\`
+          FROM \`ProductVariant\` v INNER JOIN \`Product\` p ON p.\`id\` = v.\`productId\`
+          WHERE v.\`id\` IN (${Prisma.join(variantIds)})
+          ORDER BY v.\`id\` LOCK IN SHARE MODE
+        `) : [];
+        const currentByVariant = new Map(variants.map(variant => [variant.id, variant]));
+        const quotedRates = new Map(order.invoiceSnapshot?.invoiceDetails?.lines.map(line => [line.variantId, line.taxRate]) || []);
+        for (const line of order.lines) {
+          const current = currentByVariant.get(line.variantId);
+          if (!current || !current.active || current.status !== "ACTIVE" || current.deletedAt)
+            throw new AppError(409, "PRODUCT_UNAVAILABLE", "A product option is no longer available. Review your bag before placing the order.");
+          const price = number(current.price), taxRate = number(current.taxRate);
+          const expectedTaxCents = Math.round(((price * line.quantity * taxRate) / 100) * 100);
+          const quotedTaxRate = quotedRates.get(line.variantId);
+          if (Math.abs(price - line.unitPrice) > 0.000001 ||
+              Math.round(line.tax * 100) !== expectedTaxCents ||
+              (quotedTaxRate !== undefined && Math.abs(quotedTaxRate - taxRate) > 0.000001))
+            throw new AppError(409, "CHECKOUT_PRICE_CHANGED", "Product pricing changed. Review the updated total before placing your order.");
+        }
         const coupon = couponCode
           ? await tx.coupon.findUnique({
               where: { code: couponCode.trim().toUpperCase() },
@@ -3626,7 +3745,6 @@ export class PrismaPersistence {
         if (couponCode && !coupon)
           throw new AppError(422, "COUPON_NOT_APPLICABLE", "Coupon is no longer available");
         if (coupon) {
-          const variants = await tx.productVariant.findMany({ where: { id: { in: order.lines.map(line => line.variantId) } }, select: { id: true, productId: true } });
           const productByVariant = new Map(variants.map(variant => [variant.id, variant.productId]));
           const benefit = couponBenefit({
             code: coupon.code, type: coupon.type, value: number(coupon.value), minimumSpend: number(coupon.minimumSpend),

@@ -250,6 +250,13 @@ export async function createApp(overrides?: {
   } else if (config.NODE_ENV === "test" || process.env.SEED_CATALOG === "true") {
     seedStore(store);
   }
+  let pendingCatalogueReservations = 0, catalogueReservationVersion = 0;
+  const refreshCatalog = async () => {
+    if (!persistence || pendingCatalogueReservations > 0) return;
+    const version = catalogueReservationVersion;
+    await persistence.refreshCatalog?.(store, () =>
+      pendingCatalogueReservations === 0 && catalogueReservationVersion === version);
+  };
   const resolvePaymentProvider = (requested: string) => {
     const integration = selectRuntimeIntegration(
       store.integrations.values(),
@@ -487,6 +494,7 @@ export async function createApp(overrides?: {
             const externalOrder = String(refundData?.order_id || "");
             const status = String(refundData?.refund_status || "");
             const persistedRefund = persistence ? await persistence.db.refund.findUnique({ where: { externalId: reference }, include: { payment: true } }) : null;
+            if (persistedRefund) await persistence!.refreshOrder(store, persistedRefund.payment.orderId);
             const order = persistedRefund ? store.orders.get(persistedRefund.payment.orderId) : [...store.orders.values()].find(o => o.payment?.externalId === externalOrder && o.payment.refunds?.some(r => r.externalId === reference));
             const refund = persistedRefund || order?.payment?.refunds?.find(r => r.externalId === reference);
             if (!order || !refund || (persistedRefund ? persistedRefund.payment.externalId : order.payment?.externalId) !== externalOrder || (persistedRefund ? persistedRefund.payment.provider : order.payment?.provider) !== "cashfree") throw new AppError(404, "REFUND_NOT_FOUND", "Refund reference was not found");
@@ -674,6 +682,9 @@ export async function createApp(overrides?: {
           store.webhookIds.add(`${provider}:${eventId}`);
           return ok(res, { received: true });
         }
+        // A webhook may land on a worker that never handled checkout, or whose
+        // cached order predates payment/fulfilment on another worker.
+        if (persistence && orderId) await persistence.refreshOrder(store, orderId);
         const target =
             eventType === "payment.captured"
               ? "PAID"
@@ -699,11 +710,20 @@ export async function createApp(overrides?: {
             "ORDER_NOT_FOUND",
             "Webhook order was not found",
           );
-        if (target && order?.status === target) {
+        const captureAlreadySettled = target === "PAID" && order?.payment &&
+          ["CAPTURED", "PARTIALLY_REFUNDED", "REFUNDED"].includes(order.payment.status || "");
+        if ((!persistence && captureAlreadySettled) || (target !== "PAID" && order?.status === target)) {
+          // Record the signed receipt without moving an already fulfilled or
+          // refunded order backwards, or consuming its inventory a second time.
+          await persistence?.processWebhook({
+            provider, eventId,
+            payloadHash: crypto.createHash("sha256").update(raw).digest("hex"),
+            safePayload: { type: eventType, orderId: orderId || undefined },
+          });
           store.webhookIds.add(`${provider}:${eventId}`);
           return ok(res, { duplicate: true }, "Already processed");
         }
-        if (target && order) assertOrderTransition(order.status, target);
+        if (target && order && order.status !== target && !captureAlreadySettled) assertOrderTransition(order.status, target);
         const persisted = await persistence?.processWebhook({
           provider,
           eventId,
@@ -721,6 +741,7 @@ export async function createApp(overrides?: {
             : undefined,
           paymentAmount:
             Number(payload.payload?.payment?.entity?.amount || 0) / 100,
+          paymentCurrency: String(payload.payload?.payment?.entity?.currency || "").toUpperCase(),
           paymentErrorCode:
             String(payload.payload?.payment?.entity?.error_code || "") ||
             undefined,
@@ -1635,7 +1656,8 @@ export async function createApp(overrides?: {
     }
     return ok(res, { deleted: true }, "Address removed");
   });
-  app.get("/api/v1/products", (req, res) => {
+  app.get("/api/v1/products", async (req, res) => {
+    await refreshCatalog();
     const q = String(req.query.q || "").toLowerCase(),
       category = String(req.query.category || "");
     const data = store
@@ -1652,11 +1674,12 @@ export async function createApp(overrides?: {
       .map(storefrontProductDto);
     return ok(res, data);
   });
-  app.get("/api/v1/search/suggestions", (req, res) => {
+  app.get("/api/v1/search/suggestions", async (req, res) => {
     const query = String(req.query.q || "").trim().toLowerCase();
     if (query.length > 80)
       throw new AppError(400, "INVALID_SEARCH", "Search must be 80 characters or fewer");
     if (query.length < 2) return ok(res, []);
+    await refreshCatalog();
 
     const data = store
       .listProducts()
@@ -1699,7 +1722,8 @@ export async function createApp(overrides?: {
       });
     return ok(res, data);
   });
-  app.get("/api/v1/products/:id", (req, res) => {
+  app.get("/api/v1/products/:id", async (req, res) => {
+    await refreshCatalog();
     const key = String(req.params.id);
     const product = store.products.get(key) || store.listProducts().find((candidate) => candidate.slug === key);
     if (!product || product.status !== "ACTIVE")
@@ -2159,11 +2183,16 @@ export async function createApp(overrides?: {
     res.setHeader("x-cart-token", token);
     return `guest:${token}`;
   };
+  app.use(["/api/v1/combos", "/api/v1/cart/combos"], async (_req, _res, next) => {
+    await refreshCatalog();
+    next();
+  });
   registerComboRoutes({ app, store, persistence, auth, optionalAuth, authorize, hostname: requestHostname, cartKey });
   app.get(
     "/api/v1/cart",
     optionalAuth,
     async (req, res) => {
+      await refreshCatalog();
       const key = cartKey(req, res);
       if (persistence) store.carts.set(key, new Map((await persistence.readCartItems(key)).map(item => [item.variantId, item.quantity])));
       const items = store.carts.get(key) || new Map<string, number>();
@@ -2195,6 +2224,7 @@ export async function createApp(overrides?: {
         latest.delete(req.body.variantId); store.carts.set(key, latest);
         return ok(res, { variantId: req.body.variantId, quantity: 0 }, "Cart updated");
       }
+      await refreshCatalog();
       const { product, variant } = store.getVariant(req.body.variantId);
       if (
         req.body.quantity > 0 &&
@@ -2326,6 +2356,7 @@ export async function createApp(overrides?: {
     },
     deliverySettings: StorefrontConfig,
   ) => {
+    await refreshCatalog();
     const isCod = input.paymentProvider.toLowerCase() === "cod";
     if (isCod && !deliverySettings.codEnabled)
       throw new AppError(409, "COD_DISABLED", "Cash on delivery is currently unavailable. Choose an available online payment method.");
@@ -2503,6 +2534,7 @@ export async function createApp(overrides?: {
     validate(checkoutSchema),
     async (req, res, next) => {
       let reserved = false,
+        catalogueReservationStarted = false,
         accepted = false,
         createdOrderId: string | undefined;
       try {
@@ -2584,6 +2616,11 @@ export async function createApp(overrides?: {
           billing: req.body.billingAddress || { ...req.body.shippingAddress, postalCode: req.body.postalCode },
           lines: lines.map(line => ({ variantId: line.variantId, pack: line.pack, hsnCode: line.hsnCode, taxRate: line.taxRate })),
         };
+        // Protect pending local reservations from catalogue snapshot replacement
+        // until the durable transaction accepts them or rollback restores them.
+        pendingCatalogueReservations++;
+        catalogueReservationVersion++;
+        catalogueReservationStarted = true;
         store.reserveMany(req.body.lines);
         reserved = true;
         const isCod = req.body.paymentProvider.toLowerCase() === "cod";
@@ -2761,6 +2798,11 @@ export async function createApp(overrides?: {
           if (createdOrderId) store.orders.delete(createdOrderId);
         }
         next(e);
+      } finally {
+        if (catalogueReservationStarted) {
+          pendingCatalogueReservations--;
+          catalogueReservationVersion++;
+        }
       }
     },
   );
@@ -3084,11 +3126,14 @@ export async function createApp(overrides?: {
     return ok(res, payments);
   });
   app.get("/api/v1/orders/:id/invoice", auth, async (req, res) => {
-    const order = store.orders.get(String(req.params.id));
+    const orderId = String(req.params.id);
+    if (persistence) await persistence.refreshOrder(store, orderId);
+    const order = store.orders.get(orderId);
     if (
       !order ||
       (order.userId !== req.principal!.sub &&
-        !req.principal!.permissions.includes("orders:read"))
+        !req.principal!.permissions.includes("orders:read") &&
+        !req.principal!.permissions.includes("*"))
     )
       throw new AppError(404, "ORDER_NOT_FOUND", "Order not found");
     const storefront = await readStorefront(requestHostname(req));
@@ -4862,5 +4907,5 @@ export async function createApp(overrides?: {
   );
   app.use(notFound);
   app.use(errorHandler);
-  return { app, store, config, persistence, readStorefront };
+  return { app, store, config, persistence, readStorefront, refreshCatalog };
 }

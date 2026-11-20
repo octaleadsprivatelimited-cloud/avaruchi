@@ -3,7 +3,7 @@ import type { StoreProduct } from "./store-products";
 // Hostinger runs the public API and SSR in one process. Read the public DTOs
 // directly: a request to the externally reachable app need not have loopback HTTP.
 const readerKey = Symbol.for("avaruchi.publicCatalogReader");
-type CatalogReader = () => StoreProduct[];
+type CatalogReader = () => StoreProduct[] | Promise<StoreProduct[]>;
 const inProcessReader = () => (globalThis as unknown as Record<symbol, CatalogReader | undefined>)[readerKey];
 const apiOrigin = () => `http://127.0.0.1:${process.env.COMMERCE_API_PORT || process.env.PORT || "4010"}`;
 
@@ -20,7 +20,7 @@ export async function readPublicCatalog(): Promise<StoreProduct[]> {
 export async function readPublicProduct(id: string): Promise<StoreProduct | null> {
   const reader = inProcessReader();
   if (reader) {
-    const products = reader();
+    const products = await reader();
     return products.find((product) => product.id === id) || products.find((product) => product.slug === id) || null;
   }
   const response = await fetch(`${apiOrigin()}/api/v1/products/${encodeURIComponent(id)}`, { signal: AbortSignal.timeout(10000) });

@@ -28,6 +28,10 @@ let ready = false;
 let markReady;
 const initialized = new Promise(resolve => { markReady = resolve; });
 const privatePath = /^\/(admin|account|cart|checkout|login|track|transaction|api|webhooks)(\/|$)/;
+const catalogueUnavailable = res => {
+  res.writeHead(503, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store', 'Retry-After': '1' });
+  res.end('The store is temporarily unavailable. Please refresh and try again.');
+};
 const server = createServer(async (req, res) => {
   for (const [name, value] of Object.entries(baseSecurityHeaders(process.env.NODE_ENV === 'production'))) res.setHeader(name, value);
   const canonical = canonicalWwwRedirect({ origin, authority: req.headers.host, url: req.url });
@@ -62,19 +66,18 @@ const server = createServer(async (req, res) => {
     res.end(buildRobots(origin));
     return;
   }
-  if (/^\/sitemap(?:-\d+)?\.xml$/.test(path)) {
-    const sitemap = buildSitemap(store.products.values(), origin, path);
+  const isSitemap = /^\/sitemap(?:-\d+)?\.xml$/.test(path);
+  if (isSitemap || path === '/merchant-feed.xml') {
+    let xml;
+    try {
+      await refreshCatalog();
+      xml = isSitemap ? buildSitemap(store.products.values(), origin, path) : buildMerchantFeed(store.products.values(), origin).xml;
+    } catch { return catalogueUnavailable(res); }
+    if (!xml) { res.writeHead(404, { 'Cache-Control': 'no-store' }); res.end('Sitemap not found'); return; }
     res.setHeader('Content-Type', 'application/xml; charset=utf-8');
     res.setHeader('Cache-Control', 'public, max-age=300');
-    if (!sitemap) { res.statusCode = 404; res.end('Sitemap not found'); return; }
-    res.end(sitemap);
-    return;
-  }
-  if (path === '/merchant-feed.xml') {
-    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
-    res.setHeader('Cache-Control', 'public, max-age=300');
-    res.setHeader('X-Robots-Tag', 'noindex');
-    res.end(buildMerchantFeed(store.products.values(), origin).xml);
+    if (!isSitemap) res.setHeader('X-Robots-Tag', 'noindex');
+    res.end(req.method === 'HEAD' ? undefined : xml);
     return;
   }
   if (privatePath.test(path)) {
@@ -83,22 +86,24 @@ const server = createServer(async (req, res) => {
   }
   if (/^\/(api|webhooks|uploads)(\/|$)/.test(path) || ['/health', '/ready'].includes(path)) app(req, res);
   else if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405, { Allow: 'GET, HEAD' }); res.end('Method not allowed'); }
-  else serveStatic(req, res, async () => serveStorefront(req, res, {
-    origin,
-    storefront: await readStorefront(new URL(origin).hostname),
-    products: store.listProducts().filter(product => product.status === 'ACTIVE').map(storefrontProductDto),
-  }));
+  else serveStatic(req, res, () => {
+    Promise.all([readStorefront(new URL(origin).hostname), readProducts()])
+      .then(([storefront, products]) => serveStorefront(req, res, { origin, storefront, products }))
+      .catch(() => catalogueUnavailable(res));
+  });
 });
 // Hostinger expects listen() within three seconds. Bind before migrations, but
 // keep every route unavailable until persistent storage and the app are ready.
 const port = Number(process.env.PORT || '4010');
 server.listen(port, '0.0.0.0', () => console.log(`Storefront and API listening on port ${port}; initializing database.`));
 await prepareHostingerDatabase();
-const { app, config, store, persistence, readStorefront } = await createApp();
+const { app, config, store, persistence, readStorefront, refreshCatalog } = await createApp();
+const readProducts = async () => {
+  await refreshCatalog();
+  return store.listProducts().filter(product => product.status === 'ACTIVE').map(storefrontProductDto);
+};
 globalThis[Symbol.for('avaruchi.publicStorefrontReader')] = readStorefront;
-globalThis[Symbol.for('avaruchi.publicCatalogReader')] = () => store.listProducts()
-  .filter(product => product.status === 'ACTIVE')
-  .map(storefrontProductDto);
+globalThis[Symbol.for('avaruchi.publicCatalogReader')] = readProducts;
 const stopNotifications = persistence && config.NODE_ENV === 'production'
   ? startNotificationWorker({ db: persistence.db, config }) : async () => {};
 ready = true;

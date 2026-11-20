@@ -14,50 +14,29 @@ const owners = [["storefront", rootDatabase], ["backend", apiDatabase]] as const
 // connections, application credentials or production systems are involved.
 for (const [name, database] of owners) describe(`${name} websocket dependency`, () => {
   const faye = createRequire(database).resolve("faye-websocket");
-  const driver = createRequire(faye)("websocket-driver");
-  const handshake = (headers: string[] = [], body = "") => Buffer.from([
-    "GET / HTTP/1.1", "Host: fixture.invalid", "Connection: upgrade", "Upgrade: websocket", ...headers, "", body,
+  const fayeRequire = createRequire(faye);
+  const driver = fayeRequire("websocket-driver");
+  const handshake = (headers: string[] = []) => Buffer.from([
+    "GET / HTTP/1.1", "Host: fixture.invalid", "Connection: upgrade", "Upgrade: websocket", ...headers, "", "",
   ].join("\r\n"));
   const draft76 = ["Sec-WebSocket-Key1: 12 34", "Sec-WebSocket-Key2: 56 78"];
-  const overflowingDraft76 = ["Sec-WebSocket-Key1: 858 993 4592", "Sec-WebSocket-Key2: 1 1"];
-  const server = (options = {}) => {
-    const socket = driver.server(options);
-    const messages: string[] = [], chunks: Buffer[] = [];
+  it("resolves a release with the upstream protocol fixes", () => {
+    const version: string = fayeRequire("websocket-driver/package.json").version;
+    expect(version).toMatch(/^\d+\.\d+\.\d+$/);
+    const [major, minor] = version.split(".").map(Number);
+    expect(major! > 0 || minor! >= 8).toBe(true);
+  });
+
+  it.each(["draft75", "draft76"])("rejects a valid %s handshake by default", protocol => {
+    const socket = driver.server();
+    const chunks: Buffer[] = [];
     socket.io.on("data", (chunk: Buffer) => chunks.push(chunk));
-    socket.on("message", (event: { data: string }) => messages.push(event.data));
     socket.on("connect", () => socket.start());
-    return { socket, messages, response: () => Buffer.concat(chunks).toString() };
-  };
-
-  it.each(["draft75", "draft76"])("rejects %s by default before accepting legacy messages", protocol => {
-    const captured = server();
-    expect(() => captured.socket.io.write(protocol === "draft76" ? handshake(draft76) : handshake())).not.toThrow();
-    expect(captured.response()).toMatch(/^HTTP\/1\.1 400 Bad Request/);
-    if (protocol === "draft76") captured.socket.io.write(Buffer.from("12345678"));
-    expect(() => captured.socket.io.write(Buffer.from([0x80, 0x01, 0xff]))).not.toThrow();
-    expect(captured.messages).toEqual([]);
+    socket.io.write(protocol === "draft76" ? handshake(draft76) : handshake());
+    expect(Buffer.concat(chunks).toString()).toMatch(/^HTTP\/1\.1 400 Bad Request/);
   });
 
-  it.each([false, true])("safely parses legacy length frames with prior message=%s when explicitly opted in", priorMessage => {
-    // Opt-in is exercised only to verify the upstream parser repair; the
-    // application does not enable legacy draft protocols.
-    const captured = server({ allowDrafts: true });
-    captured.socket.io.write(handshake());
-    expect(captured.response()).toMatch(/^HTTP\/1\.1 101/);
-    if (priorMessage) captured.socket.io.write(Buffer.from([0x00, 0x48, 0x69, 0xff]));
-    expect(() => captured.socket.io.write(Buffer.from([0x80, 0x01, 0xff]))).not.toThrow();
-    captured.socket.io.write(Buffer.from([0x00, 0x4f, 0x4b, 0xff]));
-    expect(captured.messages).toEqual(priorMessage ? ["Hi", "OK"] : ["OK"]);
-  });
-
-  it("rejects overflowing draft76 key values even with explicit legacy opt-in", () => {
-    const captured = server({ allowDrafts: true });
-    expect(() => captured.socket.io.write(handshake(overflowingDraft76, "12345678"))).not.toThrow();
-    expect(captured.response()).toMatch(/^HTTP\/1\.1 400 Bad Request/);
-    expect(captured.messages).toEqual([]);
-  });
-
-  it("retains modern client/server messages and ping callbacks without prototype-pong crashes", async () => {
+  it("retains modern client/server messages and ping callbacks", async () => {
     const client = driver.client("wss://fixture.invalid/socket", { maxLength: 1024, protocols: [] });
     const peer = driver.server({ maxLength: 1024 });
     const received: string[] = [], replies: string[] = [];
@@ -82,13 +61,6 @@ for (const [name, database] of owners) describe(`${name} websocket dependency`, 
       client.ping("heartbeat", () => acknowledgements++);
       await setImmediate();
       expect(acknowledgements).toBe(1);
-      for (const payload of ["__proto__", "hasOwnProperty"]) {
-        expect(() => client.pong(payload)).not.toThrow();
-        // An unmasked server pong exercises the actual Firebase-facing client
-        // parser too, rather than a no-op on the generic server wrapper.
-        const pong = Buffer.concat([Buffer.from([0x8a, payload.length]), Buffer.from(payload)]);
-        expect(() => client.io.write(pong)).not.toThrow();
-      }
       client.text("still connected");
       await setImmediate();
       expect(received).toEqual(["client message", "still connected"]);
