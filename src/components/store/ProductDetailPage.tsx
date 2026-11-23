@@ -21,6 +21,7 @@ import { useStoreProducts } from "@/lib/store-products";
 import { useStorefrontConfig } from "@/lib/storefront-config";
 import { deliveryAnnouncement, deliveryEstimate } from "@/lib/delivery-policy";
 import { StorePage } from "./StoreHeader";
+import { CatalogImage } from "./CatalogImage";
 import { toast, Toaster } from "sonner";
 import { useParams, useSearchParams } from "react-router";
 import { useInitialCatalog } from "@/lib/store-data";
@@ -166,7 +167,13 @@ export function ProductDetailPage() {
         <section className="product-detail">
           <div className="product-gallery" aria-label="Product photos">
             <div className="detail-art main">
-              {activeImage ? <img src={activeImage.url} alt={activeImage.alt} fetchPriority="high" /> : product.glyph}
+              <CatalogImage
+                src={activeImage?.url}
+                alt={activeImage?.alt || product.name}
+                loading="eager"
+                fetchPriority="high"
+                showPlaceholderLabel
+              />
             </div>
             {/ai.generated|illustration|mockup/i.test(primaryAlt || "") && <p className="product-image-disclosure">AI-generated product illustration. Actual packaging and appearance may vary.</p>}
             {galleryImages.length > 1 && <div className="product-thumbnails" aria-label="Choose a product photo">
@@ -177,7 +184,7 @@ export function ProductDetailPage() {
                 aria-pressed={activeImage?.url === image.url}
                 onClick={() => setGallerySelection({ key: galleryKey, url: image.url })}
               >
-                <img src={image.url} alt={image.alt} loading="lazy" />
+                <CatalogImage src={image.url} alt={image.alt} />
               </button>)}
             </div>}
           </div>

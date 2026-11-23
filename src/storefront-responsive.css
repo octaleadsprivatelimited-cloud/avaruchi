@@ -235,3 +235,175 @@
   .avaruchi-ui.reference-store .site-header .brand-logo { width: 34px; height: 34px; }
   .avaruchi-ui.reference-store .site-header .brand-name { font-size: 21px; letter-spacing: -1px; }
 }
+
+.avaruchi-ui .story-page-intro {
+  padding-bottom: clamp(24px, 4vw, 48px);
+}
+.avaruchi-ui .story-page-intro h1 em {
+  display: block;
+}
+.avaruchi-ui .story-wide-photo {
+  margin: 0;
+}
+.avaruchi-ui .story-wide-photo img {
+  aspect-ratio: 16 / 9;
+  max-height: 620px;
+  object-position: center;
+}
+.avaruchi-ui .story-chapters article {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.7fr);
+  align-items: start;
+  gap: clamp(26px, 5vw, 64px);
+  padding-block: clamp(32px, 5vw, 64px);
+}
+.avaruchi-ui .story-chapters article > * {
+  min-width: 0;
+}
+.avaruchi-ui .story-chapters article > header .eyebrow {
+  display: block;
+  margin-bottom: 10px;
+}
+.avaruchi-ui .story-chapters h2 {
+  font-size: clamp(26px, 3vw, 38px);
+  line-height: 1.2;
+  text-wrap: balance;
+}
+.avaruchi-ui .story-chapters article > div {
+  max-width: 66ch;
+}
+.avaruchi-ui .story-chapters .link-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 10px;
+}
+
+@media (min-width: 701px) and (max-width: 800px) {
+  .avaruchi-ui.reference-store .site-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: 65px 45px;
+    gap: 0 12px;
+    height: auto;
+  }
+  .avaruchi-ui.reference-store .site-header .reference-brand {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .avaruchi-ui.reference-store .site-header nav {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-content: center;
+    margin: 0;
+    border-top: 1px solid var(--rule);
+  }
+  .avaruchi-ui.reference-store .header-actions {
+    grid-column: 2;
+    grid-row: 1;
+    padding: 0;
+    border: 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .avaruchi-ui .story-page {
+    padding-block: 34px 52px;
+  }
+  .avaruchi-ui .story-page-intro h1 {
+    margin-block: 14px;
+    font-size: clamp(30px, 7.8vw, 45px);
+    text-wrap: balance;
+  }
+  .avaruchi-ui .story-page-intro .lead {
+    font-size: 16px;
+  }
+  .avaruchi-ui .story-business-line {
+    margin-top: 14px;
+    line-height: 1.55;
+  }
+  .avaruchi-ui .story-wide-photo img {
+    aspect-ratio: 4 / 3;
+  }
+  .avaruchi-ui .story-wide-photo figcaption {
+    line-height: 1.5;
+  }
+  .avaruchi-ui .story-chapters article {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+  .avaruchi-ui .subcategory-row button {
+    min-height: 44px;
+    max-width: 100%;
+  }
+  .avaruchi-ui .product-page-refined .option-picker button,
+  .avaruchi-ui .combo-card-bottom .button {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+  .avaruchi-ui .combo-components li > span,
+  .avaruchi-ui .combo-offer-code,
+  .avaruchi-ui .tracking-result h2 {
+    overflow-wrap: anywhere;
+  }
+  .avaruchi-ui .information-page {
+    width: 100%;
+    padding: 34px 18px 52px;
+  }
+  .avaruchi-ui .information-page > header {
+    padding-bottom: 22px;
+  }
+  .avaruchi-ui .information-page h1 {
+    font-size: clamp(30px, 7vw, 38px);
+    line-height: 1.16;
+  }
+  .avaruchi-ui .information-nav {
+    gap: 4px 16px;
+    padding-top: 14px;
+  }
+  .avaruchi-ui .information-nav a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .avaruchi-ui .track-page > section:first-child form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .avaruchi-ui .track-page form button {
+    justify-content: center;
+  }
+  .avaruchi-ui .transaction-state a,
+  .avaruchi-ui .transaction-state button {
+    max-width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .avaruchi-ui .cart-page-lines article {
+    grid-template-columns: 64px minmax(0, 1fr) minmax(0, max-content);
+    grid-template-areas: "photo item item" "quantity quantity total";
+    align-items: start;
+  }
+  .avaruchi-ui .cart-page-lines .line-art {
+    grid-area: photo;
+    width: 100%;
+  }
+  .avaruchi-ui .cart-page-lines article > div:nth-child(2) {
+    grid-area: item;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .avaruchi-ui .cart-page-lines .line-qty {
+    grid-area: quantity;
+  }
+  .avaruchi-ui .cart-page-lines article > strong {
+    grid-area: total;
+    align-self: center;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+  .avaruchi-ui .information-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

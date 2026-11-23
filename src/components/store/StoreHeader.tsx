@@ -15,6 +15,7 @@ import {
   ReferenceModal,
 } from "./ReferencePrimitives";
 import { AccountLink } from "./AccountLink";
+import { FloatingWhatsApp } from "./FloatingWhatsApp";
 import { useInitialCatalog } from "@/lib/store-data";
 import { useStoreProducts } from "@/lib/store-products";
 import { catalogCategoryTree } from "@/lib/catalog-categories";
@@ -396,7 +397,6 @@ export function StoreFooter() {
             Octaleads
           </a>
         </span>
-        <Link to="/track">Track your order</Link>
       </div>
     </footer>
   );
@@ -410,6 +410,7 @@ export function StorePage({ children }: { children: ReactNode }) {
           <StoreHeader />
           {children}
           <StoreFooter />
+          <FloatingWhatsApp />
           <Toaster position="bottom-center" richColors />
         </div>
       </StoreCommerceProvider>

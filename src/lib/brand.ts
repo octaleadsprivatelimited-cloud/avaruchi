@@ -9,4 +9,7 @@ export const BRAND = {
   logo: "/brand/avaruchi-logo.webp",
   logoSmall: "/brand/avaruchi-logo-small.webp",
   logoIcon: "/brand/avaruchi-logo-icon.png",
+  heroTitle: "A little jar of home.",
+  heroImage: "/images/aavaruchi-hero.webp",
+  heroImageAlt: "A jar labelled aavaruchi beside a dish of mango pickle",
 } as const;

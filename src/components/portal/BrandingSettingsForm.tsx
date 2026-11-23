@@ -1,6 +1,8 @@
 import { ImagePlus, Save, Trash2 } from "lucide-react";
 import { Link } from "@/lib/navigation";
+import { BRAND } from "@/lib/brand";
 import type { StorefrontConfig } from "@/lib/storefront-config";
+import { whatsappChatHref } from "../../../commerce-api/src/whatsapp-link";
 
 export const brandingFields = { logo: "logoUrl", footer: "footerLogoUrl", favicon: "faviconUrl", hero: "heroImageUrl" } as const;
 export type BrandingKind = keyof typeof brandingFields;
@@ -11,8 +13,9 @@ type Props = {
 };
 export function BrandingSettingsForm({ form, error, saving, onChange, onSave, onUpload }: Props) {
   const text = (key: keyof StorefrontConfig, value: string) => onChange({ [key]: value });
+  const invalidWhatsAppUrl = Boolean(form.whatsappUrl?.trim() && !whatsappChatHref(form.whatsappUrl));
   return <div>
-    <div className="editor-top"><div><p className="portal-eyebrow">Store settings</p><h2>Identity, logos &amp; website controls</h2><span>Manage the branding customers see across your website.</span></div><button className="primary" onClick={onSave} disabled={saving}><Save />{saving ? "Saving…" : "Publish settings"}</button></div>
+    <div className="editor-top"><div><p className="portal-eyebrow">Store settings</p><h2>Identity, logos &amp; website controls</h2><span>Manage the branding customers see across your website.</span></div><button className="primary" onClick={onSave} disabled={saving || invalidWhatsAppUrl}><Save />{saving ? "Saving…" : "Publish settings"}</button></div>
     {error && <p className="settings-error" role="alert">{error}</p>}
     <fieldset className="branding-settings-fields" disabled={saving}>
       <div className="editor-layout"><div>
@@ -41,8 +44,8 @@ export function BrandingSettingsForm({ form, error, saving, onChange, onSave, on
         </section>
         <section className="panel form-panel" id="homepage-hero"><div className="panel-head"><div><h2>Homepage hero image</h2><p>Change the main banner without editing code or redeploying.</p></div></div>
           <div className="branding-asset hero-image-settings">
-            <div className="branding-asset-preview hero-image-preview"><img src={form.heroImageUrl || "/images/hero.png"} alt={form.heroImageAlt || "Homepage hero preview"} /></div>
-            <p>Use a wide image, ideally 2400 × 900 px. It fills the first carousel slide on desktop and mobile; keep the subject near the centre. Your banner text and shop link stay visible.</p>
+            <div className="branding-asset-preview hero-image-preview"><img src={form.heroImageUrl || BRAND.heroImage} alt={form.heroImageAlt || "Homepage hero preview"} /></div>
+            <p>Use a landscape image with the subject near the centre so it fits the banner on desktop and mobile.</p>
             <label className="branding-upload"><ImagePlus />Upload hero image<input type="file" accept="image/png,image/jpeg,image/webp,image/avif,image/heic,image/heif" onChange={event => {
               const file = event.target.files?.[0]; event.target.value = "";
               if (file) void onUpload("hero", file);
@@ -59,6 +62,9 @@ export function BrandingSettingsForm({ form, error, saving, onChange, onSave, on
         </section>
         <section className="panel form-panel"><div className="panel-head"><div><h2>Contact &amp; messaging</h2><p>Support channels and storefront copy</p></div></div>
           <div className="form-row"><label>Support email<input type="email" value={form.supportEmail} onChange={e => text("supportEmail", e.target.value)} /></label><label>Support phone<input value={form.supportPhone} onChange={e => text("supportPhone", e.target.value)} /></label></div>
+          <label>Public WhatsApp chat link<input type="url" value={form.whatsappUrl || ""} maxLength={512} placeholder="https://wa.me/…" autoComplete="off" aria-describedby="whatsapp-chat-help" aria-invalid={invalidWhatsAppUrl || undefined} onChange={e => text("whatsappUrl", e.target.value)} />
+            <small id="whatsapp-chat-help">{invalidWhatsAppUrl ? "Enter a valid https://wa.me/ link." : "Paste your WhatsApp Business short link or a direct chat link. Leave this blank to hide the button."}</small>
+          </label>
           <label>Footer tagline<textarea value={form.footerTagline} onChange={e => text("footerTagline", e.target.value)} /></label>
         </section>
         <section className="panel form-panel"><div className="panel-head"><div><h2>Search &amp; domain</h2><p>SEO defaults for this storefront</p></div></div>

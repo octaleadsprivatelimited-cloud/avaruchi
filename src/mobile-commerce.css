@@ -1856,22 +1856,38 @@
   }
 }
 @media (max-width: 550px) {
+  .checkout-shell > header {
+    gap: 12px;
+  }
+  .checkout-shell > header .brand {
+    min-width: 0;
+    gap: 8px;
+  }
+  .checkout-shell > header > span {
+    flex-shrink: 0;
+  }
   .checkout-form .two-fields,
   .checkout-form .three-fields {
     grid-template-columns: minmax(0, 1fr);
   }
+  .checkout-steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
   .checkout-steps button {
     min-width: 0;
     min-height: 44px;
-    gap: 6px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    padding-block: 5px;
     font-size: 11px;
   }
   .checkout-steps button span {
     display: inline;
   }
   .checkout-steps button:not(:last-child)::after {
-    min-width: 0;
-    margin-left: 4px;
+    content: none;
   }
   .checkout-steps i {
     flex: 0 0 26px;

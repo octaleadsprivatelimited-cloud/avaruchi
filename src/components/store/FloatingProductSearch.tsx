@@ -4,6 +4,7 @@ import { ArrowRight, Search, X } from "lucide-react";
 import { commerceApi, type ApiSearchSuggestion } from "@/lib/commerce-api";
 import { priceIncludingTax } from "@/lib/catalog-price";
 import { money } from "@/data/commerce";
+import { CatalogImage } from "./CatalogImage";
 
 export function FloatingProductSearch({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [query, setQuery] = useState("");
@@ -86,7 +87,7 @@ export function FloatingProductSearch({ open, onClose }: { open: boolean; onClos
           {!loading && suggestions.map((suggestion) => (
             <a key={suggestion.id} href={productPath(suggestion)} onClick={onClose}>
               <span className="search-result-thumb">
-                {suggestion.image ? <img src={suggestion.image} alt="" /> : <Search aria-hidden="true" />}
+                <CatalogImage src={suggestion.image} />
               </span>
               <span><strong>{suggestion.name}</strong><small>{suggestion.category}</small></span>
               <b>{money(priceIncludingTax(suggestion.price, suggestion.taxRate))}</b>

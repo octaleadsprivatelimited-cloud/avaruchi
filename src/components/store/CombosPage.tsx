@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ArrowRight, Package, RefreshCw, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import { StorePage } from "./StoreHeader";
+import { CatalogImage } from "./CatalogImage";
 import { Link, useNavigate } from "@/lib/navigation";
 import { commerceApi } from "@/lib/commerce-api";
 import { useCommerceCart } from "@/lib/commerce-cart";
@@ -40,7 +41,7 @@ export function CombosPage() {
     {loading ? <p role="status" className="combo-empty">Loading combo packages…</p> : error ? <div className="combo-empty" role="alert"><p>{error}</p><button type="button" className="button" onClick={() => void load()}><RefreshCw size={18} /> Try again</button></div> : !combos.length ? <div className="combo-empty"><Package size={38} /><h2>More flavours to choose from</h2><p>There are no published combo packages at the moment. You can choose individual products from the shop.</p><Link className="button" to="/shop">Shop products <ArrowRight size={18} /></Link></div> : <div className="combo-store-grid">{combos.map(combo => <article className="combo-store-card" key={combo.id}>
       <header><h2>{combo.name}</h2>{combo.description && <p>{combo.description}</p>}</header>
       <ul className="combo-components">{combo.components.map(item => <li key={item.variantId}>
-        {item.image && <Link to="/product/$id" params={{ id: item.slug }} aria-label={`View ${item.name}`}><img src={item.image} alt={item.imageAlt} loading="lazy" width={96} height={96} /></Link>}
+        <Link to="/product/$id" params={{ id: item.slug }} aria-label={`View ${item.name}`}><CatalogImage src={item.image} alt={item.imageAlt || item.name} width={96} height={96} /></Link>
         <span><Link to="/product/$id" params={{ id: item.slug }}>{item.name}</Link><small>{item.pack} × {item.quantity}</small><small>{money(item.unitPrice)} each</small></span>
       </li>)}</ul>
       {combo.couponOffer && <p className="combo-offer-code">Offer code <strong>{combo.couponOffer.code}</strong><small>Added for validation in your bag. Minimum spend, product eligibility and customer usage limits apply.</small></p>}

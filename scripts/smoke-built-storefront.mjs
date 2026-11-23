@@ -55,12 +55,13 @@ try {
   }
   const home = await request('/');
   assert.ok(home.body.includes('reference-hero'), 'render the reference pickle hero');
-  assert.ok(home.body.includes('Amma’s Andhra Taste, Delivered to Your Door.'), 'render the approved homepage heading');
+  assert.ok(home.body.includes('A little jar of home.'), 'render the new homepage heading');
   for (const category of ['Pickles', 'Powders', 'Fryums']) assert.ok(home.body.includes(`Shop ${category}`), 'provide category shopping actions');
-  assert.ok(home.body.includes('/images/hero.png') && home.body.includes('/brand/avaruchi-logo-small.webp'), 'use the reference photography and brand artwork');
+  assert.ok(home.body.includes('/images/aavaruchi-hero.webp') && home.body.includes('/brand/avaruchi-logo-small.webp'), 'use the new branded photograph');
   assert.ok(home.body.includes('reference-story'), 'render the reference brand story');
   assert.ok(!home.body.includes('class="announcement"'), 'the top announcement bar is removed');
   assert.ok(home.body.includes('contact@aavaruchi.in') && !home.body.includes('tel:') && !home.body.includes('wa.me/'), 'public contact uses email without phone links');
+  assert.ok(!home.body.match(/<footer\b[\s\S]*?<\/footer>/)?.[0].includes('href="/track"'), 'order tracking is omitted from the footer');
   assert.ok((await request('/our-story')).body.includes('PRODUCT INFORMATION'), 'publish the supplied product information with the brand story');
   assert.ok(!(await request('/our-story')).body.includes('OUR STORY'), 'remove the old eyebrow without removing the story');
   assert.ok(home.body.includes('Our collection is coming together.'), 'an empty backend must stay empty in the new UI');
@@ -69,11 +70,16 @@ try {
   const customHero = await request('/');
   assert.ok(customHero.body.includes('src="/uploads/admin-hero.png"') && customHero.body.includes('alt="Pickles selected by the store administrator"'), 'SSR must render the published hero image and description');
   storefrontSettings = { ...storefrontSettings, heroImageUrl: '', heroImageAlt: '' };
-  assert.ok((await request('/')).body.includes('src="/images/hero.png"'), 'resetting the hero restores the bundled image');
+  assert.ok((await request('/')).body.includes('src="/images/aavaruchi-hero.webp"'), 'resetting the hero restores the bundled image');
   storefrontSettings = { ...storefrontSettings, deliveryCharge: 89, freeShippingThreshold: 799 };
   const updatedShop = await request('/shipping-returns');
   assert.ok(updatedShop.body.includes('₹89 delivery') && updatedShop.body.includes('₹799'), 'fresh SSR must read the replacement policy');
   assert.ok(!updatedShop.body.includes('₹62 delivery') && !updatedShop.body.includes('₹999'), 'old shipping prices must not remain in rendered markup');
+  assert.ok(updatedShop.body.includes('Customers pay the courier charges for international orders.'), 'explain international courier charges');
+  storefrontSettings = { ...storefrontSettings, whatsappUrl: 'https://wa.me/message/PREVIEW' };
+  assert.match((await request('/shop')).body, /class="store-whatsapp" href="https:\/\/wa\.me\/message\/PREVIEW"/);
+  assert.ok(!(await request('/checkout')).body.includes('class="store-whatsapp"'), 'keep the floating chat clear of checkout controls');
+  storefrontSettings = { ...storefrontSettings, whatsappUrl: '' };
   const missing = await request('/product/not-a-real-product');
   assert.equal(missing.status, 404);
   assert.ok(missing.body.includes('We couldn’t find this page.'));
@@ -121,7 +127,7 @@ try {
   catalog = [
     dietFixture('diet-mango', 'Diet fixture mango', 'Pickles > Avakaya'),
     dietFixture('diet-podi', 'Diet fixture podi', 'Powders > Karam podis'),
-    dietFixture('diet-chicken', 'Diet fixture chicken', 'Non-veg pickles > Chicken pickles'),
+    { ...dietFixture('diet-chicken', 'Diet fixture chicken', 'Non-veg pickles > Chicken pickles'), media: [] },
     dietFixture('diet-unknown', 'Diet fixture unknown', 'Other foods'),
   ];
   // Inspect rendered cards only: bootstrap data intentionally retains the full
@@ -132,6 +138,8 @@ try {
   assert.ok(!grid(veg).includes('Diet fixture chicken') && !grid(veg).includes('Diet fixture unknown'), 'Veg excludes non-veg and unclassified food');
   const nonVeg = await request('/shop?diet=non-veg');
   assert.ok(grid(nonVeg).includes('Diet fixture chicken') && !grid(nonVeg).includes('Diet fixture mango'), 'Non-Veg is separate on direct links');
+  assert.ok(grid(nonVeg).includes('/images/catalog-photo-placeholder.webp') && grid(nonVeg).includes('Photo coming soon'), 'show a labelled placeholder when a product has no photo');
+  assert.ok((await request('/product/diet-chicken')).body.includes('/images/catalog-photo-placeholder.webp'), 'use a placeholder on product detail too');
   const dietCategory = await request('/shop?diet=veg&category=Powders');
   assert.ok(grid(dietCategory).includes('Diet fixture podi') && !grid(dietCategory).includes('Diet fixture mango'), 'diet and category filters compose');
   const dietSearch = await request('/shop?diet=veg&q=chicken');

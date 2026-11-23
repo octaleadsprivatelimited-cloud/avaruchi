@@ -49,6 +49,7 @@ export function InformationPage({ kind }: { kind: InformationPageKind }) {
       sections: [
         ["Shipping policy", "At Aavaruchi, we believe homemade food should reach you with the same freshness, care, and love with which it is prepared. Every order is carefully packed to preserve its authentic taste and quality before it reaches your home."],
         ["Free delivery across India", <>{deliveryAnnouncement(store)} across India. All products are shipped from Hyderabad, Telangana. We generally take around 3 days to dispatch an order. Delivery typically takes {deliveryEstimate(store)}{store.deliveryEstimateBasis !== "ORDER" ? " after dispatch" : ""}. Timelines may vary with courier availability, destination and product freshness. Available services and the final total are shown before you place your order.</>],
+        ["International delivery", <>Customers pay the courier charges for international orders. Email {supportLink} before ordering to confirm delivery to your destination and get a courier quote.</>],
         ["Packed with care", "Each package that leaves our kitchen carries not just pickles and podis, but a piece of tradition, warmth, and the comforting flavours of home. We are based in Hyderabad, Telangana, India."],
         ["Cancellation, refund & exchange policy", "Every product is freshly prepared in small batches with great care, using authentic homemade methods and quality ingredients. Because these are food products, we do not offer cancellations, change-of-mind refunds or exchanges once an order has been confirmed and processed. Please review the products, pack sizes, quantities and delivery address carefully before confirming your purchase."],
         ["Important notes", "No cancellations are accepted once an order is confirmed. Food items are not eligible for change-of-mind refunds or exchanges. Sale items and gift cards are non-refundable and non-exchangeable for a change of mind. These restrictions do not remove remedies for a genuine product, fulfilment or payment problem, or your statutory consumer rights."],
@@ -69,13 +70,16 @@ export function InformationPage({ kind }: { kind: InformationPageKind }) {
     },
   } as const satisfies Record<InformationPageKind, PolicyPage>;
   const page = pages[kind];
+  const lastUpdated = kind === "shipping"
+    ? { date: "2026-11-23", label: "23 November 2026" }
+    : { date: "2026-10-16", label: "16 October 2026" };
   return (
     <StorePage>
       <main id="main" className="information-page">
         <header>
           <p className="eyebrow">{page.eyebrow}</p>
           <h1>{page.title}</h1>
-          <p>Last updated <time dateTime="2026-10-16">16 October 2026</time> · {businessName}</p>
+          <p>Last updated <time dateTime={lastUpdated.date}>{lastUpdated.label}</time> · {businessName}</p>
         </header>
         <nav className="information-nav" aria-label="Store policies">
           <Link to="/privacy" aria-current={kind === "privacy" ? "page" : undefined}>Privacy policy</Link>

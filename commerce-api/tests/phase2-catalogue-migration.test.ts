@@ -9,6 +9,7 @@ type MasterProduct = {
 };
 const master = JSON.parse(await readFile(new URL("../../docs/catalogue-phase2-master.json", import.meta.url), "utf8")) as { products: MasterProduct[] };
 const migration = await readFile(new URL("../prisma/migrations/20261118000000_phase2_catalogue/migration.sql", import.meta.url), "utf8");
+const archiveMinapa = await readFile(new URL("../prisma/migrations/20261123000000_archive_minapa_vadiyalu/migration.sql", import.meta.url), "utf8");
 
 it("records only the unambiguous owner-approved packs and does not infer missing offers", () => {
   expect(master.products).toHaveLength(52);
@@ -31,7 +32,7 @@ it("records only the unambiguous owner-approved packs and does not infer missing
   expect(master.products.filter(product => /pesara|green-chilli|minapa/.test(product.slug))).toEqual([]);
 });
 
-it.skipIf(process.env.RUN_DB_TESTS !== "1")("applies reviewed prices and missing products without changing existing inventory, images, tax or identity", async () => {
+it.skipIf(process.env.RUN_DB_TESTS !== "1")("applies reviewed prices and catalogue retirements without changing existing inventory, images, tax or identity", async () => {
   const persistence = new PrismaPersistence();
   const fixture = crypto.randomUUID();
   const rollback = new Error("ROLL_BACK_PHASE2_FIXTURE");
@@ -74,7 +75,7 @@ it.skipIf(process.env.RUN_DB_TESTS !== "1")("applies reviewed prices and missing
       }, include: { variants: true } });
       const minapa = await tx.product.create({ data: {
         name: "Minapa Vadiyalu", slug: slug("minapa-vadiyalu"), description: "Preserve confirmed stock", categoryId, status: "ACTIVE", taxRate: 0,
-        variants: { create: { sku: slug("MINAPA-1000"), title: "1 kg", weightGrams: 1000, price: 1200, mrp: 1200, attributes: {}, inventory: { create: { onHand: 100 } } } },
+        variants: { create: { sku: slug("MINAPA-1000"), title: "1 kg", weightGrams: 1000, price: 1200, mrp: 1200, attributes: {}, inventory: { create: { onHand: 100, reserved: 2, version: 4 } } } },
       }, include: { variants: true } });
       // An unlisted pack on an approved product is not repriced or retired.
       const mango = await tx.product.findUniqueOrThrow({ where: { slug: slug("classic-mango-pickle") } });
@@ -111,8 +112,14 @@ it.skipIf(process.env.RUN_DB_TESTS !== "1")("applies reviewed prices and missing
       expect(await tx.productVariant.findUniqueOrThrow({ where: { id: unlisted.id } })).toMatchObject({ active: true, title: "250 g" });
       expect(Number((await tx.productVariant.findUniqueOrThrow({ where: { id: unlisted.id } })).price)).toBe(234);
       const kept = await tx.product.findUniqueOrThrow({ where: { id: minapa.id }, include });
+      expect(kept.status).toBe("ACTIVE");
       expect(Number(kept.variants[0]?.price)).toBe(1200);
-      expect(kept.variants[0]?.inventory?.onHand).toBe(100);
+      expect(kept.variants[0]?.inventory).toMatchObject({ onHand: 100, reserved: 2, version: 4 });
+      const scopedArchive = archiveMinapa.replace("'minapa-vadiyalu'", `'${slug("minapa-vadiyalu")}'`);
+      expect(await tx.$executeRawUnsafe(scopedArchive)).toBe(1);
+      const retired = await tx.product.findUniqueOrThrow({ where: { id: minapa.id }, include });
+      expect(retired).toMatchObject({ status: "ARCHIVED", deletedAt: null, variants: kept.variants });
+      expect(await tx.$executeRawUnsafe(scopedArchive)).toBe(0);
       // Insertion statements tolerate recovery/replay without duplicating rows.
       // Prisma records the entire migration once; update statements do not run
       // again on later deploys and are deliberately not a recurring price sync.

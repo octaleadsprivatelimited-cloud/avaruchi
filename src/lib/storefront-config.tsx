@@ -10,6 +10,7 @@ export type StorefrontConfig = {
   analyticsPromptEnabled: boolean; assetCleanupPending?: boolean;
   primaryColor: string; accentColor: string; backgroundColor: string;
   currency: string; locale: string; supportEmail: string; supportPhone: string;
+  whatsappUrl: string;
   freeShippingThreshold: number; announcement: string; footerTagline: string;
   manualDeliveryEnabled: boolean; deliveryCharge: number; deliveryMinDays: number; deliveryMaxDays: number; deliveryEstimateBasis: "ORDER" | "DISPATCH"; settingsLoaded?: boolean;
   codEnabled: boolean; onlinePaymentDiscountEnabled: boolean; onlinePaymentDiscountType: "PERCENTAGE" | "FIXED_AMOUNT"; onlinePaymentDiscountValue: number;
@@ -20,7 +21,7 @@ export const defaultStorefrontConfig: StorefrontConfig = {
   logoUrl: "/favicon.svg", footerLogoUrl: "", faviconUrl: "/favicon.svg", fssaiLicense: "",
   heroImageUrl: "", heroImageAlt: "",
   analyticsPromptEnabled: false, primaryColor: "#173f2b", accentColor: "#dc6b32", backgroundColor: "#fbf7ec",
-  currency: "INR", locale: "en-IN", supportEmail: BRAND.email, supportPhone: "",
+  currency: "INR", locale: "en-IN", supportEmail: BRAND.email, supportPhone: "", whatsappUrl: "",
   freeShippingThreshold: 0, manualDeliveryEnabled: false, deliveryCharge: 0, deliveryMinDays: 4, deliveryMaxDays: 5, deliveryEstimateBasis: "ORDER", announcement: "",
   codEnabled: true, onlinePaymentDiscountEnabled: false, onlinePaymentDiscountType: "PERCENTAGE", onlinePaymentDiscountValue: 0,
   footerTagline: "Amma’s Andhra taste, delivered to your door.",

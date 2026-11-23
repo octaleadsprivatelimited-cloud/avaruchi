@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@/lib/navigation";
+import { Link } from "@/lib/navigation";
 import { BRAND } from "@/lib/brand";
 import { aboutAavaruchi, productInformation } from "@/data/brand-content";
 import { useInitialCatalog } from "@/lib/store-data";
@@ -10,31 +10,33 @@ import {
   PickleArtwork,
   ReferenceProductCard,
 } from "./ReferencePrimitives";
-function StoryContent({ onShop }: { onShop: () => void }) {
+function StoryContent() {
   return (
     <section className="story-page wrap">
-      <div className="story-page-intro">
+      <header className="story-page-intro">
         <span className="eyebrow">ABOUT US</span>
-        <h1>The warmth of home.<br /><em>The taste of Aavaruchi.</em></h1>
+        <h1>The warmth of home. <em>The taste of Aavaruchi.</em></h1>
         <p className="lead">Food, memories, and Amma chethi ruchi.</p>
         <p className="story-business-line">{BRAND.legalName} · {BRAND.address}</p>
-      </div>
+      </header>
       <Reveal as="figure" className="story-wide-photo">
-        <img src="/images/hero.png" alt="Aavaruchi mango pickle with raw mango and traditional spices" />
+        <img src={BRAND.heroImage} alt={BRAND.heroImageAlt} decoding="async" />
         <figcaption>FAMILY RECIPES. SMALL BATCHES. MADE WITH LOVE.</figcaption>
       </Reveal>
       <div className="story-chapters">
         <Reveal as="article">
-          <h2>From Amma’s kitchen<br />to your family table.</h2>
+          <header><h2>From Amma’s kitchen to your family table.</h2></header>
           <div>{aboutAavaruchi.map(paragraph => <p key={paragraph}>{paragraph}</p>)}
             <a className="link-button" href={`mailto:${BRAND.email}`}>Share a recipe or feedback ↗</a>
           </div>
         </Reveal>
         <Reveal as="article" id="product-information">
-          <span className="eyebrow">PRODUCT INFORMATION</span>
-          <h2>Homemade goodness.<br />Care in every batch.</h2>
+          <header>
+            <span className="eyebrow">PRODUCT INFORMATION</span>
+            <h2>Homemade goodness. Care in every batch.</h2>
+          </header>
           <div>{productInformation.map(paragraph => <p key={paragraph}>{paragraph}</p>)}
-            <button className="button outline" onClick={onShop}>Find your flavour <span>↗</span></button>
+            <Link className="button outline" to="/shop">Find your flavour <span aria-hidden="true">↗</span></Link>
           </div>
         </Reveal>
       </div>
@@ -43,11 +45,10 @@ function StoryContent({ onShop }: { onShop: () => void }) {
 }
 
 export function StoryPage() {
-  const navigate = useNavigate();
   return (
     <StorePage>
       <main id="main">
-        <StoryContent onShop={() => void navigate({ to: "/shop" })} />
+        <StoryContent />
       </main>
     </StorePage>
   );

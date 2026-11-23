@@ -24,6 +24,7 @@ import { canAutofillDelivery, checkoutAutofill, checkoutMobileInput, defaultChec
 import { prepareFirebaseAuth, firebaseGoogleCredential, firebaseAuthMessage } from "@/lib/firebase-auth";
 import { StoreBrand, useStorefrontConfig } from "@/lib/storefront-config";
 import { StorePage } from "./StoreHeader";
+import { CatalogImage } from "./CatalogImage";
 import { customerTransactionPath, loginReturnPath } from "@/lib/transactions";
 import { toast, Toaster } from "sonner";
 import { usePostalLookup } from "@/lib/postal-lookup";
@@ -194,14 +195,10 @@ export function CartPage() {
                     className="line-art"
                     style={{ background: product.tone }}
                   >
-                    {variant?.image || product.image ? (
-                      <img
-                        src={variant?.image || product.image}
-                        alt={variant?.imageAlt || product.imageAlt || product.name}
-                      />
-                    ) : (
-                      product.glyph
-                    )}
+                    <CatalogImage
+                      src={variant?.image || product.image}
+                      alt={variant?.imageAlt || product.imageAlt || product.name}
+                    />
                   </div>
                   <div>
                     <small>{product.category}</small>
@@ -1027,14 +1024,10 @@ export function CheckoutPage() {
           {cart.lines.map(({ product, entry, variant, unitPrice }, i) => (
             <div className="checkout-line" key={i}>
               <div style={{ background: product.tone }}>
-                {variant?.image || product.image ? (
-                  <img
-                    src={variant?.image || product.image}
-                    alt={variant?.imageAlt || product.imageAlt || product.name}
-                  />
-                ) : (
-                  product.glyph
-                )}
+                <CatalogImage
+                  src={variant?.image || product.image}
+                  alt={variant?.imageAlt || product.imageAlt || product.name}
+                />
                 <i>{entry.quantity}</i>
               </div>
               <span>

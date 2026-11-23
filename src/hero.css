@@ -1,0 +1,112 @@
+.avaruchi-ui .reference-hero {
+  --hero-image-width: 55%;
+  --hero-inset: clamp(24px, 5vw, 88px);
+  height: auto;
+  background: #233827;
+}
+
+.avaruchi-ui .reference-hero .reference-slide {
+  position: relative;
+  height: auto;
+  min-height: clamp(430px, 38vw, 560px);
+  display: grid;
+  grid-template-columns: minmax(0, var(--hero-image-width)) minmax(0, 1fr);
+}
+
+.reference-hero-image {
+  position: relative;
+  min-width: 0;
+  background: #354330;
+}
+
+.reference-hero-image img {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.avaruchi-ui .reference-hero .reference-hero-copy {
+  position: relative;
+  inset: auto;
+  min-width: 0;
+  align-self: center;
+  padding: 42px var(--hero-inset) 82px;
+  color: #fcfbf6;
+}
+
+.avaruchi-ui .reference-hero .reference-hero-copy h1 {
+  max-width: 13ch;
+  margin: 0;
+  font: 500 clamp(2.5rem, 4.5vw, 4.75rem)/1.04 Georgia, serif;
+  letter-spacing: -0.045em;
+}
+
+.avaruchi-ui .reference-hero .reference-hero-copy p {
+  max-width: 35ch;
+  margin: 16px 0 0;
+  color: #e4ebdc;
+  font-size: clamp(1rem, 1.4vw, 1.125rem);
+  line-height: 1.55;
+}
+
+.avaruchi-ui .reference-hero .hero-secondary-links {
+  column-gap: 18px;
+  row-gap: 0;
+}
+
+.avaruchi-ui .reference-hero .slide-controls {
+  left: calc(var(--hero-image-width) + var(--hero-inset) - 14px);
+  bottom: 18px;
+  gap: 0;
+}
+
+.avaruchi-ui .reference-hero .slide-controls span {
+  width: 9px;
+  height: 9px;
+  border: 1px solid #f2f1de;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.avaruchi-ui .reference-hero .slide-controls [aria-pressed="true"] span {
+  border-color: #e8c561;
+  background: #e8c561;
+}
+
+.avaruchi-ui .reference-hero .slide-controls button:focus-visible,
+.avaruchi-ui .reference-hero .hero-shop-link:focus-visible {
+  outline: 2px solid #e8c561;
+  outline-offset: 3px;
+}
+
+@media (max-width: 700px) {
+  .avaruchi-ui .reference-hero {
+    --hero-inset: clamp(18px, 5vw, 30px);
+  }
+
+  .avaruchi-ui .reference-hero .reference-slide {
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .reference-hero-image {
+    aspect-ratio: 3 / 2;
+  }
+
+  .avaruchi-ui .reference-hero .reference-hero-copy {
+    padding: 24px var(--hero-inset) 64px;
+  }
+
+  .avaruchi-ui .reference-hero .reference-hero-copy h1 {
+    font-size: clamp(2.15rem, 8.6vw, 3.4rem);
+  }
+
+  .avaruchi-ui .reference-hero .slide-controls {
+    left: calc(var(--hero-inset) - 12px);
+    bottom: 9px;
+  }
+}

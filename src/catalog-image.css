@@ -1,0 +1,20 @@
+.avaruchi-ui .catalog-photo,
+.avaruchi-ui .product-page .detail-art.main {
+  position: relative;
+}
+
+.avaruchi-ui .catalog-photo > .catalog-photo-placeholder-label,
+.avaruchi-ui .detail-art.main > .catalog-photo-placeholder-label {
+  position: absolute;
+  inset-inline: 8px;
+  inset-block-end: 8px;
+  justify-self: center;
+  width: fit-content;
+  max-width: calc(100% - 16px);
+  padding: 4px 8px;
+  border-radius: 3px;
+  background: #fbf8f0;
+  color: #33432b;
+  font: 500 12px/1.3 "Work Sans", Arial, sans-serif;
+  text-align: center;
+}

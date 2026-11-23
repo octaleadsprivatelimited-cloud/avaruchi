@@ -11,6 +11,7 @@ import { priceIncludingTax } from "@/lib/catalog-price";
 import { trackCommerceEvent } from "@/lib/analytics";
 import { productAnalyticsItem } from "@/lib/commerce-analytics";
 import { useStorefrontConfig } from "@/lib/storefront-config";
+import { CatalogImage } from "./CatalogImage";
 
 export function PickleArtwork({
   index,
@@ -37,23 +38,19 @@ export function PickleArtwork({
 export function ProductPhoto({
   product,
   className = "",
+  showPlaceholderLabel = false,
 }: {
   product: Product;
   className?: string;
+  showPlaceholderLabel?: boolean;
 }) {
   return (
     <div className={`product-photo catalog-photo ${className}`}>
-      {product.image ? (
-        <img
-          src={product.image}
-          alt={product.imageAlt || product.name}
-          loading="lazy"
-        />
-      ) : (
-        <span role="img" aria-label={product.name}>
-          {product.glyph || "◒"}
-        </span>
-      )}
+      <CatalogImage
+        src={product.image}
+        alt={product.imageAlt || product.name}
+        showPlaceholderLabel={showPlaceholderLabel}
+      />
     </div>
   );
 }
@@ -110,7 +107,7 @@ export function ReferenceProductCard({
           onClick={selectProduct}
           aria-label={`View ${product.name}`}
         >
-          <ProductPhoto product={product} />
+          <ProductPhoto product={product} showPlaceholderLabel />
         </Link>
         <button
           type="button"
@@ -179,35 +176,41 @@ export function ReferenceProductCard({
 
 const heroSlides = [
   {
-    id: "mango",
-    title: "Amma’s Andhra Taste, Delivered to Your Door.",
-    copy: "Discover traditional pickles, podis and fryums made for the flavours you grew up with.",
-    name: "classic mango",
-    image: 0,
+    slug: "classic-mango-pickle",
+    title: BRAND.heroTitle,
+    copy: "Homemade pickles, podis and fryums, made in small batches from family recipes.",
+    name: "mango",
+    image: BRAND.heroImage,
+    alt: BRAND.heroImageAlt,
   },
   {
-    id: "gongura",
-    title: "An Andhra favourite.",
-    copy: "Discover the distinctive, leafy tang of gongura.",
+    slug: "gongura-pickle",
+    title: "Bright, tangy gongura.",
+    copy: "The tang of gongura pickle brings a lift to a bowl of warm rice.",
     name: "gongura",
-    image: 1,
+    image: "/images/catalog-2026/gongura-pickle.webp",
+    alt: "Illustration of an Aavaruchi gongura pickle jar",
   },
   {
-    id: "chilli",
-    title: "A little more fire.",
-    copy: "Bold red chilli pickle for the heat seekers.",
+    slug: "red-chilli-pickle",
+    title: "A spoonful of heat.",
+    copy: "Red chilli pickle gives dal and rice a little extra kick.",
     name: "red chilli",
-    image: 5,
+    image: "/images/catalog-2026/red-chilli-pickle.webp",
+    alt: "Illustration of an Aavaruchi red chilli pickle jar",
   },
 ];
+
 export function ReferenceHero({ products }: { products: Product[] }) {
   const store = useStorefrontConfig();
   const [slide, setSlide] = useState(0);
   const reduced = useReducedMotion();
   const item = heroSlides[slide]!;
-  const product = products.find((product) =>
-    `${product.slug || ""} ${product.name}`.toLowerCase().includes(item.id),
-  );
+  const product = products.find((product) => product.slug === item.slug);
+  const customBanner = slide === 0 && store.heroImageUrl && store.heroImageUrl !== "/images/hero.png"
+    ? store.heroImageUrl
+    : undefined;
+
   return (
     <section
       className="reference-hero"
@@ -216,33 +219,27 @@ export function ReferenceHero({ products }: { products: Product[] }) {
     >
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
-          key={item.id}
-          className={`reference-slide ${slide === 0 ? "photo-slide" : "jar-slide"}`}
+          key={item.slug}
+          className="reference-slide"
           initial={reduced ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: reduced ? 0 : 0.3 }}
         >
-          {slide === 0 ? (
+          <div className="reference-hero-image">
             <img
-              key={store.heroImageUrl || "default-hero"}
-              src={store.heroImageUrl || "/images/hero.png"}
-              alt={store.heroImageAlt || (store.heroImageUrl ? `${store.storeName} featured pickles` : "Aavaruchi mango pickle jar with a bowl of spiced mango and chillies")}
-              fetchPriority="high"
+              key={customBanner || item.image}
+              src={customBanner || item.image}
+              alt={customBanner ? store.heroImageAlt || `${store.storeName} featured pickles` : item.alt}
+              fetchPriority={slide === 0 ? "high" : "auto"}
               onError={event => {
-                if (store.heroImageUrl && event.currentTarget.getAttribute("src") !== "/images/hero.png") {
-                  event.currentTarget.src = "/images/hero.png";
-                  event.currentTarget.alt = "Aavaruchi mango pickle jar with a bowl of spiced mango and chillies";
+                if (customBanner && event.currentTarget.getAttribute("src") !== item.image) {
+                  event.currentTarget.src = item.image;
+                  event.currentTarget.alt = item.alt;
                 }
               }}
             />
-          ) : (
-            <PickleArtwork
-              index={item.image}
-              label={`Aavaruchi ${item.name} pickle`}
-              className="hero-jar"
-            />
-          )}
+          </div>
           <div className="reference-hero-copy">
             <h1>{item.title}</h1>
             <p>{item.copy}</p>
@@ -266,7 +263,7 @@ export function ReferenceHero({ products }: { products: Product[] }) {
               <Link
                 className="hero-shop-link"
                 to="/shop"
-                search={{ q: item.id }}
+                search={{ q: item.name }}
               >
                 Shop {item.name}
               </Link>
@@ -282,8 +279,8 @@ export function ReferenceHero({ products }: { products: Product[] }) {
         {heroSlides.map((item, index) => (
           <button
             type="button"
-            key={item.id}
-            aria-label={`Show ${item.id} pickle slide`}
+            key={item.slug}
+            aria-label={`Show ${item.name} pickle slide`}
             aria-pressed={slide === index}
             onClick={() => setSlide(index)}
           >

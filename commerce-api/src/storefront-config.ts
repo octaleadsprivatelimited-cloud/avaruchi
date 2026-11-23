@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { additionalAnnouncement } from "./delivery-policy.js";
+import { whatsappChatHref } from "./whatsapp-link.js";
 
 const optionalUrl = z.union([
   z.string().url().max(1000).refine(value => /^https?:\/\//i.test(value), "Use an HTTP or HTTPS image URL"),
@@ -26,6 +27,7 @@ export const storefrontConfigSchema = z.object({
   locale: z.string().regex(/^[a-z]{2,3}(?:-[A-Z]{2})?$/),
   supportEmail: z.union([z.string().email().max(254), z.literal("")]).default(""),
   supportPhone: z.string().trim().max(30).default(""),
+  whatsappUrl: z.string().trim().refine(value => !value || Boolean(whatsappChatHref(value)), "Enter a valid https://wa.me/ link").transform(whatsappChatHref).default(""),
   freeShippingThreshold: z.number().min(0).max(100000000).multipleOf(0.01).default(0),
   manualDeliveryEnabled: z.boolean().default(false),
   codEnabled: z.boolean().default(true),
@@ -50,7 +52,7 @@ export const defaultStorefrontConfig: StorefrontConfig = {
   storeName: "Aavaruchi", legalName: "LAKSHMI'S TAPASI TREATS", businessGstin:"", businessAddress:"", logoUrl: "/favicon.svg", footerLogoUrl: "", faviconUrl: "/favicon.svg", heroImageUrl: "", heroImageAlt: "", fssaiLicense: "", analyticsPromptEnabled: false,
   primaryColor: "#173f2b", accentColor: "#dc6b32", backgroundColor: "#fbf7ec",
   currency: "INR", locale: "en-IN", supportEmail: "contact@aavaruchi.in",
-  supportPhone: "", freeShippingThreshold: 0, manualDeliveryEnabled: false, deliveryCharge: 0, deliveryMinDays: 4, deliveryMaxDays: 5, deliveryEstimateBasis: "ORDER", announcement: "",
+  supportPhone: "", whatsappUrl: "", freeShippingThreshold: 0, manualDeliveryEnabled: false, deliveryCharge: 0, deliveryMinDays: 4, deliveryMaxDays: 5, deliveryEstimateBasis: "ORDER", announcement: "",
   codEnabled: true, onlinePaymentDiscountEnabled: false, onlinePaymentDiscountType: "PERCENTAGE", onlinePaymentDiscountValue: 0,
   footerTagline: "Traditional Andhra pickles, made with love.", seoTitle: "Aavaruchi | Authentic Andhra Pickles",
   seoDescription: "Discover traditional Andhra pickles, powders and fryums from Aavaruchi. Choose your favourite flavours and available pack sizes.", primaryDomain: "",

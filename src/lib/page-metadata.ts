@@ -2,13 +2,14 @@ import type { StorefrontConfig } from "./storefront-config";
 import type { Product } from "../data/commerce";
 import { productPath } from "./product-url";
 import { productSeo, storeOrigin } from "./seo";
+import { BRAND } from "./brand";
 
 const publicRoutes = new Set(["/", "/shop", "/combos", "/cart", "/checkout", "/login", "/track", "/account", "/contact", "/privacy", "/terms", "/shipping", "/returns", "/shipping-returns", "/journal", "/our-story", "/wishlist"]);
 
 export function pageMetadata(path: string, store?: Partial<StorefrontConfig>) {
   const name = store?.storeName || "Aavaruchi";
   const titles: Record<string, string> = {
-    "/": "Amma’s Andhra taste, delivered to your door",
+    "/": BRAND.heroTitle,
     "/shop": "Pickles, powders & fryums",
     "/combos": "Combo packages",
     "/wishlist": "Your saved flavours",

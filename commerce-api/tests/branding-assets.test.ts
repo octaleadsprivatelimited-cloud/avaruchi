@@ -1,7 +1,7 @@
 import path from "node:path";
 import crypto from "node:crypto";
 import os from "node:os";
-import { mkdtemp, readdir, rm, stat } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rm, stat } from "node:fs/promises";
 import type { Server } from "node:http";
 import sharp from "sharp";
 import { afterAll, beforeAll, expect, it } from "vitest";
@@ -47,16 +47,32 @@ beforeAll(async () => {
 afterAll(async () => { if (server) await new Promise<void>(resolve => server.close(() => resolve())); await rm(directory, { recursive: true, force: true }); });
 
 it("upgrades saved settings with the analytics popup hidden and configurable footer identity", async () => {
-  const { analyticsPromptEnabled: _prompt, footerLogoUrl: _footer, fssaiLicense: _license, heroImageUrl: _hero, heroImageAlt: _alt, ...legacy } = defaultStorefrontConfig;
+  const { analyticsPromptEnabled: _prompt, footerLogoUrl: _footer, fssaiLicense: _license, heroImageUrl: _hero, heroImageAlt: _alt, whatsappUrl: _whatsapp, ...legacy } = defaultStorefrontConfig;
   const upgraded = storefrontConfigSchema.parse(legacy);
   expect(upgraded.analyticsPromptEnabled).toBe(false); expect(upgraded.footerLogoUrl).toBe("");
   expect(upgraded.fssaiLicense).toBe("");
   expect(upgraded.heroImageUrl).toBe(""); expect(upgraded.heroImageAlt).toBe("");
+  expect(upgraded.whatsappUrl).toBe("");
   expect((await save({ ...upgraded, analyticsPromptEnabled: true })).status).toBe(200);
   expect((await read()).analyticsPromptEnabled).toBe(true);
   expect((await save(upgraded)).status).toBe(200);
   expect((await read()).analyticsPromptEnabled).toBe(false);
   expect((await save({ ...upgraded, logoUrl: "javascript:alert(1)" })).status).toBe(400);
+});
+it("publishes only an approved WhatsApp chat link and can clear it again", async () => {
+  const previous = await read();
+  const direct = "https://wa.me/15550100123?text=Hello";
+  const short = "https://wa.me/message/STORETESTLINK";
+  for (const link of [direct, short]) {
+    expect((await save({ ...previous, whatsappUrl: link })).status).toBe(200);
+    expect((await read()).whatsappUrl).toBe(link);
+  }
+  for (const link of ["http://wa.me/15550100123", "https://example.com/message/STORETESTLINK", "https://wa.me/?text=Hello"]) {
+    expect((await save({ ...previous, whatsappUrl: link })).status).toBe(400);
+  }
+  expect((await read()).whatsappUrl).toBe(short);
+  expect((await save(previous)).status).toBe(200);
+  expect((await read()).whatsappUrl).toBe("");
 });
 it("requires administrator access before processing an upload", async () => {
   expect((await upload("logo", "invalid")).status).toBe(401);
@@ -134,6 +150,42 @@ it("never deletes an external, product, bundled or traversal URL, and protects s
   const previous = { ...defaultStorefrontConfig, logoUrl: `${baseUrl}/${name}` };
   expect(unusedBrandingAssets([previous], [{ ...defaultStorefrontConfig, footerLogoUrl: `/uploads/${name}` }], baseUrl)).toEqual([]);
   expect(unusedBrandingAssets([previous], [defaultStorefrontConfig], baseUrl)).toEqual([previous.logoUrl]);
+});
+it.skipIf(process.env.RUN_DB_TESTS !== "1")("replaces only the previous Aavaruchi hero setting during rollout", async () => {
+  const persistence = new PrismaPersistence();
+  const fixture = crypto.randomUUID();
+  const key = (hostname: string) => `storefront:${hostname}:${fixture}`;
+  const migration = await readFile(new URL("../prisma/migrations/20261123010000_refresh_homepage_hero/migration.sql", import.meta.url), "utf8");
+  const scopedMigration = migration.replace(/'storefront:([^']+)'/g, (_, hostname: string) => `'${key(hostname)}'`);
+  const previous = {
+    ...defaultStorefrontConfig,
+    heroImageUrl: "https://aavaruchi.in/uploads/brand-ae35dab4-3a44-451e-bd90-d61ec36bd5b0.png",
+    heroImageAlt: "Previous homepage hero",
+  };
+  const custom = { ...previous, heroImageUrl: "https://aavaruchi.in/uploads/new-hero.webp" };
+  const rollback = new Error("Roll back temporary hero migration settings");
+  try {
+    await expect(persistence.db.$transaction(async tx => {
+      await tx.setting.createMany({ data: [
+        { key: key("aavaruchi.in"), value: previous },
+        { key: key("localhost"), value: previous },
+        { key: key("www.aavaruchi.in"), value: custom },
+        { key: key("another-store.test"), value: previous },
+      ] });
+      expect(await tx.$executeRawUnsafe(scopedMigration)).toBe(2);
+      const savedSetting = async (hostname: string) =>
+        (await tx.setting.findUniqueOrThrow({ where: { key: key(hostname) } })).value;
+      for (const hostname of ["aavaruchi.in", "localhost"]) {
+        expect(await savedSetting(hostname)).toEqual({ ...previous, heroImageUrl: "", heroImageAlt: "" });
+      }
+      expect(await savedSetting("www.aavaruchi.in")).toEqual(custom);
+      expect(await savedSetting("another-store.test")).toEqual(previous);
+      expect(await tx.$executeRawUnsafe(scopedMigration)).toBe(0);
+      throw rollback;
+    })).rejects.toBe(rollback);
+  } finally {
+    await persistence.disconnect();
+  }
 });
 it.skipIf(process.env.RUN_DB_TESTS !== "1")("rolls back every MySQL settings alias if one publication fails", async () => {
   const persistence = new PrismaPersistence();
