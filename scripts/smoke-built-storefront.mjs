@@ -57,8 +57,10 @@ try {
   assert.ok(home.body.includes('reference-hero'), 'render the reference pickle hero');
   assert.ok(home.body.includes('A little jar of home.'), 'render the new homepage heading');
   for (const category of ['Pickles', 'Powders', 'Fryums']) assert.ok(home.body.includes(`Shop ${category}`), 'provide category shopping actions');
-  assert.ok(home.body.includes('/images/aavaruchi-hero-mango-768.webp 768w, /images/aavaruchi-hero-mango.webp 1536w') &&
-    home.body.includes('/brand/avaruchi-logo-small.webp'), 'serve the branded hero with responsive sources');
+  assert.match(home.body, /<picture class="reference-hero-image"><source media="\(max-width: 700px\)" srcset="\/images\/aavaruchi-pantry-mobile\.webp"\/?><img\b/i,
+    'serve the portrait hero source at narrow widths');
+  assert.ok(home.body.includes('src="/images/aavaruchi-pantry-desktop.webp"') &&
+    home.body.includes('/brand/avaruchi-logo-small.webp'), 'serve the landscape hero and brand artwork');
   assert.ok(home.body.includes('reference-story'), 'render the reference brand story');
   assert.ok(!home.body.includes('class="announcement"'), 'the top announcement bar is removed');
   assert.ok(home.body.includes('contact@aavaruchi.in') && !home.body.includes('tel:') && !home.body.includes('wa.me/'), 'public contact uses email without phone links');
@@ -70,9 +72,9 @@ try {
   storefrontSettings = { ...storefrontSettings, heroImageUrl: '/uploads/admin-hero.png', heroImageAlt: 'Pickles selected by the store administrator' };
   const customHero = await request('/');
   assert.ok(customHero.body.includes('src="/uploads/admin-hero.png"') && customHero.body.includes('alt="Pickles selected by the store administrator"'), 'SSR must render the published hero image and description');
-  assert.ok(!customHero.body.includes('/images/aavaruchi-hero-mango-768.webp'), 'an admin hero takes precedence over the bundled source set');
+  assert.ok(!customHero.body.includes('/images/aavaruchi-pantry-mobile.webp'), 'an admin hero takes precedence over the bundled source set');
   storefrontSettings = { ...storefrontSettings, heroImageUrl: '', heroImageAlt: '' };
-  assert.ok((await request('/')).body.includes('src="/images/aavaruchi-hero-mango.webp"'), 'resetting the hero restores the bundled image');
+  assert.ok((await request('/')).body.includes('src="/images/aavaruchi-pantry-desktop.webp"'), 'resetting the hero restores the bundled image');
   storefrontSettings = { ...storefrontSettings, deliveryCharge: 89, freeShippingThreshold: 799 };
   const updatedShop = await request('/shipping-returns');
   assert.ok(updatedShop.body.includes('₹89 delivery') && updatedShop.body.includes('₹799'), 'fresh SSR must read the replacement policy');

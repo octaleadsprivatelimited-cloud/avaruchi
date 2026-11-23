@@ -223,18 +223,19 @@ export function ReferenceHero({ products }: { products: Product[] }) {
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={item.slug}
-          className="reference-slide"
+          className={slide === 0 ? "reference-slide" : "reference-slide reference-slide--catalog"}
           initial={reduced ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: reduced ? 0 : 0.3 }}
         >
-          <div className="reference-hero-image">
+          <picture className="reference-hero-image">
+            {usesBundledHero && (
+              <source media="(max-width: 700px)" srcSet={BRAND.heroImageMobile} />
+            )}
             <img
               key={customBanner || item.image}
               src={customBanner || item.image}
-              srcSet={usesBundledHero ? `${BRAND.heroImageSmall} 768w, ${BRAND.heroImage} 1536w` : undefined}
-              sizes={usesBundledHero ? "(max-width: 700px) 100vw, (max-width: 1527px) 55vw, 840px" : undefined}
               alt={customBanner ? store.heroImageAlt || `${store.storeName} featured pickles` : item.alt}
               fetchPriority={slide === 0 ? "high" : "auto"}
               onError={restoreDefaultImage}
@@ -242,7 +243,7 @@ export function ReferenceHero({ products }: { products: Product[] }) {
                 if (image?.complete && image.naturalWidth === 0) restoreDefaultImage();
               })}
             />
-          </div>
+          </picture>
           <div className="reference-hero-copy">
             <h1>{item.title}</h1>
             <p>{item.copy}</p>

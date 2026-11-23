@@ -1,22 +1,48 @@
 .avaruchi-ui .reference-hero {
-  --hero-image-width: min(55%, 840px);
-  --hero-inset: clamp(24px, 5vw, 88px);
+  --hero-inset: clamp(24px, 6vw, 128px);
   height: auto;
   background: #233827;
 }
 
 .avaruchi-ui .reference-hero .reference-slide {
+  --hero-scrim: linear-gradient(
+    to right,
+    rgb(18 31 21 / 0.94),
+    rgb(18 31 21 / 0.81) 27%,
+    rgb(18 31 21 / 0.68) 47%,
+    transparent 69%
+  );
   position: relative;
+  inset: auto;
   height: auto;
-  min-height: clamp(430px, 38vw, 560px);
+  min-height: max(470px, 39vw);
   display: grid;
-  grid-template-columns: minmax(0, var(--hero-image-width)) minmax(0, 1fr);
+  align-items: center;
+}
+
+.avaruchi-ui .reference-hero .reference-slide--catalog {
+  --hero-scrim: linear-gradient(
+    to left,
+    rgb(18 31 21 / 0.94),
+    rgb(18 31 21 / 0.81) 27%,
+    rgb(18 31 21 / 0.68) 47%,
+    transparent 69%
+  );
 }
 
 .reference-hero-image {
-  position: relative;
-  min-width: 0;
+  position: absolute;
+  inset: 0;
+  display: block;
   background: #354330;
+}
+
+.reference-hero-image::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--hero-scrim);
+  pointer-events: none;
 }
 
 .reference-hero-image img {
@@ -32,10 +58,15 @@
 .avaruchi-ui .reference-hero .reference-hero-copy {
   position: relative;
   inset: auto;
-  min-width: 0;
-  align-self: center;
-  padding: 42px var(--hero-inset) 82px;
+  width: 43%;
+  max-width: 38rem;
+  margin-inline: var(--hero-inset);
+  padding-block: 40px 76px;
   color: #fcfbf6;
+}
+
+.avaruchi-ui .reference-hero .reference-slide--catalog .reference-hero-copy {
+  justify-self: end;
 }
 
 .avaruchi-ui .reference-hero .reference-hero-copy h1 {
@@ -59,9 +90,12 @@
 }
 
 .avaruchi-ui .reference-hero .slide-controls {
-  left: calc(var(--hero-image-width) + var(--hero-inset) - 14px);
-  bottom: 18px;
+  left: 50%;
+  bottom: 14px;
   gap: 0;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: rgb(18 31 21 / 0.78);
 }
 
 .avaruchi-ui .reference-hero .slide-controls span {
@@ -85,28 +119,57 @@
 
 @media (max-width: 700px) {
   .avaruchi-ui .reference-hero {
-    --hero-inset: clamp(18px, 5vw, 30px);
+    --hero-inset: clamp(18px, 5vw, 34px);
   }
 
   .avaruchi-ui .reference-hero .reference-slide {
-    min-height: 0;
-    grid-template-columns: minmax(0, 1fr);
+    --hero-scrim: linear-gradient(
+      to bottom,
+      transparent 26%,
+      rgb(18 31 21 / 0.1) 34%,
+      rgb(18 31 21 / 0.66) 47%,
+      rgb(18 31 21 / 0.79) 63%,
+      rgb(18 31 21 / 0.97)
+    );
+    min-height: max(590px, 116vw);
+    align-items: end;
   }
 
-  .reference-hero-image {
-    aspect-ratio: 3 / 2;
+  .avaruchi-ui .reference-hero .reference-slide--catalog {
+    --hero-scrim: linear-gradient(
+      to bottom,
+      transparent 34%,
+      rgb(18 31 21 / 0.14) 46%,
+      rgb(18 31 21 / 0.78) 65%,
+      rgb(18 31 21 / 0.97)
+    );
   }
 
-  .avaruchi-ui .reference-hero .reference-hero-copy {
-    padding: 24px var(--hero-inset) 64px;
+  .reference-hero-image img {
+    object-position: center top;
+  }
+
+  .reference-slide--catalog .reference-hero-image img {
+    object-position: 40% 28%;
+  }
+
+  .avaruchi-ui .reference-hero .reference-slide .reference-hero-copy {
+    justify-self: stretch;
+    width: auto;
+    max-width: none;
+    padding-block: 24px 68px;
   }
 
   .avaruchi-ui .reference-hero .reference-hero-copy h1 {
-    font-size: clamp(2.15rem, 8.6vw, 3.4rem);
+    max-width: 100%;
+    font-size: clamp(2rem, 8vw, 3.4rem);
+  }
+
+  .avaruchi-ui .reference-hero .reference-hero-copy p {
+    margin-top: 12px;
   }
 
   .avaruchi-ui .reference-hero .slide-controls {
-    left: calc(var(--hero-inset) - 12px);
-    bottom: 9px;
+    bottom: 10px;
   }
 }
