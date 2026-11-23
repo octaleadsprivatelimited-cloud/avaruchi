@@ -38,7 +38,7 @@ export function EcommerceHome() {
     <StorePage>
       <main id="main" className="reference-home">
         <CampaignSlot placement="HOME_HERO" />
-        <ReferenceHero products={products} />
+        <ReferenceHero />
         <Reveal as="section" className="reference-intro wrap">
           <div>
             <h2>Pickles for the everyday Andhra table</h2>

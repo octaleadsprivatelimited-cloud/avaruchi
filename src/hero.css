@@ -1,10 +1,5 @@
 .avaruchi-ui .reference-hero {
   --hero-inset: clamp(24px, 6vw, 128px);
-  height: auto;
-  background: #233827;
-}
-
-.avaruchi-ui .reference-hero .reference-slide {
   --hero-scrim: linear-gradient(
     to right,
     rgb(18 31 21 / 0.94),
@@ -12,22 +7,11 @@
     rgb(18 31 21 / 0.68) 47%,
     transparent 69%
   );
-  position: relative;
-  inset: auto;
   height: auto;
   min-height: max(470px, 39vw);
   display: grid;
   align-items: center;
-}
-
-.avaruchi-ui .reference-hero .reference-slide--catalog {
-  --hero-scrim: linear-gradient(
-    to left,
-    rgb(18 31 21 / 0.94),
-    rgb(18 31 21 / 0.81) 27%,
-    rgb(18 31 21 / 0.68) 47%,
-    transparent 69%
-  );
+  background: #233827;
 }
 
 .reference-hero-image {
@@ -65,10 +49,6 @@
   color: #fcfbf6;
 }
 
-.avaruchi-ui .reference-hero .reference-slide--catalog .reference-hero-copy {
-  justify-self: end;
-}
-
 .avaruchi-ui .reference-hero .reference-hero-copy h1 {
   max-width: 13ch;
   margin: 0;
@@ -89,29 +69,6 @@
   row-gap: 0;
 }
 
-.avaruchi-ui .reference-hero .slide-controls {
-  left: 50%;
-  bottom: 14px;
-  gap: 0;
-  transform: translateX(-50%);
-  border-radius: 999px;
-  background: rgb(18 31 21 / 0.78);
-}
-
-.avaruchi-ui .reference-hero .slide-controls span {
-  width: 9px;
-  height: 9px;
-  border: 1px solid #f2f1de;
-  border-radius: 50%;
-  background: transparent;
-}
-
-.avaruchi-ui .reference-hero .slide-controls [aria-pressed="true"] span {
-  border-color: #e8c561;
-  background: #e8c561;
-}
-
-.avaruchi-ui .reference-hero .slide-controls button:focus-visible,
 .avaruchi-ui .reference-hero .hero-shop-link:focus-visible {
   outline: 2px solid #e8c561;
   outline-offset: 3px;
@@ -120,9 +77,6 @@
 @media (max-width: 700px) {
   .avaruchi-ui .reference-hero {
     --hero-inset: clamp(18px, 5vw, 34px);
-  }
-
-  .avaruchi-ui .reference-hero .reference-slide {
     --hero-scrim: linear-gradient(
       to bottom,
       transparent 26%,
@@ -135,25 +89,11 @@
     align-items: end;
   }
 
-  .avaruchi-ui .reference-hero .reference-slide--catalog {
-    --hero-scrim: linear-gradient(
-      to bottom,
-      transparent 34%,
-      rgb(18 31 21 / 0.14) 46%,
-      rgb(18 31 21 / 0.78) 65%,
-      rgb(18 31 21 / 0.97)
-    );
-  }
-
   .reference-hero-image img {
     object-position: center top;
   }
 
-  .reference-slide--catalog .reference-hero-image img {
-    object-position: 40% 28%;
-  }
-
-  .avaruchi-ui .reference-hero .reference-slide .reference-hero-copy {
+  .avaruchi-ui .reference-hero .reference-hero-copy {
     justify-self: stretch;
     width: auto;
     max-width: none;
@@ -167,9 +107,5 @@
 
   .avaruchi-ui .reference-hero .reference-hero-copy p {
     margin-top: 12px;
-  }
-
-  .avaruchi-ui .reference-hero .slide-controls {
-    bottom: 10px;
   }
 }

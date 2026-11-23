@@ -54,7 +54,10 @@ try {
     }
   }
   const home = await request('/');
-  assert.ok(home.body.includes('reference-hero'), 'render the reference pickle hero');
+  const hero = home.body.match(/<section class="reference-hero"[\s\S]*?<\/section>/)?.[0];
+  assert.ok(hero, 'render the reference pickle hero');
+  assert.equal(hero.match(/<picture\b/g)?.length, 1, 'render a single hero banner');
+  assert.doesNotMatch(hero, /aria-roledescription="carousel"|slide-controls|reference-slide/, 'omit hero slides and carousel controls');
   assert.ok(home.body.includes('A little jar of home.'), 'render the new homepage heading');
   for (const category of ['Pickles', 'Powders', 'Fryums']) assert.ok(home.body.includes(`Shop ${category}`), 'provide category shopping actions');
   assert.match(home.body, /<picture class="reference-hero-image"><source media="\(max-width: 700px\)" srcset="\/images\/aavaruchi-pantry-mobile\.webp"\/?><img\b/i,

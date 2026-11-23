@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Link } from "@/lib/navigation";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { toast } from "sonner";
 import { BRAND } from "@/lib/brand";
 import { aavaruchiFaq } from "@/data/brand-content";
@@ -174,123 +174,52 @@ export function ReferenceProductCard({
   );
 }
 
-const heroSlides = [
-  {
-    slug: "classic-mango-pickle",
-    title: BRAND.heroTitle,
-    copy: "Homemade pickles, podis and fryums, made in small batches from family recipes.",
-    name: "mango",
-    image: BRAND.heroImage,
-    alt: BRAND.heroImageAlt,
-  },
-  {
-    slug: "gongura-pickle",
-    title: "Bright, tangy gongura.",
-    copy: "The tang of gongura pickle brings a lift to a bowl of warm rice.",
-    name: "gongura",
-    image: "/images/catalog-2026/gongura-pickle.webp",
-    alt: "Illustration of an Aavaruchi gongura pickle jar",
-  },
-  {
-    slug: "red-chilli-pickle",
-    title: "A spoonful of heat.",
-    copy: "Red chilli pickle gives dal and rice a little extra kick.",
-    name: "red chilli",
-    image: "/images/catalog-2026/red-chilli-pickle.webp",
-    alt: "Illustration of an Aavaruchi red chilli pickle jar",
-  },
-];
-
-export function ReferenceHero({ products }: { products: Product[] }) {
+export function ReferenceHero() {
   const store = useStorefrontConfig();
-  const [slide, setSlide] = useState(0);
   const [failedBanner, setFailedBanner] = useState("");
-  const reduced = useReducedMotion();
-  const item = heroSlides[slide]!;
-  const product = products.find((product) => product.slug === item.slug);
-  const customBanner = slide === 0 && store.heroImageUrl !== "/images/hero.png" && store.heroImageUrl !== failedBanner
+  const customBanner = store.heroImageUrl !== "/images/hero.png" && store.heroImageUrl !== failedBanner
     ? store.heroImageUrl
-    : undefined;
-  const usesBundledHero = slide === 0 && !customBanner;
+    : "";
+  const bannerSrc = customBanner || BRAND.heroImage;
   const restoreDefaultImage = customBanner ? () => setFailedBanner(customBanner) : undefined;
 
   return (
-    <section
-      className="reference-hero"
-      aria-label="Featured pickles"
-      aria-roledescription="carousel"
-    >
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={item.slug}
-          className={slide === 0 ? "reference-slide" : "reference-slide reference-slide--catalog"}
-          initial={reduced ? false : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: reduced ? 0 : 0.3 }}
-        >
-          <picture className="reference-hero-image">
-            {usesBundledHero && (
-              <source media="(max-width: 700px)" srcSet={BRAND.heroImageMobile} />
-            )}
-            <img
-              key={customBanner || item.image}
-              src={customBanner || item.image}
-              alt={customBanner ? store.heroImageAlt || `${store.storeName} featured pickles` : item.alt}
-              fetchPriority={slide === 0 ? "high" : "auto"}
-              onError={restoreDefaultImage}
-              ref={restoreDefaultImage && (image => {
-                if (image?.complete && image.naturalWidth === 0) restoreDefaultImage();
-              })}
-            />
-          </picture>
-          <div className="reference-hero-copy">
-            <h1>{item.title}</h1>
-            <p>{item.copy}</p>
-            {slide === 0 ? (
-              <div className="hero-shopping-actions">
-                <Link className="hero-shop-link hero-primary-link" to="/shop" search={{ category: "Pickles" }}>Shop Pickles</Link>
-                <div className="hero-secondary-links">
-                  <Link to="/shop" search={{ category: "Powders" }}>Shop Powders <span aria-hidden="true">↗</span></Link>
-                  <Link to="/shop" search={{ category: "Fryums" }}>Shop Fryums <span aria-hidden="true">↗</span></Link>
-                </div>
-              </div>
-            ) : product ? (
-              <Link
-                className="hero-shop-link"
-                to="/product/$productId"
-                params={{ productId: productRouteKey(product) }}
-              >
-                Shop {item.name}
-              </Link>
-            ) : (
-              <Link
-                className="hero-shop-link"
-                to="/shop"
-                search={{ q: item.name }}
-              >
-                Shop {item.name}
-              </Link>
-            )}
-          </div>
-        </motion.div>
-      </AnimatePresence>
-      <div
-        className="slide-controls"
-        role="group"
-        aria-label="Choose a featured pickle"
-      >
-        {heroSlides.map((item, index) => (
-          <button
-            type="button"
-            key={item.slug}
-            aria-label={`Show ${item.name} pickle slide`}
-            aria-pressed={slide === index}
-            onClick={() => setSlide(index)}
+    <section className="reference-hero" aria-labelledby="homepage-hero-title">
+      <picture className="reference-hero-image">
+        {!customBanner && (
+          <source media="(max-width: 700px)" srcSet={BRAND.heroImageMobile} />
+        )}
+        <img
+          key={bannerSrc}
+          src={bannerSrc}
+          alt={customBanner ? store.heroImageAlt || `${store.storeName} featured pickles` : BRAND.heroImageAlt}
+          fetchPriority="high"
+          onError={restoreDefaultImage}
+          ref={restoreDefaultImage && (image => {
+            if (image?.complete && image.naturalWidth === 0) restoreDefaultImage();
+          })}
+        />
+      </picture>
+      <div className="reference-hero-copy">
+        <h1 id="homepage-hero-title">{BRAND.heroTitle}</h1>
+        <p>Homemade pickles, podis and fryums, made in small batches from family recipes.</p>
+        <div className="hero-shopping-actions">
+          <Link
+            className="hero-shop-link hero-primary-link"
+            to="/shop"
+            search={{ category: "Pickles" }}
           >
-            <span />
-          </button>
-        ))}
+            Shop Pickles
+          </Link>
+          <div className="hero-secondary-links">
+            <Link to="/shop" search={{ category: "Powders" }}>
+              Shop Powders <span aria-hidden="true">↗</span>
+            </Link>
+            <Link to="/shop" search={{ category: "Fryums" }}>
+              Shop Fryums <span aria-hidden="true">↗</span>
+            </Link>
+          </div>
+        </div>
       </div>
     </section>
   );
