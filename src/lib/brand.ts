@@ -10,6 +10,9 @@ export const BRAND = {
   logoSmall: "/brand/avaruchi-logo-small.webp",
   logoIcon: "/brand/avaruchi-logo-icon.png",
   heroTitle: "A little jar of home.",
-  heroImage: "/images/aavaruchi-hero.webp",
-  heroImageAlt: "A jar labelled aavaruchi beside a dish of mango pickle",
+  heroImage: "/images/aavaruchi-hero-mango.webp",
+  heroImageSmall: "/images/aavaruchi-hero-mango-768.webp",
+  heroImageAlt: "Aavaruchi Mango Avakaya jar with pickle, spices, rice, lentils and fresh leaves",
+  storyImage: "/images/aavaruchi-hero.webp",
+  storyImageAlt: "A jar labelled aavaruchi beside a dish of mango pickle",
 } as const;

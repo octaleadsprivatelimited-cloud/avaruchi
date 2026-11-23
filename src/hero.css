@@ -1,5 +1,5 @@
 .avaruchi-ui .reference-hero {
-  --hero-image-width: 55%;
+  --hero-image-width: min(55%, 840px);
   --hero-inset: clamp(24px, 5vw, 88px);
   height: auto;
   background: #233827;

@@ -20,7 +20,7 @@ function StoryContent() {
         <p className="story-business-line">{BRAND.legalName} · {BRAND.address}</p>
       </header>
       <Reveal as="figure" className="story-wide-photo">
-        <img src={BRAND.heroImage} alt={BRAND.heroImageAlt} decoding="async" />
+        <img src={BRAND.storyImage} alt={BRAND.storyImageAlt} decoding="async" />
         <figcaption>FAMILY RECIPES. SMALL BATCHES. MADE WITH LOVE.</figcaption>
       </Reveal>
       <div className="story-chapters">

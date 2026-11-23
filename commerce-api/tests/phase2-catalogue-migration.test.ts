@@ -10,6 +10,17 @@ type MasterProduct = {
 const master = JSON.parse(await readFile(new URL("../../docs/catalogue-phase2-master.json", import.meta.url), "utf8")) as { products: MasterProduct[] };
 const migration = await readFile(new URL("../prisma/migrations/20261118000000_phase2_catalogue/migration.sql", import.meta.url), "utf8");
 const archiveMinapa = await readFile(new URL("../prisma/migrations/20261123000000_archive_minapa_vadiyalu/migration.sql", import.meta.url), "utf8");
+const artworkMigration = await readFile(new URL("../prisma/migrations/20261124000000_fill_catalogue_artwork/migration.sql", import.meta.url), "utf8");
+const newProducts = master.products.filter(product => product.newProduct);
+
+it("bundles a WebP for every product named in the artwork migration", async () => {
+  const artworkSlugs = [...artworkMigration.matchAll(/^    '([a-z0-9-]+)'/gm)].map(match => match[1]);
+  expect(artworkSlugs.sort()).toEqual(newProducts.map(product => product.slug).sort());
+  await Promise.all(newProducts.map(async product => {
+    const image = await readFile(new URL(`../../public/images/catalog-2026/${product.slug}.webp`, import.meta.url));
+    expect(image.toString("ascii", 8, 12), product.slug).toBe("WEBP");
+  }));
+});
 
 it("records only the unambiguous owner-approved packs and does not infer missing offers", () => {
   expect(master.products).toHaveLength(52);
@@ -129,6 +140,39 @@ it.skipIf(process.env.RUN_DB_TESTS !== "1")("applies reviewed prices and catalog
       expect(added.variants).toHaveLength(2);
       await tx.productVariant.update({ where: { id: added.variants[0]!.id }, data: { price: 777, mrp: 777 } });
       expect(Number((await tx.productVariant.findUniqueOrThrow({ where: { id: added.variants[0]!.id } })).price)).toBe(777);
+
+      const merchantUpload = await tx.product.findUniqueOrThrow({ where: { slug: slug("kakarakaya-pickle") } });
+      await tx.productMedia.createMany({ data: [
+        { productId: merchantUpload.id, url: "/uploads/merchant-karela.webp", alt: "Merchant product photo" },
+        { productId: added.id, variantId: added.variants[0]!.id, url: "/uploads/merchant-flax.webp", alt: "Merchant pack photo" },
+      ] });
+      const scopedArtwork = artworkMigration.replace(/'([a-z0-9-]+)'/g, (quoted, value: string) =>
+        identities.has(value) ? `'${slug(value)}'` : quoted);
+      expect(await tx.$executeRawUnsafe(scopedArtwork)).toBe(21);
+      expect(await tx.$executeRawUnsafe(scopedArtwork)).toBe(0);
+      const withArtwork = await tx.product.findMany({
+        where: { slug: { in: master.products.map(product => slug(product.slug)) } },
+        select: { slug: true, media: true },
+      });
+      const mediaBySlug = new Map(withArtwork.map(product => [product.slug, product.media]));
+      for (const product of master.products) {
+        const media = mediaBySlug.get(slug(product.slug))!;
+        expect(media, product.name).toHaveLength(1);
+        if (!product.newProduct) {
+          expect(media[0]!.url).toBe("/uploads/retained.webp");
+        } else if (product.slug === "kakarakaya-pickle") {
+          expect(media[0]!.url).toBe("/uploads/merchant-karela.webp");
+        } else if (product.slug === "flax-seed-karam-podi") {
+          expect(media[0]).toMatchObject({ url: "/uploads/merchant-flax.webp", variantId: added.variants[0]!.id });
+        } else {
+          expect(media[0]).toMatchObject({
+            url: `/images/catalog-2026/${slug(product.slug)}.webp`,
+            alt: `AI-generated product illustration of Aavaruchi ${product.name} branded packaging`,
+            type: "IMAGE",
+            variantId: null,
+          });
+        }
+      }
       throw rollback;
     }, { timeout: 60000 });
   } catch (error) { if (error !== rollback) throw error; }

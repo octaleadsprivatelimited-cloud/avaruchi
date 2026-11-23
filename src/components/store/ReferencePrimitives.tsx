@@ -204,12 +204,15 @@ const heroSlides = [
 export function ReferenceHero({ products }: { products: Product[] }) {
   const store = useStorefrontConfig();
   const [slide, setSlide] = useState(0);
+  const [failedBanner, setFailedBanner] = useState("");
   const reduced = useReducedMotion();
   const item = heroSlides[slide]!;
   const product = products.find((product) => product.slug === item.slug);
-  const customBanner = slide === 0 && store.heroImageUrl && store.heroImageUrl !== "/images/hero.png"
+  const customBanner = slide === 0 && store.heroImageUrl !== "/images/hero.png" && store.heroImageUrl !== failedBanner
     ? store.heroImageUrl
     : undefined;
+  const usesBundledHero = slide === 0 && !customBanner;
+  const restoreDefaultImage = customBanner ? () => setFailedBanner(customBanner) : undefined;
 
   return (
     <section
@@ -230,14 +233,14 @@ export function ReferenceHero({ products }: { products: Product[] }) {
             <img
               key={customBanner || item.image}
               src={customBanner || item.image}
+              srcSet={usesBundledHero ? `${BRAND.heroImageSmall} 768w, ${BRAND.heroImage} 1536w` : undefined}
+              sizes={usesBundledHero ? "(max-width: 700px) 100vw, (max-width: 1527px) 55vw, 840px" : undefined}
               alt={customBanner ? store.heroImageAlt || `${store.storeName} featured pickles` : item.alt}
               fetchPriority={slide === 0 ? "high" : "auto"}
-              onError={event => {
-                if (customBanner && event.currentTarget.getAttribute("src") !== item.image) {
-                  event.currentTarget.src = item.image;
-                  event.currentTarget.alt = item.alt;
-                }
-              }}
+              onError={restoreDefaultImage}
+              ref={restoreDefaultImage && (image => {
+                if (image?.complete && image.naturalWidth === 0) restoreDefaultImage();
+              })}
             />
           </div>
           <div className="reference-hero-copy">
